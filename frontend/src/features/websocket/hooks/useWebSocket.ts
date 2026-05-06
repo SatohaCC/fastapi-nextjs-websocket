@@ -1,15 +1,15 @@
 "use client";
 
 import {
-    sendRequest as apiSendRequest,
-    sendMessage,
-    updateRequestStatus,
+  sendRequest as apiSendRequest,
+  sendMessage,
+  updateRequestStatus,
 } from "@/features/websocket/api";
-import {dispatchMessage} from "@/features/websocket/handlers";
-import type {RequestStatus} from "@/types/ws";
-import {useCallback, useEffect} from "react";
-import {useConnection} from "./useConnection";
-import {useMessageSync} from "./useMessageSync";
+import { dispatchMessage } from "@/features/websocket/handlers";
+import type { RequestStatus } from "@/types/ws";
+import { useCallback, useEffect } from "react";
+import { useConnection } from "./useConnection";
+import { useMessageSync } from "./useMessageSync";
 
 const INITIAL_RETRY_MS = 1000;
 
