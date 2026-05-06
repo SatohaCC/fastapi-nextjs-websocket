@@ -51,16 +51,45 @@
 
 ## 開発環境の起動
 
-### Docker Compose
-最も手軽な起動方法です。
+本プロジェクトでは、DB などのインフラを Docker で、アプリケーション（Frontend/Backend）をローカルで動かす構成を推奨します。
+
+### 1. インフラの起動 (Docker)
+PostgreSQL, Redis, pgAdmin を起動します。
+```bash
+docker-compose up -d postgres redis pgadmin
+```
+- **pgAdmin**: `http://localhost:5050` (ID: `admin@example.com`, PW: `admin`)
+
+### 2. バックエンドの起動 (Python)
+`backend` ディレクトリでライブラリをインストールし、サーバーを起動します。
+```bash
+cd backend
+poetry install
+poetry run fastapi dev app/main.py
+```
+- **API Docs**: `http://localhost:8000/docs`
+
+### 3. フロントエンドの起動 (Node.js)
+`frontend` ディレクトリでパッケージをインストールし、開発サーバーを起動します。
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- **Frontend**: `http://localhost:3000`
+
+---
+
+### その他の起動方法
+
+#### Docker Compose で一括起動
+バックエンドも含めて Docker で動かしたい場合（フロントエンドは引き続きローカル起動が必要です）：
 ```bash
 docker-compose up -d --build
 ```
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:8000`
-- pgAdmin: `http://localhost:5050`
+※ `docker-compose.yml` には現在フロントエンドが含まれていないため、手順 3 は常に必要です。
 
-### Kubernetes (minikube)
+#### Kubernetes (minikube)
 ローカルで k8s クラスタを動かす場合の手順です。
 
 1. **minikube の起動と環境設定**
@@ -72,7 +101,7 @@ docker-compose up -d --build
 
 2. **イメージのビルド**
    ```bash
-   # クラスタ内で直接イメージをビルド（レジストリへの Push 不要）
+   # クラスタ内で直接イメージをビルド
    docker build -t fastapi-nextjs-websocket-backend ./backend
    ```
 
@@ -85,8 +114,26 @@ docker-compose up -d --build
 
 4. **サービスの公開**
    ```bash
-   # Backend サービスをブラウザで開く
    minikube service fastapi-backend
    ```
 
-- **Backend**: `LoadBalancer` 設定により、上記コマンドで払い出される URL でアクセス可能です。
+---
+
+## 開発ガイドライン
+
+### リンター・フォーマッターの実行
+
+#### フロントエンド (Biome)
+```bash
+cd frontend
+npm run lint    # チェック
+npm run format  # 修正
+```
+
+#### バックエンド (Ruff, MyPy)
+```bash
+cd backend
+poetry run ruff check .
+poetry run ruff format .
+poetry run mypy .
+```
