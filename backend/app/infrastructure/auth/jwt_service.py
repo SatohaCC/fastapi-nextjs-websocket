@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
+from app.domain.primitives.primitives import Username
+
 from ..config import settings
 
 
@@ -14,21 +16,25 @@ class JwtServiceImpl:
         """ユーザー名とパスワードの照合を行います。"""
         return settings.USERS.get(username) == password
 
-    def create_token(self, username: str) -> str:
+    def create_token(self, username: Username) -> str:
         """JWT トークンを生成して返します。"""
-        payload = {
-            "sub": username,
-            "exp": datetime.now(timezone.utc)
-            + timedelta(minutes=settings.TOKEN_EXPIRE_MINUTES),
-        }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+        to_encode = {"sub": username.value, "exp": expire}
+        return jwt.encode(
+            to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+        )
 
-    def verify_token(self, token: str) -> str | None:
-        """JWT トークンを検証し、ユーザー名を返します。無効な場合は None を返します。"""
+    def verify_token(self, token: str) -> Username | None:
+        """JWT トークンを検証し、ユーザー名を返します。"""
         try:
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
             )
-            return payload.get("sub")
-        except jwt.InvalidTokenError:
+            username_str: str | None = payload.get("sub")
+            if username_str is None:
+                return None
+            return Username(username_str)
+        except jwt.PyJWTError:
             return None

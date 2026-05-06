@@ -1,4 +1,7 @@
-"""フィードの検索に関するユースケースを実現するアプリケーションサービス。"""
+"""フィード取得に関するユースケースを実現するアプリケーションサービス。"""
+
+from app.domain.primitives.feed import SequenceId, SequenceName
+from app.domain.primitives.primitives import Username
 
 from ...domain.entities.delivery_feed import DeliveryFeed
 from ..uow import UnitOfWork
@@ -12,8 +15,13 @@ class FeedQueryService:
         self._uow = uow
 
     async def get_feeds_after(
-        self, sequence_name: str, after_id: int, username: str
+        self,
+        sequence_name: SequenceName,
+        after_id: SequenceId,
+        username: Username,
     ) -> list[DeliveryFeed]:
         """指定したID以降の、ユーザーに関連するフィードを取得します。"""
         async with self._uow:
-            return await self._uow.outbox.get_after(sequence_name, after_id, username)
+            return await self._uow.outbox.get_after(
+                sequence_name, after_id, username
+            )

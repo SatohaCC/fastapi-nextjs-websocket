@@ -1,4 +1,4 @@
-"""ユーザー認証とトークン発行を担うアプリケーションサービス。"""
+from app.domain.primitives.primitives import Username
 
 from ...domain.repositories.jwt_service import JwtService
 
@@ -11,16 +11,16 @@ class AuthService:
         self._jwt = jwt
         self._users = users
 
-    def login(self, username: str, password: str) -> str | None:
+    def login(self, username: Username, password: str) -> str | None:
         """ユーザー認証を行い、成功した場合は JWT トークンを返します。"""
-        if self._jwt.authenticate_user(username, password):
+        if self._jwt.authenticate_user(username.value, password):
             return self._jwt.create_token(username)
         return None
 
-    def get_user_from_token(self, token: str) -> str | None:
+    def get_user_from_token(self, token: str) -> Username | None:
         """トークンを検証し、ユーザー名を取得します。"""
         return self._jwt.verify_token(token)
 
-    def get_all_usernames(self) -> list[str]:
+    def get_all_usernames(self) -> list[Username]:
         """全ユーザー名を取得します。"""
-        return list(self._users.keys())
+        return [Username(name) for name in self._users.keys()]

@@ -5,10 +5,9 @@ import json
 import logging
 import time
 
+import asyncpg
 from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import async_sessionmaker
-
-import asyncpg
 
 from ..config import settings
 from ..persistence.sa_outbox_repository import SqlAlchemyDeliveryFeedRepository
@@ -66,8 +65,8 @@ async def relay_worker(session_factory: async_sessionmaker, redis_url: str) -> N
                         for feed in feeds:
                             payload_to_publish = {
                                 **feed.payload,
-                                "seq": feed.sequence_id,
-                                "sequence_name": feed.sequence_name
+                                "seq": feed.sequence_id.value if feed.sequence_id else None,
+                                "sequence_name": feed.sequence_name.value,
                             }
                             await redis.publish(
                                 settings.REDIS_CHANNEL, json.dumps(payload_to_publish)
@@ -79,22 +78,24 @@ async def relay_worker(session_factory: async_sessionmaker, redis_url: str) -> N
                             for f in feeds
                             if f.sequence_name and f.sequence_id is not None
                         ]
-                        await repo.mark_published(feed_keys)
+                        await repo.mark_processed(feed_keys)
                         await session.commit()
-                        
+
                         # 処理した場合は、まだ未処理のフィードがあるかもしれないので即座に次へループ
                         continue
                     except Exception:
-                        logger.exception("Relay worker failed to publish feeds; will retry")
+                        logger.exception(
+                            "Relay worker failed to publish feeds; will retry"
+                        )
                         await session.rollback()
 
                 # 1時間ごとにクリーンアップ処理を実行
                 current_time = time.time()
                 if current_time - last_cleanup > 3600:
                     try:
-                        deleted = await repo.delete_old_published_feeds(hours=24)
+                        deleted = await repo.delete_old_processed_feeds(hours=24)
                         if deleted > 0:
-                            logger.info(f"Cleaned up {deleted} old published feeds")
+                            logger.info(f"Cleaned up {deleted} old processed feeds")
                         await session.commit()
                     except Exception:
                         logger.exception("Failed to cleanup old feeds")
