@@ -21,21 +21,20 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
             raise ValueError("sequence_name is required")
 
         # カウンタテーブルを更新して新しい ID を採番（行ロック）
+        # PostgreSQL の INSERT ... ON CONFLICT DO UPDATE を使用して
+        # 存在しない場合の初期化とインクリメントをアトミックに行う
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
         stmt = (
-            update(DeliverySequenceORM)
-            .where(DeliverySequenceORM.name == feed.sequence_name)
-            .values(last_id=DeliverySequenceORM.last_id + 1)
+            pg_insert(DeliverySequenceORM)
+            .values(name=feed.sequence_name, last_id=1)
+            .on_conflict_do_update(
+                index_elements=["name"],
+                set_={"last_id": DeliverySequenceORM.last_id + 1},
+            )
             .returning(DeliverySequenceORM.last_id)
         )
         result = await self._session.execute(stmt)
-        new_id = result.scalar_one_or_none()
-
-        if new_id is None:
-            # シーケンスが存在しない場合は初期化
-            new_sequence = DeliverySequenceORM(name=feed.sequence_name, last_id=1)
-            self._session.add(new_sequence)
-            await self._session.flush()
-            new_id = 1
+        new_id = result.scalar_one()
 
         orm = DeliveryFeedORM(
             sequence_name=feed.sequence_name,

@@ -12,7 +12,8 @@ export interface ChatMessage {
   username: string;
   text: string;
   id: number;
-  seq: number; // delivery_feeds.id (欠番なし連番)
+  seq: number | null; // delivery_feeds.id (欠番なし連番)
+  sequence_name?: string;
   created_at: string;
   is_history?: boolean;
 }
@@ -22,7 +23,8 @@ export type RequestStatus = "requested" | "processing" | "completed";
 export interface RequestMessage {
   type: "request";
   id: number;
-  seq: number; // delivery_feeds.id (欠番なし連番)
+  seq: number | null; // delivery_feeds.id (欠番なし連番)
+  sequence_name?: string;
   sender: string;
   recipient: string;
   text: string;
@@ -35,7 +37,8 @@ export interface RequestMessage {
 export interface RequestUpdateMessage {
   type: "request_updated";
   id: number;
-  seq: number; // delivery_feeds.id (欠番なし連番)
+  seq: number | null; // delivery_feeds.id (欠番なし連番)
+  sequence_name?: string;
   status: RequestStatus;
   sender: string;
   recipient: string;
