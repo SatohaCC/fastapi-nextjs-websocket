@@ -54,6 +54,11 @@ async def websocket_endpoint(
 ) -> None:
     """WebSocket メインハンドラ"""
     print(f"DEBUG: WebSocket authenticated as: {username}")
+    # 接続前に「このユーザーの初回接続か」を確認（connect() 後は必ず in connections になるため事前に取得）
+    is_first_connection = (
+        username not in ws_manager.connections
+        or not ws_manager.connections[username]
+    )
     await ws_manager.connect(username, websocket)
 
     try:
@@ -105,8 +110,8 @@ async def websocket_endpoint(
                 }
                 await websocket.send_json(payload)
 
-        if last_chat_id is None and last_request_id is None:
-            # 入室イベントの記録
+        if is_first_connection:
+            # 入室イベントの記録（同一ユーザーの複数タブ接続では重複発火しない）
             await connection_service.handle_user_join(username)
 
     except WebSocketDisconnect:

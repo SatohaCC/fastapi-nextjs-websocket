@@ -12,7 +12,10 @@ export interface ChatMessage {
   username: string;
   text: string;
   id: number;
-  seq: number; // delivery_feeds.id (欠番なし連番)
+  // delivery_feeds.sequence_id。初回接続時の履歴は seq なし（null）
+  seq: number | null;
+  // ギャップ検知用のシーケンスのスコープ名
+  sequence_name?: string;
   created_at: string;
   is_history?: boolean;
 }
@@ -22,7 +25,10 @@ export type RequestStatus = "requested" | "processing" | "completed";
 export interface RequestMessage {
   type: "request";
   id: number;
-  seq: number; // delivery_feeds.id (欠番なし連番)
+  // delivery_feeds.sequence_id。初回接続時の履歴は seq なし（null）
+  seq: number | null;
+  // ギャップ検知用のシーケンスのスコープ名
+  sequence_name?: string;
   sender: string;
   recipient: string;
   text: string;
@@ -35,7 +41,10 @@ export interface RequestMessage {
 export interface RequestUpdateMessage {
   type: "request_updated";
   id: number;
-  seq: number; // delivery_feeds.id (欠番なし連番)
+  // delivery_feeds.sequence_id。初回接続時の履歴は seq なし（null）
+  seq: number | null;
+  // ギャップ検知用のシーケンスのスコープ名
+  sequence_name?: string;
   status: RequestStatus;
   sender: string;
   recipient: string;

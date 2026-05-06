@@ -99,9 +99,11 @@ export function useWebSocket(token: string | null) {
 
   // ── トークン監視 ──
   useEffect(() => {
-    // トークンが変わったら、古いデータを即座にクリアする
+    // トークンが変わったら、古いデータと seq を即座にクリアする
     setChatMessages([]);
     setRequestMessages([]);
+    lastChatId.current = null;
+    lastRequestId.current = null;
     setSyncStatus("待機中...");
 
     if (token) {

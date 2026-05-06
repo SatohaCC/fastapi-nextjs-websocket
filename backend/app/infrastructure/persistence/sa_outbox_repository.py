@@ -31,11 +31,13 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         new_id = result.scalar_one_or_none()
 
         if new_id is None:
-            # シーケンスが存在しない場合は初期化
-            new_sequence = DeliverySequenceORM(name=feed.sequence_name, last_id=1)
-            self._session.add(new_sequence)
-            await self._session.flush()
-            new_id = 1
+            # lifespan で事前に INSERT されているはずのシーケンスが存在しない。
+            # フォールバックで INSERT すると並行リクエスト時に PK 制約違反が発生するため、
+            # ここでは例外を発生させる。
+            raise ValueError(
+                f"Delivery sequence '{feed.sequence_name}' not found. "
+                "Ensure it is seeded on application startup."
+            )
 
         orm = DeliveryFeedORM(
             sequence_name=feed.sequence_name,
