@@ -22,6 +22,4 @@ class FeedQueryService:
     ) -> list[DeliveryFeed]:
         """指定したID以降の、ユーザーに関連するフィードを取得します。"""
         async with self._uow:
-            return await self._uow.outbox.get_after(
-                sequence_name, after_id, username
-            )
+            return await self._uow.outbox.get_after(sequence_name, after_id, username)

@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from ..entities.delivery_feed import DeliveryFeed
+from ..entities.delivery_feed import DeliveryFeed, DraftDeliveryFeed
 from ..primitives.feed import SequenceId, SequenceName
 from ..primitives.primitives import Username
 
@@ -10,8 +10,8 @@ from ..primitives.primitives import Username
 class DeliveryFeedRepository(Protocol):
     """DeliveryFeed エンティティに対するデータアクセスのインターフェース。"""
 
-    async def save(self, feed: DeliveryFeed) -> DeliveryFeed:
-        """フィードを保存します。この際、厳密連番の採番も行われます。"""
+    async def save(self, feed: DraftDeliveryFeed) -> DeliveryFeed:
+        """DraftDeliveryFeed を永続化し、採番済みの DeliveryFeed を返します。"""
 
     async def get_pending(self, limit: int = 100) -> list[DeliveryFeed]:
         """未配信（PENDING）のフィードを取得します。

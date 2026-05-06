@@ -2,8 +2,8 @@
 
 from app.domain.primitives.feed import SequenceName
 
-from ...domain.entities.delivery_feed import DeliveryFeed
-from ...domain.entities.direct_request import DirectRequest
+from ...domain.entities.delivery_feed import DraftDeliveryFeed
+from ...domain.entities.direct_request import DirectRequest, DraftDirectRequest
 from ...domain.exceptions import EntityNotFoundException
 from ...domain.factories.delivery_feed_factory import DeliveryFeedFactory
 from ...domain.primitives.primitives import EntityId, RequestText, Username
@@ -22,19 +22,19 @@ class RequestService:
         self, sender: Username, recipient: Username, text: RequestText
     ) -> DirectRequest:
         """リクエストエンティティを生成・保存し、パブリッシュします。"""
-        request = DirectRequest(
+        draft = DraftDirectRequest(
             sender=sender,
             recipient=recipient,
             text=text,
             status=RequestStatus.REQUESTED,
         )
         async with self._uow:
-            saved_request = await self._uow.requests.save(request)
+            saved_request = await self._uow.requests.save(draft)
 
             event_type, payload = DeliveryFeedFactory.create_payload_from_request(
                 saved_request
             )
-            feed = DeliveryFeed(
+            feed = DraftDeliveryFeed(
                 sequence_name=SequenceName("requests_global"),
                 event_type=event_type,
                 payload=payload,
@@ -67,14 +67,14 @@ class RequestService:
                 raise EntityNotFoundException(f"Request {request_id} not found")
 
             # ステータス遷移（内部でバリデーション、権限チェック、時刻更新が行われる）
-            request.transition_to(new_status, operator)
+            transitioned = request.transition_to(new_status, operator)
 
-            updated_request = await self._uow.requests.save(request)
+            updated_request = await self._uow.requests.save(transitioned)
 
             event_type, payload = (
                 DeliveryFeedFactory.create_payload_from_request_updated(updated_request)
             )
-            feed = DeliveryFeed(
+            feed = DraftDeliveryFeed(
                 sequence_name=SequenceName("requests_global"),
                 event_type=event_type,
                 payload=payload,

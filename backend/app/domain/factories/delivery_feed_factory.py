@@ -4,8 +4,6 @@ from app.domain.primitives.feed import FeedEventType
 
 from ..entities.direct_request import DirectRequest
 from ..entities.message import Message
-
-
 from ..primitives.primitives import Username
 
 
@@ -19,8 +17,8 @@ class DeliveryFeedFactory:
             "type": FeedEventType.MESSAGE.value,
             "username": message.username.value,
             "text": message.text.value,
-            # id はオプショナルだが、ここではメインDBのidを含める
-            "id": message.id.value if message.id else None,
+            # メインDBのidを含める
+            "id": message.id.value,
             "created_at": message.created_at.isoformat(),
         }
         return FeedEventType.MESSAGE, payload
@@ -32,7 +30,7 @@ class DeliveryFeedFactory:
         """DirectRequest エンティティから Payload と event_type を生成します。"""
         payload = {
             "type": FeedEventType.REQUEST.value,
-            "id": request.id.value if request.id else None,
+            "id": request.id.value,
             "sender": request.sender.value,
             "recipient": request.recipient.value,
             "text": request.text.value,
@@ -51,7 +49,7 @@ class DeliveryFeedFactory:
         """
         payload = {
             "type": FeedEventType.REQUEST_UPDATED.value,
-            "id": request.id.value if request.id else None,
+            "id": request.id.value,
             "status": request.status.value,
             "sender": request.sender.value,
             "recipient": request.recipient.value,

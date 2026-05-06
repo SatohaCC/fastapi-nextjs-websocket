@@ -3,15 +3,15 @@
 # pylint: disable=unnecessary-ellipsis
 from typing import Protocol
 
-from ..entities.direct_request import DirectRequest
+from ..entities.direct_request import DirectRequest, DraftDirectRequest
 from ..primitives.primitives import EntityId, Username
 
 
 class RequestRepository(Protocol):
     """ダイレクトリクエストの CRUD 操作を定義するリポジトリインターフェース。"""
 
-    async def save(self, request: DirectRequest) -> DirectRequest:
-        """新規リクエストまたは既存リクエストをDBに保存し、ID確定済みのエンティティを返す"""
+    async def save(self, request: DraftDirectRequest) -> DirectRequest:
+        """DraftDirectRequest を永続化し、ID 確定済みの DirectRequest を返します。"""
         ...
 
     async def get_by_id(self, request_id: EntityId) -> DirectRequest | None:

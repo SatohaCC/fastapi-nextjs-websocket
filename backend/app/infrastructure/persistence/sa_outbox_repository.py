@@ -1,6 +1,6 @@
 """SQLAlchemy を用いた DeliveryFeed リポジトリの実装。"""
 
-from sqlalchemy import and_, delete, or_, select, text, tuple_, update
+from sqlalchemy import and_, delete, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +12,7 @@ from app.domain.primitives.feed import (
 )
 from app.domain.primitives.primitives import Username
 
-from ...domain.entities.delivery_feed import DeliveryFeed
+from ...domain.entities.delivery_feed import DeliveryFeed, DraftDeliveryFeed
 from ...domain.repositories.delivery_feed_repository import DeliveryFeedRepository
 from .orm_models import DeliveryFeedORM, DeliverySequenceORM
 
@@ -24,7 +24,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         """リポジトリを初期化します。"""
         self._session = session
 
-    async def save(self, feed: DeliveryFeed) -> DeliveryFeed:
+    async def save(self, feed: DraftDeliveryFeed) -> DeliveryFeed:
         """フィードを保存します。この際、厳密連番の採番も行われます。"""
         # カウンタテーブルを更新して新しい ID を採番（行ロック）
         stmt = (
