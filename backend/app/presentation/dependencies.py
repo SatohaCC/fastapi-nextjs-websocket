@@ -85,10 +85,13 @@ def get_feed_query_service(
 # --- Authentication Dependencies ---
 
 
+from ..domain.primitives.primitives import Username
+
+
 async def get_authenticated_user(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-) -> str:
+) -> Username:
     """REST API 用の認証依存関係"""
     token = credentials.credentials
     username = auth_service.get_user_from_token(token)
@@ -105,7 +108,7 @@ async def get_ws_authenticated_user(
     websocket: WebSocket,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     token: str = Query(...),
-) -> str:
+) -> Username:
     """WebSocket 用の認証依存関係"""
     # 1. Origin の検証
     origin = websocket.headers.get("origin", "")

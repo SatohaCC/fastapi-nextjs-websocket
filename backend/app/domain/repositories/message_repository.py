@@ -3,15 +3,15 @@
 # pylint: disable=unnecessary-ellipsis
 from typing import Protocol
 
-from ..entities.message import Message
+from ..entities.message import DraftMessage, Message
 from ..primitives.primitives import EntityId
 
 
 class MessageRepository(Protocol):
     """チャットメッセージの CRUD 操作を定義するリポジトリインターフェース。"""
 
-    async def save(self, message: Message) -> Message:
-        """メッセージエンティティを永続化（保存）し、IDが確定した状態のドメインエンティティを返します。"""
+    async def save(self, message: DraftMessage) -> Message:
+        """DraftMessage を永続化し、ID が確定した Message を返します。"""
         ...
 
     async def get_after(self, after_id: EntityId) -> list[Message]:

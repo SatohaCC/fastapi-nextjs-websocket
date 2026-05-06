@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from ...application.services.feed_query_service import FeedQueryService
+from ...domain.primitives.feed import SequenceId, SequenceName
+from ...domain.primitives.primitives import Username
 from ..dependencies import get_authenticated_user, get_feed_query_service
 
 router = APIRouter(tags=["Feeds"])
@@ -24,27 +26,35 @@ class FeedResponse(BaseModel):
 
 @router.get("/api/feeds", response_model=list[FeedResponse])
 async def get_feeds_since(
-    username: Annotated[str, Depends(get_authenticated_user)],
+    username: Annotated[Username, Depends(get_authenticated_user)],
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
-    after_chat_id: Annotated[int | None, Query(description="この ID 以降のチャットフィードを取得します")] = None,
-    after_request_id: Annotated[int | None, Query(description="この ID 以降のリクエストフィードを取得します")] = None,
+    after_chat_id: Annotated[
+        int | None, Query(description="この ID 以降のチャットフィードを取得します")
+    ] = None,
+    after_request_id: Annotated[
+        int | None, Query(description="この ID 以降のリクエストフィードを取得します")
+    ] = None,
 ) -> list[FeedResponse]:
     """指定された ID 以降のフィードを取得します（リカバリ用）。"""
     feeds = []
-    
+
     if after_chat_id is not None:
-        chat_feeds = await feed_service.get_feeds_after("chat_global", after_chat_id, username)
+        chat_feeds = await feed_service.get_feeds_after(
+            SequenceName("chat_global"), SequenceId(after_chat_id), username
+        )
         feeds.extend(chat_feeds)
-        
+
     if after_request_id is not None:
-        request_feeds = await feed_service.get_feeds_after("requests_global", after_request_id, username)
+        request_feeds = await feed_service.get_feeds_after(
+            SequenceName("requests_global"), SequenceId(after_request_id), username
+        )
         feeds.extend(request_feeds)
-        
+
     return [
         FeedResponse(
-            sequence_name=f.sequence_name,  # type: ignore
-            sequence_id=f.sequence_id,  # type: ignore
-            event_type=f.event_type,
+            sequence_name=f.sequence_name.value,
+            sequence_id=f.sequence_id.value,
+            event_type=f.event_type.value,
             payload=f.payload,
             created_at=f.created_at,
         )

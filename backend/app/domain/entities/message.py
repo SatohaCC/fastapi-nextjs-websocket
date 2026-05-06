@@ -7,16 +7,26 @@ from app.domain.primitives.primitives import EntityId, MessageText, Username
 
 
 @dataclass(frozen=True, kw_only=True)
-class Message:
-    """チャットメッセージを表すドメインエンティティ。
-    グローバルチャットでやり取りされるメッセージの不変なデータを保持します。
+class DraftMessage:
+    """新規メッセージ作成用のドメインエンティティ（Command 側）。
+
+    アプリケーション層でメッセージを生成する際に使用します。
+    永続化前のため id を持ちません。
     """
 
-    # 永続化（DB保存）前にアプリケーション層でエンティティを生成できるよう、
-    # 発番前のIDをNoneで許容します。
-    id: EntityId | None = None
     username: Username  # メッセージを送信したユーザーの名前
     text: MessageText  # メッセージの本文
     # 作成日時。
     # リアルタイム通知の一貫性維持とドメイン層内での完結のため、アプリ側で生成します。
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass(frozen=True, kw_only=True)
+class Message(DraftMessage):
+    """永続化済みチャットメッセージのドメインエンティティ（Query 側）。
+
+    DB保存後にリポジトリから返されるエンティティです。
+    id は必ず存在し、None チェックは不要です。
+    """
+
+    id: EntityId

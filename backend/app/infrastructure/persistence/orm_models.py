@@ -70,5 +70,7 @@ class DeliveryFeedORM(Base):
     )
 
     __table_args__ = (
-        Index("ix_delivery_feeds_status_seq", "status", "sequence_name", "sequence_id"),  # ポーリング最適化
+        Index(
+            "ix_delivery_feeds_status_seq", "status", "sequence_name", "sequence_id"
+        ),  # ポーリング最適化
     )
