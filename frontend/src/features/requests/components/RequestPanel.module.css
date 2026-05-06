@@ -1,0 +1,136 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  /* CardHeader のクラスとして使用 */
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.requestForm {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.selectRecipient {
+  flex: 1;
+  border-radius: 20px;
+  background: #16181c;
+}
+
+.inputTask {
+  flex: 2;
+  border-radius: 20px;
+  background: #16181c;
+  border: 1px solid transparent;
+}
+
+.submitButton {
+  font-size: 15px;
+  padding: 10px 0;
+}
+
+.requestList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyState {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.requestItem {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.metaInfo {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.senderName {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.senderHandle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.separator {
+  color: var(--text-secondary);
+}
+
+.timestamp {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.requestText {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  color: #e7e9ea;
+  word-break: break-word;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actionButton {
+  font-size: 14px;
+  padding: 8px 0;
+  flex: 1;
+}
+
+.completeButton {
+  background: var(--status-completed);
+}
+
+.resolvedNote {
+  font-size: 11px;
+  color: var(--status-completed);
+  font-weight: 600;
+  margin-top: 8px;
+}

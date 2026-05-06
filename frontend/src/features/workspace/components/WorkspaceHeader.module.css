@@ -1,0 +1,93 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.brandGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: -0.05em;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid transparent;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.statusText {
+  font-weight: 700;
+}
+
+.systemInfo {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: 16px;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  gap: 16px;
+}
+
+.userGroup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.userInfo {
+  text-align: right;
+}
+
+.username {
+  font-size: 16px;
+  color: white;
+  font-weight: 800;
+}
+
+.handle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1024px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .userGroup {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

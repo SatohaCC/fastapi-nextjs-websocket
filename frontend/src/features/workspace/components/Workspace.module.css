@@ -1,0 +1,52 @@
+.container {
+  height: 100vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.errorToast {
+  padding: 12px 20px;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border-radius: 12px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-weight: 500;
+}
+
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  min-height: 0;
+}
+
+@media (max-width: 1024px) {
+  .main {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .container {
+    padding: 12px;
+    height: auto;
+    min-height: 100vh;
+  }
+}
+
+.footer {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.footerText {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}

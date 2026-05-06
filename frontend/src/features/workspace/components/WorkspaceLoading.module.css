@@ -1,0 +1,10 @@
+.loadingContainer {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  color: white;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}

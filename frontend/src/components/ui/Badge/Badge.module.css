@@ -1,0 +1,37 @@
+.base {
+  padding: 2px 12px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.requested {
+  background: rgba(255, 212, 0, 0.1);
+  color: var(--status-requested);
+}
+
+.processing {
+  background: rgba(29, 155, 240, 0.1);
+  color: var(--status-processing);
+}
+
+.completed {
+  background: rgba(0, 186, 124, 0.1);
+  color: var(--status-completed);
+}
+
+.error {
+  background: rgba(244, 33, 46, 0.1);
+  color: var(--error);
+}
+
+.warning {
+  background: rgba(255, 212, 0, 0.1);
+  color: var(--warning);
+}
+
+.default {
+  background: rgba(113, 118, 123, 0.1);
+  color: var(--text-secondary);
+}

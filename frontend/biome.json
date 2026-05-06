@@ -1,0 +1,113 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "bracketSpacing": true,
+      "semicolons": "always",
+      "quoteStyle": "double"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noConsole": "warn"
+      },
+      "style": {
+        "useImportType": "error",
+        "useExportType": "error",
+        "useConsistentArrayType": "error"
+      },
+      "correctness": {
+        "noUnusedImports": "error"
+      }
+    },
+    "domains": {
+      "next": "recommended",
+      "react": "recommended"
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/features": "UIコンポーネントは機能(features)に依存してはいけません。",
+                  "@/app": "UIコンポーネントはページ(app)に依存してはいけません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/features/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/app": "機能(features)はページ(app)に依存してはいけません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/features/**/components/*.tsx",
+        "!src/features/**/components/*Container.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "react": "PresentationalコンポーネントでHooksを使用してはいけません。ロジックはContainerコンポーネントへ移動してください。",
+                  "@/features/auth/hooks": "Hooksの呼び出しはContainerコンポーネントのみに制限されています。",
+                  "@/features/chat/hooks": "Hooksの呼び出しはContainerコンポーネントのみに制限されています。",
+                  "@/features/requests/hooks": "Hooksの呼び出しはContainerコンポーネントのみに制限されています。",
+                  "@/features/websocket/hooks": "Hooksの呼び出しはContainerコンポーネントのみに制限されています。"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
