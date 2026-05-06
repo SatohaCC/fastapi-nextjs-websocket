@@ -1,9 +1,9 @@
 """ダイレクトリクエストに関するユースケースを実現するアプリケーションサービス。"""
 
-from datetime import datetime, timezone
+from app.domain.primitives.feed import SequenceName
 
-from ...domain.entities.delivery_feed import DeliveryFeed
-from ...domain.entities.direct_request import DirectRequest
+from ...domain.entities.delivery_feed import DraftDeliveryFeed
+from ...domain.entities.direct_request import DirectRequest, DraftDirectRequest
 from ...domain.exceptions import EntityNotFoundException
 from ...domain.factories.delivery_feed_factory import DeliveryFeedFactory
 from ...domain.primitives.primitives import EntityId, RequestText, Username
@@ -19,26 +19,25 @@ class RequestService:
         self._uow = uow
 
     async def send_request(
-        self, sender: str, recipient: str, text: str
+        self, sender: Username, recipient: Username, text: RequestText
     ) -> DirectRequest:
         """リクエストエンティティを生成・保存し、パブリッシュします。"""
-        request = DirectRequest(
-            sender=Username(sender),
-            recipient=Username(recipient),
-            text=RequestText(text),
+        draft = DraftDirectRequest(
+            sender=sender,
+            recipient=recipient,
+            text=text,
             status=RequestStatus.REQUESTED,
         )
         async with self._uow:
-            saved_request = await self._uow.requests.save(request)
+            saved_request = await self._uow.requests.save(draft)
 
             event_type, payload = DeliveryFeedFactory.create_payload_from_request(
                 saved_request
             )
-            feed = DeliveryFeed(
-                sequence_name="requests_global",
+            feed = DraftDeliveryFeed(
+                sequence_name=SequenceName("requests_global"),
                 event_type=event_type,
                 payload=payload,
-                created_at=datetime.now(timezone.utc),
             )
             await self._uow.outbox.save(feed)
 
@@ -46,42 +45,39 @@ class RequestService:
 
         return saved_request
 
-    async def get_requests_for_user(self, username: str) -> list[DirectRequest]:
+    async def get_requests_for_user(self, username: Username) -> list[DirectRequest]:
         """ユーザーに関連するリクエスト履歴を取得します。"""
         async with self._uow:
-            return await self._uow.requests.get_for_user(Username(username))
+            return await self._uow.requests.get_for_user(username)
 
     async def get_requests_after(
-        self, username: str, after_id: int
+        self, username: Username, after_id: EntityId
     ) -> list[DirectRequest]:
         """指定したID以降のユーザー関連リクエストを取得します。"""
         async with self._uow:
-            return await self._uow.requests.get_after(
-                Username(username), EntityId(after_id)
-            )
+            return await self._uow.requests.get_after(username, after_id)
 
     async def update_status(
-        self, request_id: int, new_status: RequestStatus, operator: str
+        self, request_id: EntityId, new_status: RequestStatus, operator: Username
     ) -> DirectRequest:
         """ステータスを更新し、変更をパブリッシュします。"""
         async with self._uow:
-            request = await self._uow.requests.get_by_id(EntityId(request_id))
+            request = await self._uow.requests.get_by_id(request_id)
             if not request:
                 raise EntityNotFoundException(f"Request {request_id} not found")
 
             # ステータス遷移（内部でバリデーション、権限チェック、時刻更新が行われる）
-            request.transition_to(new_status, Username(operator))
+            transitioned = request.transition_to(new_status, operator)
 
-            updated_request = await self._uow.requests.save(request)
+            updated_request = await self._uow.requests.save(transitioned)
 
             event_type, payload = (
                 DeliveryFeedFactory.create_payload_from_request_updated(updated_request)
             )
-            feed = DeliveryFeed(
-                sequence_name="requests_global",
+            feed = DraftDeliveryFeed(
+                sequence_name=SequenceName("requests_global"),
                 event_type=event_type,
                 payload=payload,
-                created_at=datetime.now(timezone.utc),
             )
             await self._uow.outbox.save(feed)
 

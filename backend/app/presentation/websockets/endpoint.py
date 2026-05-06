@@ -18,6 +18,13 @@ from ...application.services.connection_service import ConnectionService
 from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.request_service import RequestService
 from ...domain.exceptions import DomainException
+from ...domain.primitives.feed import SequenceId, SequenceName
+from ...domain.primitives.primitives import (
+    EntityId,
+    MessageText,
+    RequestText,
+    Username,
+)
 from ..dependencies import (
     get_chat_manager,
     get_chat_service,
@@ -43,7 +50,7 @@ router = APIRouter(tags=["websockets"])
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    username: Annotated[str, Depends(get_ws_authenticated_user)],
+    username: Annotated[Username, Depends(get_ws_authenticated_user)],
     chat_service: Annotated[ChatService, Depends(get_chat_service)],
     request_service: Annotated[RequestService, Depends(get_request_service)],
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
@@ -53,8 +60,8 @@ async def websocket_endpoint(
     last_request_id: Annotated[int | None, Query()] = None,
 ) -> None:
     """WebSocket メインハンドラ"""
-    print(f"DEBUG: WebSocket authenticated as: {username}")
-    await ws_manager.connect(username, websocket)
+    print(f"DEBUG: WebSocket authenticated as: {username.value}")
+    await ws_manager.connect(username.value, websocket)
 
     try:
         # 履歴とギャップの送信
@@ -70,13 +77,15 @@ async def websocket_endpoint(
                 )
                 await websocket.send_json(resp.model_dump(mode="json"))
         else:
-            chat_feeds = await feed_service.get_feeds_after("chat_global", last_chat_id, username)
+            chat_feeds = await feed_service.get_feeds_after(
+                SequenceName("chat_global"), SequenceId(last_chat_id), username
+            )
             for feed in chat_feeds:
                 payload = {
                     **feed.payload,
-                    "seq": feed.sequence_id,
-                    "sequence_name": feed.sequence_name,
-                    "is_history": True
+                    "seq": feed.sequence_id.value if feed.sequence_id else None,
+                    "sequence_name": feed.sequence_name.value,
+                    "is_history": True,
                 }
                 await websocket.send_json(payload)
 
@@ -95,13 +104,15 @@ async def websocket_endpoint(
                 )
                 await websocket.send_json(resp_req.model_dump(mode="json"))
         else:
-            request_feeds = await feed_service.get_feeds_after("requests_global", last_request_id, username)
+            request_feeds = await feed_service.get_feeds_after(
+                SequenceName("requests_global"), SequenceId(last_request_id), username
+            )
             for feed in request_feeds:
                 payload = {
                     **feed.payload,
-                    "seq": feed.sequence_id,
-                    "sequence_name": feed.sequence_name,
-                    "is_history": True
+                    "seq": feed.sequence_id.value if feed.sequence_id else None,
+                    "sequence_name": feed.sequence_name.value,
+                    "is_history": True,
                 }
                 await websocket.send_json(payload)
 
@@ -111,16 +122,17 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         # 初期化中の切断はよくあることなので、静かに終了する
-        ws_manager.disconnect(websocket, username)
+        ws_manager.disconnect(websocket, username.value)
         return
     except Exception as e:
-        print(f"[error] WebSocket initialization failed for {username}: {e}")
+        print(f"[error] WebSocket initialization failed for {username.value}: {e}")
         import traceback
+
         traceback.print_exc()
-        ws_manager.disconnect(websocket, username)
+        ws_manager.disconnect(websocket, username.value)
         try:
-            await websocket.close(code=1011) # Internal Error
-        except:
+            await websocket.close(code=1011)  # Internal Error
+        except Exception:
             pass
         return
 
@@ -140,14 +152,18 @@ async def websocket_endpoint(
                 if isinstance(msg, PongMessage):
                     pong_event.set()
                 elif isinstance(msg, ChatMessage):
-                    await chat_service.send_message(username=username, text=msg.text)
+                    await chat_service.send_message(
+                        username=username, text=MessageText(msg.text)
+                    )
                 elif isinstance(msg, RequestMessage):
                     await request_service.send_request(
-                        sender=username, recipient=msg.to, text=msg.text
+                        sender=Username(username),
+                        recipient=Username(msg.to),
+                        text=RequestText(msg.text),
                     )
                 elif isinstance(msg, StatusUpdateMessage):
                     await request_service.update_status(
-                        request_id=msg.request_id,
+                        request_id=EntityId(msg.request_id),
                         new_status=msg.status,
                         operator=username,
                     )
@@ -155,7 +171,7 @@ async def websocket_endpoint(
                 await websocket.send_json({"type": "error", "text": str(e)})
 
     except (WebSocketDisconnect, RuntimeError):
-        ws_manager.disconnect(websocket, username)
+        ws_manager.disconnect(websocket, username.value)
         await connection_service.handle_user_leave(username)
     finally:
         task.cancel()

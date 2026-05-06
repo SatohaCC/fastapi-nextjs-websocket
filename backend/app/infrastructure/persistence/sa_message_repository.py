@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...domain.entities.message import Message
+from ...domain.entities.message import DraftMessage, Message
 from ...domain.primitives.primitives import EntityId, MessageText, Username
 from ...domain.repositories.message_repository import MessageRepository
 from .orm_models import MessageORM
@@ -18,7 +18,7 @@ class SqlAlchemyMessageRepository(MessageRepository):
         """SQLAlchemy セッションを初期化します。"""
         self._session = session
 
-    async def save(self, message: Message) -> Message:
+    async def save(self, message: DraftMessage) -> Message:
         """メッセージエンティティをデータベースに保存します。"""
         orm_msg = MessageORM(
             username=message.username.value,

@@ -3,7 +3,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...domain.entities.direct_request import DirectRequest
+from ...domain.entities.direct_request import DirectRequest, DraftDirectRequest
 from ...domain.primitives.primitives import EntityId, RequestText, Username
 from ...domain.primitives.request_status import RequestStatus
 from ...domain.repositories.request_repository import RequestRepository
@@ -17,7 +17,7 @@ class SqlAlchemyRequestRepository(RequestRepository):
         """SQLAlchemy セッションを初期化します。"""
         self._session = session
 
-    async def save(self, request: DirectRequest) -> DirectRequest:
+    async def save(self, request: DraftDirectRequest) -> DirectRequest:
         """エンティティを DB に保存（新規作成または更新）します。"""
         orm = RequestORM(
             sender=request.sender.value,
@@ -25,9 +25,11 @@ class SqlAlchemyRequestRepository(RequestRepository):
             text=request.text.value,
             status=request.status.value,
             created_at=request.created_at,
-            updated_at=request.updated_at,
+            updated_at=request.updated_at
+            if isinstance(request, DirectRequest)
+            else request.created_at,
         )
-        if request.id is not None:
+        if isinstance(request, DirectRequest):
             orm.id = request.id.value
             orm = await self._session.merge(orm)
         else:
