@@ -20,19 +20,21 @@ class ChatManager:
         await websocket.accept()
         ws_id = id(websocket)
         print(f"[connect] {username} (ws:{ws_id}) が入室完了")
-        
+
         if username not in self.connections:
             self.connections[username] = set()
         self.connections[username].add(websocket)
-        
+
         active_users = list(self.connections.keys())
-        print(f"DEBUG: {username} connections: {len(self.connections[username])} | Total users: {active_users}")
+        print(
+            f"DEBUG: {username} connections: {len(self.connections[username])} | Total users: {active_users}"
+        )
 
     def disconnect(self, websocket: WebSocket, username: str | None = None) -> None:
         """指定された WebSocket 接続を管理リストから削除します。"""
         ws_id = id(websocket)
         actual_user = "unknown"
-        
+
         if username and username in self.connections:
             if websocket in self.connections[username]:
                 self.connections[username].discard(websocket)
@@ -47,8 +49,10 @@ class ChatManager:
                     if not ws_set:
                         del self.connections[user]
                     break
-        
-        print(f"[disconnect] {actual_user} (ws:{ws_id}) が退室 | 残りユーザー: {list(self.connections.keys())}")
+
+        print(
+            f"[disconnect] {actual_user} (ws:{ws_id}) が退室 | 残りユーザー: {list(self.connections.keys())}"
+        )
 
     async def send_to_user(self, username: str, payload: dict) -> None:
         """特定のユーザーにのみデータを送信します。

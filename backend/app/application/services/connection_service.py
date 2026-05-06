@@ -1,6 +1,6 @@
-"""WebSocket 接続のライフサイクルイベントを処理するアプリケーションサービス。"""
-
 from typing import Awaitable, Callable
+
+from ...domain.primitives.primitives import Username
 
 
 class ConnectionService:
@@ -19,10 +19,10 @@ class ConnectionService:
         """
         self._publish = publish
 
-    async def handle_user_join(self, username: str) -> None:
+    async def handle_user_join(self, username: Username) -> None:
         """ユーザーが入室した際の処理。"""
-        await self._publish({"type": "join", "username": username})
+        await self._publish({"type": "join", "username": username.value})
 
-    async def handle_user_leave(self, username: str) -> None:
+    async def handle_user_leave(self, username: Username) -> None:
         """ユーザーが退室した際の処理。"""
-        await self._publish({"type": "leave", "username": username})
+        await self._publish({"type": "leave", "username": username.value})
