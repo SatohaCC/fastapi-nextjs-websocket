@@ -1,6 +1,7 @@
 /**
- * 既存のリストに新しいアイテムをマージし、ID で重複排除＋ソートする。
+ * 既存のリストに新しいアイテムをマージし、ID で重複排除する。
  * WebSocket のリアルタイムメッセージと REST の同期データの統合に使用。
+ * (ソートは呼び出し側で seq 等を用いて行うことを想定)
  */
 export function mergeById<T extends { id: number }>(
   prev: T[],
@@ -10,7 +11,7 @@ export function mergeById<T extends { id: number }>(
   for (const item of incoming) {
     map.set(item.id, item);
   }
-  return Array.from(map.values()).sort((a, b) => a.id - b.id);
+  return Array.from(map.values());
 }
 
 /**

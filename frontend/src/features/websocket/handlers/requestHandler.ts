@@ -25,6 +25,7 @@ export function handleRequestUpdated(
             ...r,
             status: data.status,
             updated_at: data.updated_at,
+            seq: data.seq,
           }
         : r,
     ),
