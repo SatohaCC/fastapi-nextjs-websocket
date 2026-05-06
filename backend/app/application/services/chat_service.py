@@ -2,8 +2,8 @@
 
 from app.domain.primitives.feed import SequenceName
 
-from ...domain.entities.delivery_feed import DeliveryFeed
-from ...domain.entities.message import Message
+from ...domain.entities.delivery_feed import DraftDeliveryFeed
+from ...domain.entities.message import DraftMessage, Message
 from ...domain.factories.delivery_feed_factory import DeliveryFeedFactory
 from ...domain.primitives.primitives import EntityId, MessageText, Username
 from ..uow import UnitOfWork
@@ -18,16 +18,16 @@ class ChatService:
 
     async def send_message(self, username: Username, text: MessageText) -> Message:
         """メッセージを生成・保存し、パブリッシュします。"""
-        message = Message(username=username, text=text)
+        draft = DraftMessage(username=username, text=text)
         async with self._uow:
-            saved_message = await self._uow.messages.save(message)
+            saved_message = await self._uow.messages.save(draft)
 
             # Outbox への保存（採番と記録）
             event_type, payload = DeliveryFeedFactory.create_payload_from_message(
                 saved_message
             )
 
-            feed = DeliveryFeed(
+            feed = DraftDeliveryFeed(
                 sequence_name=SequenceName("chat_global"),
                 event_type=event_type,
                 payload=payload,
