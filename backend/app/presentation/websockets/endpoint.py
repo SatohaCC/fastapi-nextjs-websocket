@@ -32,6 +32,7 @@ from .manager import ChatManager, heartbeat
 from .schemas import (
     ChatMessage,
     ChatResponse,
+    ErrorResponse,
     PongMessage,
     RequestMessage,
     RequestResponse,
@@ -83,7 +84,9 @@ async def websocket_endpoint(
             req_history = await request_service.get_requests_for_user(username)
             for r in req_history:
                 await websocket.send_json(
-                    RequestResponse.from_domain(r, is_history=True).model_dump(mode="json")
+                    RequestResponse.from_domain(r, is_history=True).model_dump(
+                        mode="json"
+                    )
                 )
         else:
             request_feeds = await feed_service.get_feeds_after(
@@ -125,16 +128,22 @@ async def websocket_endpoint(
         while True:
             try:
                 data = await websocket.receive_json()
-                msg = TypeAdapter(WebSocketMessage).validate_python(data)
+                msg: WebSocketMessage = TypeAdapter(WebSocketMessage).validate_python(
+                    data
+                )
             except (json.JSONDecodeError, ValidationError) as e:
-                await websocket.send_json({"type": "error", "text": str(e)})
+                await websocket.send_json(
+                    ErrorResponse(text=str(e)).model_dump(mode="json")
+                )
                 continue
 
             try:
                 if isinstance(msg, PongMessage):
                     pong_event.set()
                 elif isinstance(msg, ChatMessage):
-                    await chat_service.send_message(username=username, text=msg.to_domain())
+                    await chat_service.send_message(
+                        username=username, text=msg.to_domain()
+                    )
                 elif isinstance(msg, RequestMessage):
                     recipient, text = msg.to_domain()
                     await request_service.send_request(
@@ -150,7 +159,9 @@ async def websocket_endpoint(
                         operator=username,
                     )
             except DomainException as e:
-                await websocket.send_json({"type": "error", "text": str(e)})
+                await websocket.send_json(
+                    ErrorResponse(text=str(e)).model_dump(mode="json")
+                )
 
     except (WebSocketDisconnect, RuntimeError):
         ws_manager.disconnect(websocket, username)
