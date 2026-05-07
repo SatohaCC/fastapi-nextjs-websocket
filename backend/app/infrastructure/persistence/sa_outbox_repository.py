@@ -13,6 +13,13 @@ from app.domain.primitives.feed import (
 from app.domain.primitives.primitives import Username
 
 from ...domain.entities.delivery_feed import DeliveryFeed, DraftDeliveryFeed
+from ...domain.entities.payload import (
+    FeedPayload,
+    MessagePayload,
+    RequestPayload,
+    RequestUpdatePayload,
+    SystemEventPayload,
+)
 from ...domain.repositories.delivery_feed_repository import DeliveryFeedRepository
 from .orm_models import DeliveryFeedORM, DeliverySequenceORM
 
@@ -43,7 +50,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
             sequence_name=feed.sequence_name.value,
             sequence_id=new_id,
             event_type=feed.event_type.value,
-            payload=feed.payload,
+            payload=feed.payload.to_dict(),
             status=feed.status.value,
             created_at=feed.created_at,
         )
@@ -133,11 +140,47 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         return result.rowcount
 
     def _to_domain(self, orm: DeliveryFeedORM) -> DeliveryFeed:
+        event_type = FeedEventType(orm.event_type)
+        payload_dict = orm.payload
+
+        # デシリアライズ
+        payload: FeedPayload
+        if event_type == FeedEventType.MESSAGE:
+            payload = MessagePayload(
+                id=payload_dict["id"],
+                username=payload_dict["username"],
+                text=payload_dict["text"],
+                created_at=payload_dict["created_at"],
+            )
+        elif event_type == FeedEventType.REQUEST:
+            payload = RequestPayload(
+                id=payload_dict["id"],
+                sender=payload_dict["sender"],
+                recipient=payload_dict["recipient"],
+                text=payload_dict["text"],
+                status=payload_dict["status"],
+                created_at=payload_dict["created_at"],
+                updated_at=payload_dict["updated_at"],
+            )
+        elif event_type == FeedEventType.REQUEST_UPDATED:
+            payload = RequestUpdatePayload(
+                id=payload_dict["id"],
+                status=payload_dict["status"],
+                sender=payload_dict["sender"],
+                recipient=payload_dict["recipient"],
+                updated_at=payload_dict["updated_at"],
+            )
+        else:
+            payload = SystemEventPayload(
+                type=payload_dict["type"],
+                username=payload_dict["username"],
+            )
+
         return DeliveryFeed(
             sequence_name=SequenceName(orm.sequence_name),
             sequence_id=SequenceId(orm.sequence_id),
-            event_type=FeedEventType(orm.event_type),
-            payload=orm.payload,
+            event_type=event_type,
+            payload=payload,
             status=FeedStatus(orm.status),
             created_at=orm.created_at,
         )
