@@ -55,7 +55,9 @@ class ChatManager:
                         del self.connections[user]
                     break
 
-        user_str = actual_user.value if isinstance(actual_user, Username) else actual_user
+        user_str = (
+            actual_user.value if isinstance(actual_user, Username) else actual_user
+        )
         print(
             f"[disconnect] {user_str} (ws:{ws_id}) が退室 | "
             f"残りユーザー: {[u.value for u in self.connections.keys()]}"

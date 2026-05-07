@@ -14,8 +14,7 @@ class JwtServiceImpl:
 
     def authenticate_user(self, username: Username, password: Password) -> bool:
         """ユーザー名とパスワードの照合を行います。"""
-        stored = settings.USERS.get(username)
-        return stored == password
+        return settings.USERS.get(username) == password
 
     def create_token(self, username: Username) -> AuthToken:
         """JWT トークンを生成して返します。"""
