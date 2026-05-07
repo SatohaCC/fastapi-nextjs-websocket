@@ -23,10 +23,10 @@ class DeliveryFeedFactory:
     ) -> tuple[FeedEventType, FeedPayload]:
         """Message エンティティから Payload と event_type を生成します。"""
         payload = MessagePayload(
-            id=message.id.value,
-            username=message.username.value,
-            text=message.text.value,
-            created_at=message.created_at.isoformat(),
+            id=message.id,
+            username=message.username,
+            text=message.text,
+            created_at=message.created_at,
         )
         return FeedEventType.MESSAGE, payload
 
@@ -36,13 +36,13 @@ class DeliveryFeedFactory:
     ) -> tuple[FeedEventType, FeedPayload]:
         """DirectRequest エンティティから Payload と event_type を生成します。"""
         payload = RequestPayload(
-            id=request.id.value,
-            sender=request.sender.value,
-            recipient=request.recipient.value,
-            text=request.text.value,
-            status=request.status.value,
-            created_at=request.created_at.isoformat(),
-            updated_at=request.updated_at.isoformat(),
+            id=request.id,
+            sender=request.sender,
+            recipient=request.recipient,
+            text=request.text,
+            status=request.status,
+            created_at=request.created_at,
+            updated_at=request.updated_at,
         )
         return FeedEventType.REQUEST, payload
 
@@ -54,11 +54,11 @@ class DeliveryFeedFactory:
         Payload と event_type を生成します。
         """
         payload = RequestUpdatePayload(
-            id=request.id.value,
-            status=request.status.value,
-            sender=request.sender.value,
-            recipient=request.recipient.value,
-            updated_at=request.updated_at.isoformat(),
+            id=request.id,
+            status=request.status,
+            sender=request.sender,
+            recipient=request.recipient,
+            updated_at=request.updated_at,
         )
         return FeedEventType.REQUEST_UPDATED, payload
 
@@ -68,7 +68,7 @@ class DeliveryFeedFactory:
     ) -> tuple[FeedEventType, FeedPayload]:
         """入退室などのシステムイベントから Payload を生成します。"""
         payload = SystemEventPayload(
-            type=event_type.value,
-            username=username.value,
+            type=event_type,
+            username=username,
         )
         return event_type, payload

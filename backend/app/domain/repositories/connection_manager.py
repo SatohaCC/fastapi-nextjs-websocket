@@ -2,6 +2,8 @@
 
 from typing import Any, Protocol
 
+from ...domain.primitives.primitives import Username
+
 
 class ConnectionManager(Protocol):
     """ユーザーへの接続管理とデータ配信を抽象化するインターフェース。
@@ -9,11 +11,11 @@ class ConnectionManager(Protocol):
     リアルタイムでクライアントに届けるべきあらゆるペイロードを扱います。
     """
 
-    async def send_to_user(self, username: str, payload: dict[str, Any]) -> None:
+    async def send_to_user(self, username: Username, payload: dict[str, Any]) -> None:
         """指定したユーザーに対して、リアルタイムでデータを送信します。
 
         Args:
-            username (str): 送信先のユーザー名。
+            username (Username): 送信先のユーザー名。
             payload (dict): 送信するデータ。
                 type フィールドによってクライアント側で処理が振り分けられます。
         """
