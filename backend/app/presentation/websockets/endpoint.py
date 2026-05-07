@@ -82,7 +82,7 @@ async def websocket_endpoint(
             )
             for feed in chat_feeds:
                 payload = {
-                    **feed.payload,
+                    **feed.payload.to_dict(),
                     "seq": feed.sequence_id.value if feed.sequence_id else None,
                     "sequence_name": feed.sequence_name.value,
                     "is_history": True,
@@ -109,7 +109,7 @@ async def websocket_endpoint(
             )
             for feed in request_feeds:
                 payload = {
-                    **feed.payload,
+                    **feed.payload.to_dict(),
                     "seq": feed.sequence_id.value if feed.sequence_id else None,
                     "sequence_name": feed.sequence_name.value,
                     "is_history": True,
