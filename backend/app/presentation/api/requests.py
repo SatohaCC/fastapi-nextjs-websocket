@@ -67,7 +67,5 @@ async def update_request_status(
     request_service: Annotated[RequestService, Depends(get_request_service)],
 ) -> dict:
     """ダイレクト・リクエストのステータスを更新します。"""
-    await request_service.update_status(
-        EntityId(request_id), payload.status, username
-    )
+    await request_service.update_status(EntityId(request_id), payload.status, username)
     return {"status": "ok"}

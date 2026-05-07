@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
-from typing import Any
 
 from app.domain.primitives.feed import (
     FeedEventType,
@@ -12,6 +11,8 @@ from app.domain.primitives.feed import (
     SequenceId,
     SequenceName,
 )
+
+from .payload import FeedPayload
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -24,7 +25,7 @@ class DraftDeliveryFeed:
 
     sequence_name: SequenceName
     event_type: FeedEventType
-    payload: dict[str, Any]
+    payload: FeedPayload
     status: FeedStatus = FeedStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
