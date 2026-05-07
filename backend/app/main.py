@@ -8,6 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from .application.services.routing_strategies import (
+    BroadcastStrategy,
+    DirectStrategy,
+)
 from .domain.exceptions import (
     DomainException,
     DomainValidationError,
@@ -15,6 +19,8 @@ from .domain.exceptions import (
     InvalidOperationException,
     UnauthorizedException,
 )
+from .domain.primitives.feed import FeedEventType
+from .domain.services.feed_routing import FeedRouter
 from .infrastructure.config import settings
 from .infrastructure.messaging.redis_subscriber import redis_subscriber
 from .infrastructure.messaging.relay_worker import relay_worker
@@ -36,15 +42,28 @@ async def lifespan(_: FastAPI):
         # delivery_sequences 初期レコード（冪等）
         await conn.execute(
             text(
-                "INSERT INTO delivery_sequences(name, last_id) VALUES('chat_global', 0), ('requests_global', 0) "
+                "INSERT INTO delivery_sequences"
+                "(name, last_id) "
+                "VALUES('chat_global', 0), "
+                "('requests_global', 0) "
                 "ON CONFLICT (name) DO NOTHING"
             )
         )
     print("Database tables initialized.")
 
+    # ルーティング戦略の組み立て
+    broadcast = BroadcastStrategy()
+    direct = DirectStrategy()
+    feed_router = FeedRouter()
+    feed_router.register(FeedEventType.MESSAGE, broadcast)
+    feed_router.register(FeedEventType.JOIN, broadcast)
+    feed_router.register(FeedEventType.LEAVE, broadcast)
+    feed_router.register(FeedEventType.REQUEST, direct)
+    feed_router.register(FeedEventType.REQUEST_UPDATED, direct)
+
     # DI 経由ではなく、ライフサイクル管理の文脈でシングルトンを取得
     manager = get_manager()
-    redis_sub_task = asyncio.create_task(redis_subscriber(manager))
+    redis_sub_task = asyncio.create_task(redis_subscriber(manager, feed_router))
     relay_task = asyncio.create_task(
         relay_worker(AsyncSessionLocal, settings.REDIS_URL)
     )

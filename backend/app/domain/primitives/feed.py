@@ -31,6 +31,8 @@ class FeedEventType(str, Enum):
     MESSAGE = "message"
     REQUEST = "request"
     REQUEST_UPDATED = "request_updated"
+    JOIN = "join"
+    LEAVE = "leave"
 
 
 class FeedStatus(str, Enum):
