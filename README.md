@@ -1,6 +1,7 @@
 # WebSocket Chat — Outbox + LISTEN/NOTIFY + DDD
 
-学習用リポジトリ：WebSocket のロスト対策と、PostgreSQL を核とした高信頼・低負荷なメッセージング設計を学ぶために作成。
+- 学習用リポジトリ：WebSocket のロスト対策と、PostgreSQL を核とした高信頼・低負荷なメッセージング設計を学ぶために作成。
+- 細かい学習過程はこっち  [my-1st-WebSocket-fastapi](https://github.com/SatohaCC/my-1st-WebSocket-fastapi)
 
 ## 1. 機能一覧
 本システムは、リアルタイム性が求められる以下の機能を備えています。

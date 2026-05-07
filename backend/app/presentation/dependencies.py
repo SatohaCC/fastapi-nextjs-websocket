@@ -6,6 +6,8 @@ from fastapi import Depends, HTTPException, Query, WebSocket, WebSocketException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..domain.primitives.primitives import Username
+
 from ..application.services.auth_service import AuthService
 from ..application.services.chat_service import ChatService
 from ..application.services.connection_service import ConnectionService
@@ -84,9 +86,6 @@ def get_feed_query_service(
 
 
 # --- Authentication Dependencies ---
-
-
-from ..domain.primitives.primitives import Username
 
 
 async def get_authenticated_user(

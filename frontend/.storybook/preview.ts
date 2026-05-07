@@ -1,11 +1,11 @@
-import type {Preview} from "@storybook/nextjs-vite";
+import type { Preview } from "@storybook/nextjs-vite";
 
 import "../src/app/globals.css";
 
 const preview: Preview = {
   parameters: {
     docs: {
-      backgrounds:"000000"
+      backgrounds: "000000",
     },
     backgrounds: {
       default: "dark",
