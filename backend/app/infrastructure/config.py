@@ -1,3 +1,5 @@
+"""アプリケーション設定モジュール。"""
+
 from typing import Annotated
 
 from pydantic import BeforeValidator
@@ -37,9 +39,9 @@ class Settings(BaseSettings):
         Annotated[Username, BeforeValidator(Username)],
         Annotated[Password, BeforeValidator(Password)],
     ] = {
-        "alice": "password1",
-        "bob": "password2",
-        "charlie": "password3",
+        Username("alice"): Password("password1"),
+        Username("bob"): Password("password2"),
+        Username("charlie"): Password("password3"),
     }
 
     model_config = SettingsConfigDict(extra="ignore")

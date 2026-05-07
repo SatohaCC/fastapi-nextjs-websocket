@@ -145,7 +145,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
             DeliveryFeedORM.created_at < threshold,
         )
         result = await self._session.execute(stmt)
-        return result.rowcount
+        return result.rowcount  # type: ignore[attr-defined]
 
     def _to_domain(self, orm: DeliveryFeedORM) -> DeliveryFeed:
         event_type = FeedEventType(orm.event_type)

@@ -1,5 +1,6 @@
 {
     "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+    "pylint.enabled": false,
     "mypy-type-checker.importStrategy": "fromEnvironment",
     "mypy-type-checker.cwd": "${workspaceFolder}/backend",
     "editor.defaultFormatter": "biomejs.biome",
