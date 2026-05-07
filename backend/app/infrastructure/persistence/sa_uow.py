@@ -38,6 +38,6 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """コンテキストマネージャーの終了。"""
-        if exc_type:
-            await self.rollback()
-        # セッションのクローズは Depends(get_db) が行うため、ここでは行わない
+        # 例外の有無に関わらず、未コミットの変更があればロールバックする。
+        # (commit() が呼ばれた後であれば SQLAlchemy 側で適切に処理される)
+        await self.rollback()

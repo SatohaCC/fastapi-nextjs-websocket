@@ -1,8 +1,5 @@
 """アプリケーション設定モジュール。"""
 
-from typing import Annotated
-
-from pydantic import BeforeValidator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ..domain.primitives.primitives import Password, Username
@@ -35,10 +32,7 @@ class Settings(BaseSettings):
 
     # 簡易ユーザーマスター（デモ用）
     # key: username, value: password
-    USERS: dict[
-        Annotated[Username, BeforeValidator(Username)],
-        Annotated[Password, BeforeValidator(Password)],
-    ] = {
+    USERS: dict[Username, Password] = {
         Username("alice"): Password("password1"),
         Username("bob"): Password("password2"),
         Username("charlie"): Password("password3"),
