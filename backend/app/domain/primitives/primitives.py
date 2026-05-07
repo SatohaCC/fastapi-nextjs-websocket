@@ -53,3 +53,14 @@ class AuthToken(DomainPrimitive[str]):
         """バリデーションルールを適用します。"""
         if not self.value or not self.value.strip():
             raise DomainValidationError("Token cannot be empty")
+
+
+class Password(DomainPrimitive[str]):
+    """パスワードを表すドメインプリミティブ。"""
+
+    def validate(self):
+        """バリデーションルールを適用します。"""
+        if not self.value:
+            raise DomainValidationError("Password cannot be empty")
+        if len(self.value) < 4:
+            raise DomainValidationError("Password is too short")

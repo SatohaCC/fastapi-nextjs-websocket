@@ -20,6 +20,17 @@ class StatusUpdatePayload(BaseModel):
     status: RequestStatus
 
 
+class SendRequestPayload(BaseModel):
+    """リクエスト送信用のリクエストボディ。"""
+
+    to: str
+    text: str
+
+    def to_domain(self) -> tuple[Username, RequestText]:
+        """to / text フィールドをドメインプリミティブへ変換します。"""
+        return Username(self.to), RequestText(self.text)
+
+
 @router.get("/requests")
 async def get_requests_since(
     after_id: Annotated[int, Query()],
@@ -31,16 +42,7 @@ async def get_requests_since(
     """
     requests = await request_service.get_requests_after(username, EntityId(after_id))
     return [
-        RequestResponse(
-            id=r.id.value,
-            sender=r.sender.value,
-            recipient=r.recipient.value,
-            text=r.text.value,
-            status=r.status,
-            created_at=r.created_at,
-            updated_at=r.updated_at,
-            is_history=True,
-        )
+        RequestResponse.from_domain(r, is_history=True)
         for r in requests
         if r.id is not None
     ]
@@ -48,14 +50,13 @@ async def get_requests_since(
 
 @router.post("/requests")
 async def send_request(
-    payload: dict,
+    payload: SendRequestPayload,
     username: Annotated[Username, Depends(get_authenticated_user)],
     request_service: Annotated[RequestService, Depends(get_request_service)],
 ) -> dict:
     """ダイレクト・リクエストを新規送信します。"""
-    await request_service.send_request(
-        username, Username(payload["to"]), RequestText(payload["text"])
-    )
+    recipient, text = payload.to_domain()
+    await request_service.send_request(username, recipient, text)
     return {"status": "ok"}
 
 

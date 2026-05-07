@@ -1,12 +1,13 @@
 """統合リカバリ API エンドポイント。"""
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from ...application.services.feed_query_service import FeedQueryService
+from ...domain.entities.delivery_feed import DeliveryFeed
 from ...domain.primitives.feed import SequenceId, SequenceName
 from ...domain.primitives.primitives import Username
 from ..dependencies import get_authenticated_user, get_feed_query_service
@@ -20,8 +21,19 @@ class FeedResponse(BaseModel):
     sequence_name: str
     sequence_id: int
     event_type: str
-    payload: dict
+    payload: dict[str, Any]
     created_at: datetime
+
+    @classmethod
+    def from_domain(cls, feed: DeliveryFeed) -> "FeedResponse":
+        """DeliveryFeed エンティティからレスポンス DTO を生成します。"""
+        return cls(
+            sequence_name=feed.sequence_name.value,
+            sequence_id=feed.sequence_id.value,
+            event_type=feed.event_type.value,
+            payload=feed.payload.to_dict(),
+            created_at=feed.created_at,
+        )
 
 
 @router.get("/api/feeds", response_model=list[FeedResponse])
@@ -51,13 +63,7 @@ async def get_feeds_since(
         feeds.extend(request_feeds)
 
     return [
-        FeedResponse(
-            sequence_name=f.sequence_name.value,
-            sequence_id=f.sequence_id.value,
-            event_type=f.event_type.value,
-            payload=f.payload.to_dict(),
-            created_at=f.created_at,
-        )
+        FeedResponse.from_domain(f)
         for f in feeds
         if f.sequence_name is not None and f.sequence_id is not None
     ]
