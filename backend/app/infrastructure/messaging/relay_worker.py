@@ -52,7 +52,8 @@ async def relay_worker(session_factory: async_sessionmaker, redis_url: str) -> N
     try:
         while True:
             # ループの最初でイベントをクリアしておく。
-            # これにより、処理中に発生した通知を確実にとらえられる（次の wait で即座に抜ける）。
+            # これにより、処理中に発生した通知を確実にとらえられる
+            # （次の wait で即座に抜ける）。
             wakeup_event.clear()
 
             async with session_factory() as session:
@@ -64,8 +65,10 @@ async def relay_worker(session_factory: async_sessionmaker, redis_url: str) -> N
                     try:
                         for feed in feeds:
                             payload_to_publish = {
-                                **feed.payload,
-                                "seq": feed.sequence_id.value if feed.sequence_id else None,
+                                **feed.payload.to_dict(),
+                                "seq": feed.sequence_id.value
+                                if feed.sequence_id
+                                else None,
                                 "sequence_name": feed.sequence_name.value,
                             }
                             await redis.publish(
@@ -81,7 +84,8 @@ async def relay_worker(session_factory: async_sessionmaker, redis_url: str) -> N
                         await repo.mark_processed(feed_keys)
                         await session.commit()
 
-                        # 処理した場合は、まだ未処理のフィードがあるかもしれないので即座に次へループ
+                        # 処理した場合は、まだ未処理のフィードがあるかもしれないので
+                        # 即座に次へループ
                         continue
                     except Exception:
                         logger.exception(

@@ -55,7 +55,7 @@ async def get_feeds_since(
             sequence_name=f.sequence_name.value,
             sequence_id=f.sequence_id.value,
             event_type=f.event_type.value,
-            payload=f.payload,
+            payload=f.payload.to_dict(),
             created_at=f.created_at,
         )
         for f in feeds

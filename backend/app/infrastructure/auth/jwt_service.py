@@ -22,9 +22,7 @@ class JwtServiceImpl:
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         to_encode = {"sub": username.value, "exp": expire}
-        return jwt.encode(
-            to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-        )
+        return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
     def verify_token(self, token: str) -> Username | None:
         """JWT トークンを検証し、ユーザー名を返します。"""
