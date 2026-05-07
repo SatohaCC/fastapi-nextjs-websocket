@@ -50,6 +50,93 @@
 
 ---
 
+## 6. アーキテクチャ設計：Pydantic とドメインモデルの分離
+
+本プロジェクトでは、**Pydantic を HTTP 境界層（入出力 DTO）に限定**し、ドメイン層を Pydantic 非依存に保つ設計を採用しています。
+
+
+### 設計方針
+
+```
+HTTP リクエスト (raw JSON: {"username": "alice"})
+    ↓ Pydantic が型・形式を検証
+入力 DTO（Pydantic BaseModel — raw Python 型: str, int）
+    ↓ to_domain() — 明示的な変換（ドメインルール検証）
+Domain Primitive（DomainPrimitive[T], frozen dataclass）
+    ↓ Application / Infrastructure 層で処理
+出力 DTO（Pydantic BaseModel — raw Python 型: str, int）
+    ↑ from_domain() — 明示的な変換
+HTTP レスポンス (raw JSON)
+```
+
+### ドメインプリミティブ
+
+`DomainPrimitive[T]` は frozen dataclass として定義され、生成時に必ずビジネスルールを検証します。
+
+```python
+# domain/primitives/base.py
+@dataclass(frozen=True)
+class DomainPrimitive(Generic[T]):
+    value: T
+    def __post_init__(self):
+        self.validate()  # 生成時に不変条件を保証
+
+# domain/primitives/primitives.py
+class Username(DomainPrimitive[str]):
+    def validate(self):
+        if not self.value or len(self.value) > 50:
+            raise DomainValidationError("...")
+```
+
+Pydantic への依存は一切なく、Application / Infrastructure 層でもそのまま使用できます。
+
+### Presentation 層: DTO パターン
+
+**入力 DTO** は raw Python 型でフィールドを定義し、`to_domain()` で Domain Primitive へ変換します。
+
+```python
+# presentation/api/auth.py
+class LoginRequest(BaseModel):
+    username: str   # raw 型
+    password: str   # raw 型
+
+    def to_domain(self) -> tuple[Username, Password]:
+        return Username(self.username), Password(self.password)
+```
+
+**出力 DTO** は `from_domain()` クラスメソッドで Domain Primitive から生成します。
+
+```python
+class LoginResponse(BaseModel):
+    access_token: str  # raw 型
+    token_type: str
+
+    @classmethod
+    def from_domain(cls, token: AuthToken) -> "LoginResponse":
+        return cls(access_token=token.value, token_type="bearer")
+```
+
+**エンドポイント**では `to_domain()` / `from_domain()` を明示的に呼び出します。
+
+```python
+@router.post("/token")
+async def login(body: LoginRequest, ...) -> LoginResponse:
+    username, password = body.to_domain()           # 明示変換
+    token = auth_service.login(username, password)  # Domain 層へ
+    return LoginResponse.from_domain(token)         # 明示変換
+```
+
+### この設計の利点
+
+| 観点 | 効果 |
+|------|------|
+| ドメイン層の独立性 | Pydantic に依存しないため、API フレームワークを変更しても Domain は無変更 |
+| 変換の可視性 | `to_domain()` / `from_domain()` で変換箇所が一目瞭然 |
+| Always-Valid | Domain Primitive は生成時に必ず検証済み。無効な状態のオブジェクトは存在しない |
+| テスト容易性 | Domain ロジックを Pydantic なしで単体テスト可能 |
+
+---
+
 ## 開発環境の起動
 
 本プロジェクトでは、DB などのインフラを Docker で、アプリケーション（Frontend/Backend）をローカルで動かす構成を推奨します。
