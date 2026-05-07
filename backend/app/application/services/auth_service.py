@@ -1,4 +1,4 @@
-"""認証ユースケースを実現するアプリケーションサービス。"""
+"""ユーザー認証とトークン発行を管理するアプリケーションサービス。"""
 
 from app.domain.primitives.primitives import AuthToken, Password, Username
 

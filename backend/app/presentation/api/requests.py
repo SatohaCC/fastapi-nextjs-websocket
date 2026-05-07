@@ -27,7 +27,7 @@ class SendRequestPayload(BaseModel):
     text: str
 
     def to_domain(self) -> tuple[Username, RequestText]:
-        """to / text フィールドをドメインプリミティブへ変換します。"""
+        """To / text フィールドをドメインプリミティブへ変換します。"""
         return Username(self.to), RequestText(self.text)
 
 

@@ -19,7 +19,7 @@ class SendMessagePayload(BaseModel):
     text: str
 
     def to_domain(self) -> MessageText:
-        """text フィールドをドメインプリミティブへ変換します。"""
+        """Text フィールドをドメインプリミティブへ変換します。"""
         return MessageText(self.text)
 
 

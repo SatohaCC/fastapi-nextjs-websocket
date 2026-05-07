@@ -1,16 +1,17 @@
 """WebSocket で使用するメッセージスキーマの定義（クライアント↔サーバー）。"""
 
 from datetime import datetime
-from typing import Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union, cast
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-from ...domain.entities.direct_request import DirectRequest
-from ...domain.entities.message import Message
-from ...domain.primitives.feed import SequenceId
+from ...domain.entities.direct_request import RequestStatus
 from ...domain.primitives.primitives import EntityId, MessageText, RequestText, Username
-from ...domain.primitives.request_status import RequestStatus
 
+if TYPE_CHECKING:
+    from ...domain.entities.direct_request import DirectRequest
+    from ...domain.entities.message import Message
+    from ...domain.entities.payload import RequestUpdatePayload, SystemEventPayload
 
 # --- Client -> Server Messages (Requests) ---
 
@@ -28,7 +29,7 @@ class ChatMessage(BaseModel):
     text: str
 
     def to_domain(self) -> MessageText:
-        """text フィールドをドメインプリミティブへ変換します。"""
+        """Text フィールドをドメインプリミティブへ変換します。"""
         return MessageText(self.text)
 
 
@@ -40,7 +41,7 @@ class RequestMessage(BaseModel):
     text: str
 
     def to_domain(self) -> tuple[Username, RequestText]:
-        """to / text フィールドをドメインプリミティブへ変換します。"""
+        """To / text フィールドをドメインプリミティブへ変換します。"""
         return Username(self.to), RequestText(self.text)
 
 
@@ -52,7 +53,7 @@ class StatusUpdateMessage(BaseModel):
     status: RequestStatus
 
     def to_domain(self) -> tuple[EntityId, RequestStatus]:
-        """request_id フィールドをドメインプリミティブへ変換します。"""
+        """request_id / status をドメインプリミティブへ変換します。"""
         return EntityId(self.request_id), self.status
 
 
@@ -62,7 +63,13 @@ WebSocketMessage = Union[PongMessage, ChatMessage, RequestMessage, StatusUpdateM
 # --- Server -> Client Messages (Responses) ---
 
 
-class ChatResponse(BaseModel):
+class BaseResponse(BaseModel):
+    """サーバーからクライアントへ送信するレスポンスの基底クラス。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ChatResponse(BaseResponse):
     """チャットメッセージのレスポンス。"""
 
     type: Literal["message"] = "message"
@@ -75,23 +82,19 @@ class ChatResponse(BaseModel):
 
     @classmethod
     def from_domain(
-        cls,
-        msg: Message,
-        is_history: bool = False,
-        seq: Optional[SequenceId] = None,
+        cls, message: "Message", is_history: bool = False
     ) -> "ChatResponse":
-        """Message エンティティからレスポンス DTO を生成します。"""
+        """ドメインエンティティからレスポンスモデルを生成します。"""
         return cls(
-            id=msg.id.value,
-            seq=seq.value if seq is not None else None,
-            username=msg.username.value,
-            text=msg.text.value,
-            created_at=msg.created_at,
+            id=message.id.value,
+            username=message.username.value,
+            text=message.text.value,
+            created_at=message.created_at,
             is_history=is_history,
         )
 
 
-class RequestResponse(BaseModel):
+class RequestResponse(BaseResponse):
     """ダイレクトリクエストの詳細レスポンス。"""
 
     type: Literal["request"] = "request"
@@ -107,26 +110,22 @@ class RequestResponse(BaseModel):
 
     @classmethod
     def from_domain(
-        cls,
-        req: DirectRequest,
-        is_history: bool = False,
-        seq: Optional[SequenceId] = None,
+        cls, request: "DirectRequest", is_history: bool = False
     ) -> "RequestResponse":
-        """DirectRequest エンティティからレスポンス DTO を生成します。"""
+        """ドメインエンティティからレスポンスモデルを生成します。"""
         return cls(
-            id=req.id.value,
-            seq=seq.value if seq is not None else None,
-            sender=req.sender.value,
-            recipient=req.recipient.value,
-            text=req.text.value,
-            status=req.status,
-            created_at=req.created_at,
-            updated_at=req.updated_at,
+            id=request.id.value,
+            sender=request.sender.value,
+            recipient=request.recipient.value,
+            text=request.text.value,
+            status=request.status,
+            created_at=request.created_at,
+            updated_at=request.updated_at,
             is_history=is_history,
         )
 
 
-class RequestUpdateResponse(BaseModel):
+class RequestUpdateResponse(BaseResponse):
     """リクエストステータスが更新された際の通知レスポンス。"""
 
     type: Literal["request_updated"] = "request_updated"
@@ -138,19 +137,14 @@ class RequestUpdateResponse(BaseModel):
     updated_at: datetime
 
     @classmethod
-    def from_domain(
-        cls,
-        req: DirectRequest,
-        seq: Optional[SequenceId] = None,
-    ) -> "RequestUpdateResponse":
-        """DirectRequest エンティティからレスポンス DTO を生成します。"""
+    def from_domain(cls, payload: "RequestUpdatePayload") -> "RequestUpdateResponse":
+        """RequestUpdatePayload からレスポンスモデルを生成します。"""
         return cls(
-            id=req.id.value,
-            seq=seq.value if seq is not None else None,
-            status=req.status,
-            sender=req.sender.value,
-            recipient=req.recipient.value,
-            updated_at=req.updated_at,
+            id=payload.id.value,
+            status=payload.status,
+            sender=payload.sender.value,
+            recipient=payload.recipient.value,
+            updated_at=payload.updated_at,
         )
 
 
@@ -161,11 +155,12 @@ class JoinLeaveResponse(BaseModel):
     username: str
 
     @classmethod
-    def from_domain(
-        cls, type: Literal["join", "leave"], username: Username
-    ) -> "JoinLeaveResponse":
-        """Username ドメインプリミティブからレスポンス DTO を生成します。"""
-        return cls(type=type, username=username.value)
+    def from_domain(cls, payload: "SystemEventPayload") -> "JoinLeaveResponse":
+        """SystemEventPayload からレスポンスモデルを生成します。"""
+        return cls(
+            type=cast(Literal["join", "leave"], payload.type.value),
+            username=payload.username.value,
+        )
 
 
 class ErrorResponse(BaseModel):
