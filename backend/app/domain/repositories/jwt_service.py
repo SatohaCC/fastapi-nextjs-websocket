@@ -1,12 +1,14 @@
+"""認証プロバイダーを抽象化するドメインリポジトリインターフェース。"""
+
 from typing import Protocol
 
-from app.domain.primitives.primitives import AuthToken, Username
+from app.domain.primitives.primitives import AuthToken, Password, Username
 
 
 class JwtService(Protocol):
     """JWT 認証操作を抽象化するインターフェース。"""
 
-    def authenticate_user(self, username: Username, password: str) -> bool:
+    def authenticate_user(self, username: Username, password: Password) -> bool:
         """ユーザー名とパスワードの照合を行います。"""
         ...
 

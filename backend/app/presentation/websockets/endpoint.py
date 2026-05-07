@@ -19,12 +19,7 @@ from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.request_service import RequestService
 from ...domain.exceptions import DomainException
 from ...domain.primitives.feed import SequenceId, SequenceName
-from ...domain.primitives.primitives import (
-    EntityId,
-    MessageText,
-    RequestText,
-    Username,
-)
+from ...domain.primitives.primitives import Username
 from ..dependencies import (
     get_chat_manager,
     get_chat_service,
@@ -68,14 +63,9 @@ async def websocket_endpoint(
         if last_chat_id is None:
             history = await chat_service.get_recent_messages()
             for h in history:
-                resp = ChatResponse(
-                    id=h.id.value,
-                    username=h.username.value,
-                    text=h.text.value,
-                    created_at=h.created_at,
-                    is_history=True,
+                await websocket.send_json(
+                    ChatResponse.from_domain(h, is_history=True).model_dump(mode="json")
                 )
-                await websocket.send_json(resp.model_dump(mode="json"))
         else:
             chat_feeds = await feed_service.get_feeds_after(
                 SequenceName("chat_global"), SequenceId(last_chat_id), username
@@ -92,17 +82,9 @@ async def websocket_endpoint(
         if last_request_id is None:
             req_history = await request_service.get_requests_for_user(username)
             for r in req_history:
-                resp_req = RequestResponse(
-                    id=r.id.value,
-                    sender=r.sender.value,
-                    recipient=r.recipient.value,
-                    text=r.text.value,
-                    status=r.status,
-                    created_at=r.created_at,
-                    updated_at=r.updated_at,
-                    is_history=True,
+                await websocket.send_json(
+                    RequestResponse.from_domain(r, is_history=True).model_dump(mode="json")
                 )
-                await websocket.send_json(resp_req.model_dump(mode="json"))
         else:
             request_feeds = await feed_service.get_feeds_after(
                 SequenceName("requests_global"), SequenceId(last_request_id), username
@@ -152,19 +134,19 @@ async def websocket_endpoint(
                 if isinstance(msg, PongMessage):
                     pong_event.set()
                 elif isinstance(msg, ChatMessage):
-                    await chat_service.send_message(
-                        username=username, text=MessageText(msg.text)
-                    )
+                    await chat_service.send_message(username=username, text=msg.to_domain())
                 elif isinstance(msg, RequestMessage):
+                    recipient, text = msg.to_domain()
                     await request_service.send_request(
                         sender=username,
-                        recipient=Username(msg.to),
-                        text=RequestText(msg.text),
+                        recipient=recipient,
+                        text=text,
                     )
                 elif isinstance(msg, StatusUpdateMessage):
+                    request_id, new_status = msg.to_domain()
                     await request_service.update_status(
-                        request_id=EntityId(msg.request_id),
-                        new_status=msg.status,
+                        request_id=request_id,
+                        new_status=new_status,
                         operator=username,
                     )
             except DomainException as e:

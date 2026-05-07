@@ -13,24 +13,23 @@ class ChatManager:
 
     def __init__(self) -> None:
         """ChatManager を初期化します。"""
-        # ユーザー名をキー、そのユーザーの接続（複数可）のセットを値として保持
-        self.connections: dict[str, set[WebSocket]] = {}
+        # ユーザーをキー、そのユーザーの接続（複数可）のセットを値として保持
+        self.connections: dict[Username, set[WebSocket]] = {}
 
     async def connect(self, username: Username, websocket: WebSocket) -> None:
         """新しい WebSocket 接続を受け入れ、管理リストに追加します。"""
         await websocket.accept()
         ws_id = id(websocket)
-        username_str = username.value
-        print(f"[connect] {username_str} (ws:{ws_id}) が入室完了")
+        print(f"[connect] {username.value} (ws:{ws_id}) が入室完了")
 
-        if username_str not in self.connections:
-            self.connections[username_str] = set()
-        self.connections[username_str].add(websocket)
+        if username not in self.connections:
+            self.connections[username] = set()
+        self.connections[username].add(websocket)
 
-        active_users = list(self.connections.keys())
+        active_users = [u.value for u in self.connections.keys()]
         print(
-            f"DEBUG: {username_str} connections: "
-            f"{len(self.connections[username_str])} | "
+            f"DEBUG: {username.value} connections: "
+            f"{len(self.connections[username])} | "
             f"Total users: {active_users}"
         )
 
@@ -39,15 +38,14 @@ class ChatManager:
     ) -> None:
         """指定された WebSocket 接続を管理リストから削除します。"""
         ws_id = id(websocket)
-        actual_user = "unknown"
-        username_str = username.value if username else None
+        actual_user: Username | str = "unknown"
 
-        if username_str and username_str in self.connections:
-            if websocket in self.connections[username_str]:
-                self.connections[username_str].discard(websocket)
-                actual_user = username_str
-            if not self.connections[username_str]:
-                del self.connections[username_str]
+        if username and username in self.connections:
+            if websocket in self.connections[username]:
+                self.connections[username].discard(websocket)
+                actual_user = username
+            if not self.connections[username]:
+                del self.connections[username]
         else:
             for user, ws_set in list(self.connections.items()):
                 if websocket in ws_set:
@@ -57,20 +55,20 @@ class ChatManager:
                         del self.connections[user]
                     break
 
+        user_str = actual_user.value if isinstance(actual_user, Username) else actual_user
         print(
-            f"[disconnect] {actual_user} (ws:{ws_id}) が退室 | "
-            f"残りユーザー: {list(self.connections.keys())}"
+            f"[disconnect] {user_str} (ws:{ws_id}) が退室 | "
+            f"残りユーザー: {[u.value for u in self.connections.keys()]}"
         )
 
     async def send_to_user(self, username: Username, payload: dict) -> None:
         """特定のユーザーにのみデータを送信します。
         ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
         """
-        username_str = username.value
-        if username_str not in self.connections:
+        if username not in self.connections:
             return
 
-        ws_set = self.connections[username_str]
+        ws_set = self.connections[username]
 
         # 非同期送信タスクのリストを作成
         tasks = []
@@ -83,9 +81,9 @@ class ChatManager:
     async def broadcast(self, payload: dict) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
         tasks = []
-        for username_str, ws_set in list(self.connections.items()):
+        for user, ws_set in list(self.connections.items()):
             for ws in ws_set:
-                tasks.append(self._send_safe(ws, payload, Username(username_str)))
+                tasks.append(self._send_safe(ws, payload, user))
 
         if tasks:
             await asyncio.gather(*tasks)

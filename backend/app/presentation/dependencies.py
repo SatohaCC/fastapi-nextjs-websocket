@@ -12,6 +12,7 @@ from ..application.services.connection_service import ConnectionService
 from ..application.services.feed_query_service import FeedQueryService
 from ..application.services.request_service import RequestService
 from ..application.uow import UnitOfWork
+from ..domain.exceptions import DomainValidationError
 from ..domain.primitives.primitives import AuthToken, Username
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
 from ..infrastructure.config import settings
@@ -106,7 +107,7 @@ async def get_authenticated_user(
 async def get_ws_authenticated_user(
     websocket: WebSocket,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    token: str = Query(...),
+    token: Annotated[str, Query(...)],
 ) -> Username:
     """WebSocket 用の認証依存関係"""
     # 1. Origin の検証
@@ -115,7 +116,13 @@ async def get_ws_authenticated_user(
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     # 2. トークンの検証
-    username = auth_service.get_user_from_token(AuthToken(token))
+    try:
+        auth_token = AuthToken(token)
+    except DomainValidationError:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token format"
+        )
+    username = auth_service.get_user_from_token(auth_token)
     if not username:
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired token"
