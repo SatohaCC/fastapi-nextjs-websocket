@@ -14,7 +14,6 @@ from ..application.services.request_service import RequestService
 from ..application.uow import UnitOfWork
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
 from ..infrastructure.config import settings
-from ..infrastructure.messaging.redis_publisher import event_publisher
 from ..infrastructure.persistence.sa_message_repository import (
     SqlAlchemyMessageRepository,
 )
@@ -70,9 +69,11 @@ def get_request_service(
     return RequestService(uow)
 
 
-def get_connection_service() -> ConnectionService:
+def get_connection_service(
+    uow: Annotated[UnitOfWork, Depends(get_uow)],
+) -> ConnectionService:
     """ConnectionService の取得"""
-    return ConnectionService(event_publisher.publish)
+    return ConnectionService(uow)
 
 
 def get_feed_query_service(
