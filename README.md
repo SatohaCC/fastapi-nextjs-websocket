@@ -152,8 +152,8 @@ docker-compose up -d postgres redis pgadmin
 `backend` ディレクトリでライブラリをインストールし、サーバーを起動します。
 ```bash
 cd backend
-poetry install
-poetry run fastapi dev app/main.py
+uv sync
+uv run fastapi dev app/main.py
 ```
 - **API Docs**: `http://localhost:8000/docs`
 
@@ -221,7 +221,7 @@ npm run format  # 修正
 #### バックエンド (Ruff, MyPy)
 ```bash
 cd backend
-poetry run ruff check .
-poetry run ruff format .
-poetry run mypy .
+uv run ruff check .
+uv run ruff format .
+uv run mypy .
 ```
