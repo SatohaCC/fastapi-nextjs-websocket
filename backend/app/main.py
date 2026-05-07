@@ -45,7 +45,8 @@ async def lifespan(_: FastAPI):
                 "INSERT INTO delivery_sequences"
                 "(name, last_id) "
                 "VALUES('chat_global', 0), "
-                "('requests_global', 0) "
+                "('requests_global', 0), "
+                "('system_global', 0) "
                 "ON CONFLICT (name) DO NOTHING"
             )
         )
