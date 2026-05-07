@@ -22,7 +22,6 @@ export function WorkspaceContainer() {
     error,
     heartbeatStatus,
     syncStatus,
-    connect,
     disconnect,
     sendChat,
     sendRequest,
