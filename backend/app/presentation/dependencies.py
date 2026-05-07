@@ -6,14 +6,13 @@ from fastapi import Depends, HTTPException, Query, WebSocket, WebSocketException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..domain.primitives.primitives import Username
-
 from ..application.services.auth_service import AuthService
 from ..application.services.chat_service import ChatService
 from ..application.services.connection_service import ConnectionService
 from ..application.services.feed_query_service import FeedQueryService
 from ..application.services.request_service import RequestService
 from ..application.uow import UnitOfWork
+from ..domain.primitives.primitives import AuthToken, Username
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
 from ..infrastructure.config import settings
 from ..infrastructure.persistence.sa_message_repository import (
@@ -94,7 +93,7 @@ async def get_authenticated_user(
 ) -> Username:
     """REST API 用の認証依存関係"""
     token = credentials.credentials
-    username = auth_service.get_user_from_token(token)
+    username = auth_service.get_user_from_token(AuthToken(token))
     if not username:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,7 +115,7 @@ async def get_ws_authenticated_user(
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     # 2. トークンの検証
-    username = auth_service.get_user_from_token(token)
+    username = auth_service.get_user_from_token(AuthToken(token))
     if not username:
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired token"

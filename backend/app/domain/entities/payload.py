@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from ..primitives.feed import FeedEventType
+from ..primitives.primitives import EntityId, MessageText, RequestText, Username
+from ..primitives.request_status import RequestStatus
 
 
 @dataclass(frozen=True)
@@ -29,16 +32,19 @@ class FeedPayload(ABC):
 class MessagePayload(FeedPayload):
     """チャットメッセージのペイロード。"""
 
-    id: int
-    username: str
-    text: str
-    created_at: str  # ISO format string
+    id: EntityId
+    username: Username
+    text: MessageText
+    created_at: datetime
 
     def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換します。"""
         return {
             "type": self.event_type.value,
-            **asdict(self),
+            "id": self.id.value,
+            "username": self.username.value,
+            "text": self.text.value,
+            "created_at": self.created_at.isoformat(),
         }
 
     @property
@@ -51,19 +57,25 @@ class MessagePayload(FeedPayload):
 class RequestPayload(FeedPayload):
     """ダイレクトリクエスト作成時のペイロード。"""
 
-    id: int
-    sender: str
-    recipient: str
-    text: str
-    status: str
-    created_at: str
-    updated_at: str
+    id: EntityId
+    sender: Username
+    recipient: Username
+    text: RequestText
+    status: RequestStatus
+    created_at: datetime
+    updated_at: datetime
 
     def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換します。"""
         return {
             "type": self.event_type.value,
-            **asdict(self),
+            "id": self.id.value,
+            "sender": self.sender.value,
+            "recipient": self.recipient.value,
+            "text": self.text.value,
+            "status": self.status.value,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
         }
 
     @property
@@ -76,17 +88,21 @@ class RequestPayload(FeedPayload):
 class RequestUpdatePayload(FeedPayload):
     """ダイレクトリクエスト更新時のペイロード。"""
 
-    id: int
-    status: str
-    sender: str
-    recipient: str
-    updated_at: str
+    id: EntityId
+    status: RequestStatus
+    sender: Username
+    recipient: Username
+    updated_at: datetime
 
     def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換します。"""
         return {
             "type": self.event_type.value,
-            **asdict(self),
+            "id": self.id.value,
+            "status": self.status.value,
+            "sender": self.sender.value,
+            "recipient": self.recipient.value,
+            "updated_at": self.updated_at.isoformat(),
         }
 
     @property
@@ -99,14 +115,17 @@ class RequestUpdatePayload(FeedPayload):
 class SystemEventPayload(FeedPayload):
     """入退室などのシステムイベントのペイロード。"""
 
-    type: str  # "join" or "leave"
-    username: str
+    type: FeedEventType
+    username: Username
 
     def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換します。"""
-        return asdict(self)
+        return {
+            "type": self.type.value,
+            "username": self.username.value,
+        }
 
     @property
     def event_type(self) -> FeedEventType:
         """イベントタイプを返します。"""
-        return FeedEventType(self.type)
+        return self.type

@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from ...domain.primitives.primitives import Username
 from ...domain.repositories.connection_manager import ConnectionManager
 
 
@@ -33,10 +34,10 @@ class DirectStrategy:
         connection_manager: ConnectionManager,
     ) -> None:
         """Sender と recipient にのみ送信します。"""
-        sender = payload.get("sender")
-        recipient = payload.get("recipient")
+        sender_str = payload.get("sender")
+        recipient_str = payload.get("recipient")
 
-        if sender:
-            await connection_manager.send_to_user(sender, payload)
-        if recipient and recipient != sender:
-            await connection_manager.send_to_user(recipient, payload)
+        if sender_str:
+            await connection_manager.send_to_user(Username(sender_str), payload)
+        if recipient_str and recipient_str != sender_str:
+            await connection_manager.send_to_user(Username(recipient_str), payload)

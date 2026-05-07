@@ -61,7 +61,7 @@ async def websocket_endpoint(
 ) -> None:
     """WebSocket メインハンドラ"""
     print(f"DEBUG: WebSocket authenticated as: {username.value}")
-    await ws_manager.connect(username.value, websocket)
+    await ws_manager.connect(username, websocket)
 
     try:
         # 履歴とギャップの送信
@@ -122,14 +122,14 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         # 初期化中の切断はよくあることなので、静かに終了する
-        ws_manager.disconnect(websocket, username.value)
+        ws_manager.disconnect(websocket, username)
         return
     except Exception as e:
         print(f"[error] WebSocket initialization failed for {username.value}: {e}")
         import traceback
 
         traceback.print_exc()
-        ws_manager.disconnect(websocket, username.value)
+        ws_manager.disconnect(websocket, username)
         try:
             await websocket.close(code=1011)  # Internal Error
         except Exception:
@@ -157,7 +157,7 @@ async def websocket_endpoint(
                     )
                 elif isinstance(msg, RequestMessage):
                     await request_service.send_request(
-                        sender=Username(username),
+                        sender=username,
                         recipient=Username(msg.to),
                         text=RequestText(msg.text),
                     )
@@ -171,7 +171,7 @@ async def websocket_endpoint(
                 await websocket.send_json({"type": "error", "text": str(e)})
 
     except (WebSocketDisconnect, RuntimeError):
-        ws_manager.disconnect(websocket, username.value)
+        ws_manager.disconnect(websocket, username)
         await connection_service.handle_user_leave(username)
     finally:
         task.cancel()
