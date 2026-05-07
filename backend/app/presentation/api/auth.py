@@ -43,7 +43,7 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="ユーザー名またはパスワードが正しくありません",
         )
-    return LoginResponse(access_token=token, token_type="bearer")
+    return LoginResponse(access_token=token.value, token_type="bearer")
 
 
 @router.get("/me")

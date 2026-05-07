@@ -44,3 +44,12 @@ class RequestText(DomainPrimitive[str]):
             raise DomainValidationError("Request text cannot be empty")
         if len(self.value) > 500:
             raise DomainValidationError("Request text is too long")
+
+
+class AuthToken(DomainPrimitive[str]):
+    """認証用トークンを表すドメインプリミティブ。"""
+
+    def validate(self):
+        """バリデーションルールを適用します。"""
+        if not self.value or not self.value.strip():
+            raise DomainValidationError("Token cannot be empty")

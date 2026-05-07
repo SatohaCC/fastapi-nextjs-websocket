@@ -1,5 +1,7 @@
 """SQLAlchemy を用いた DeliveryFeed リポジトリの実装。"""
 
+from datetime import datetime
+
 from sqlalchemy import and_, delete, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +12,13 @@ from app.domain.primitives.feed import (
     SequenceId,
     SequenceName,
 )
-from app.domain.primitives.primitives import Username
+from app.domain.primitives.primitives import (
+    EntityId,
+    MessageText,
+    RequestText,
+    Username,
+)
+from app.domain.primitives.request_status import RequestStatus
 
 from ...domain.entities.delivery_feed import DeliveryFeed, DraftDeliveryFeed
 from ...domain.entities.payload import (
@@ -147,33 +155,33 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         payload: FeedPayload
         if event_type == FeedEventType.MESSAGE:
             payload = MessagePayload(
-                id=payload_dict["id"],
-                username=payload_dict["username"],
-                text=payload_dict["text"],
-                created_at=payload_dict["created_at"],
+                id=EntityId(payload_dict["id"]),
+                username=Username(payload_dict["username"]),
+                text=MessageText(payload_dict["text"]),
+                created_at=datetime.fromisoformat(payload_dict["created_at"]),
             )
         elif event_type == FeedEventType.REQUEST:
             payload = RequestPayload(
-                id=payload_dict["id"],
-                sender=payload_dict["sender"],
-                recipient=payload_dict["recipient"],
-                text=payload_dict["text"],
-                status=payload_dict["status"],
-                created_at=payload_dict["created_at"],
-                updated_at=payload_dict["updated_at"],
+                id=EntityId(payload_dict["id"]),
+                sender=Username(payload_dict["sender"]),
+                recipient=Username(payload_dict["recipient"]),
+                text=RequestText(payload_dict["text"]),
+                status=RequestStatus(payload_dict["status"]),
+                created_at=datetime.fromisoformat(payload_dict["created_at"]),
+                updated_at=datetime.fromisoformat(payload_dict["updated_at"]),
             )
         elif event_type == FeedEventType.REQUEST_UPDATED:
             payload = RequestUpdatePayload(
-                id=payload_dict["id"],
-                status=payload_dict["status"],
-                sender=payload_dict["sender"],
-                recipient=payload_dict["recipient"],
-                updated_at=payload_dict["updated_at"],
+                id=EntityId(payload_dict["id"]),
+                status=RequestStatus(payload_dict["status"]),
+                sender=Username(payload_dict["sender"]),
+                recipient=Username(payload_dict["recipient"]),
+                updated_at=datetime.fromisoformat(payload_dict["updated_at"]),
             )
         else:
             payload = SystemEventPayload(
-                type=payload_dict["type"],
-                username=payload_dict["username"],
+                type=FeedEventType(payload_dict["type"]),
+                username=Username(payload_dict["username"]),
             )
 
         return DeliveryFeed(
