@@ -5,16 +5,22 @@ import json
 import redis.asyncio as aioredis
 
 from ...domain.repositories.connection_manager import ConnectionManager
+from ...domain.services.feed_routing import FeedRouter
 from ..config import settings
 
 
-async def redis_subscriber(connection_manager: ConnectionManager) -> None:
-    """Redis の Pub/Sub を購読し、受け取ったイベントの種類に応じて
-    WebSocket クライアントに適切に配信します。
+async def redis_subscriber(
+    connection_manager: ConnectionManager,
+    feed_router: FeedRouter,
+) -> None:
+    """Redis の Pub/Sub を購読し、FeedRouter に配信を委譲します。
+
+    サブスクライバー自体はイベントタイプの解釈を一切行わず、
+    「受け取って FeedRouter に渡すだけ」のシンプルな役割に徹します。
 
     Args:
-        connection_manager (ConnectionManager): 配信を担当するサービス。
-            具象クラス（ChatManager）に依存せず、インターフェースを介して操作します。
+        connection_manager: 配信を担当するサービス。
+        feed_router: イベントタイプに基づいて配信戦略を解決するルーター。
     """
     client: aioredis.Redis = aioredis.from_url(settings.REDIS_URL)
     pubsub = client.pubsub()
@@ -26,21 +32,7 @@ async def redis_subscriber(connection_manager: ConnectionManager) -> None:
                 continue
 
             data = json.loads(raw["data"])
-            event_type = data.get("type")
-
-            if event_type in ("message", "join", "leave"):
-                # チャット関連は全員に放送
-                await connection_manager.broadcast(data)
-
-            elif event_type in ("request", "request_updated"):
-                # リクエスト関連は関係者のみに送信
-                sender = data.get("sender")
-                recipient = data.get("recipient")
-
-                if sender:
-                    await connection_manager.send_to_user(sender, data)
-                if recipient and recipient != sender:
-                    await connection_manager.send_to_user(recipient, data)
+            await feed_router.route(data, connection_manager)
     finally:
         await pubsub.unsubscribe(settings.REDIS_CHANNEL)
         await client.close()
