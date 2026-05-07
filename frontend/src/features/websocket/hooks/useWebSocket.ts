@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect } from "react";
 import {
   sendRequest as apiSendRequest,
   sendMessage,
@@ -7,7 +8,6 @@ import {
 } from "@/features/websocket/api";
 import { dispatchMessage } from "@/features/websocket/handlers";
 import type { RequestStatus } from "@/types/ws";
-import { useCallback, useEffect } from "react";
 import { useConnection } from "./useConnection";
 import { useMessageSync } from "./useMessageSync";
 
@@ -156,6 +156,8 @@ export function useWebSocket(token: string | null) {
     setSyncStatus,
     setIsOnline,
     retryMsRef,
+    lastChatId.current,
+    lastRequestId.current,
   ]);
 
   // ソート済みメッセージの提供

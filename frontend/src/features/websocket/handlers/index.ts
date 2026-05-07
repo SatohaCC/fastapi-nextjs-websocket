@@ -23,8 +23,7 @@ export function dispatchMessage(
   let data: ServerMessage;
   try {
     data = JSON.parse(event.data);
-  } catch (e) {
-    console.error("Failed to parse WebSocket message:", e);
+  } catch (_e) {
     return;
   }
 
