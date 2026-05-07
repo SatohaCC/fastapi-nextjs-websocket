@@ -88,7 +88,8 @@
     {
       "includes": [
         "src/features/**/components/*.tsx",
-        "!src/features/**/components/*Container.tsx"
+        "!src/features/**/components/*Container.tsx",
+        "!src/features/**/components/*.stories.tsx"
       ],
       "linter": {
         "rules": {
@@ -105,6 +106,20 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": [".storybook/**", "**/*.stories.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useExportType": "off",
+            "noDefaultExport": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "warn"
           }
         }
       }
