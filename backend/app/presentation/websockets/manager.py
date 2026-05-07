@@ -27,7 +27,8 @@ class ChatManager:
 
         active_users = list(self.connections.keys())
         print(
-            f"DEBUG: {username} connections: {len(self.connections[username])} | Total users: {active_users}"
+            f"DEBUG: {username} connections: {len(self.connections[username])} | "
+            f"Total users: {active_users}"
         )
 
     def disconnect(self, websocket: WebSocket, username: str | None = None) -> None:
@@ -51,7 +52,8 @@ class ChatManager:
                     break
 
         print(
-            f"[disconnect] {actual_user} (ws:{ws_id}) が退室 | 残りユーザー: {list(self.connections.keys())}"
+            f"[disconnect] {actual_user} (ws:{ws_id}) が退室 | "
+            f"残りユーザー: {list(self.connections.keys())}"
         )
 
     async def send_to_user(self, username: str, payload: dict) -> None:
