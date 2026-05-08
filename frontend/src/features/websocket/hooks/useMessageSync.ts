@@ -24,7 +24,7 @@ export function useMessageSync(token: string | null) {
           setChatMessages((prev) =>
             mergeById(prev, [
               {
-                ...(feed.payload as any),
+                ...(feed.payload as ChatMessage),
                 seq: feed.sequence_id,
                 is_history: true,
               },
@@ -34,17 +34,18 @@ export function useMessageSync(token: string | null) {
           setRequestMessages((prev) =>
             mergeById(prev, [
               {
-                ...(feed.payload as any),
+                ...(feed.payload as RequestMessage),
                 seq: feed.sequence_id,
                 is_history: true,
               },
             ]),
           );
         } else if (feed.event_type === "request_updated") {
+          const payload = feed.payload as RequestMessage;
           setRequestMessages((prev) =>
             prev.map((r) =>
-              r.id === feed.payload.id
-                ? { ...r, ...(feed.payload as any), seq: feed.sequence_id }
+              r.id === payload.id
+                ? { ...r, ...payload, seq: feed.sequence_id }
                 : r,
             ),
           );

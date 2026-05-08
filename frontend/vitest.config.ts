@@ -28,6 +28,20 @@ export default defineConfig({
             provider: playwright({}),
             instances: [{ browser: "chromium" }],
           },
+          setupFiles: [path.join(dirname, "src/tests/browser-setup.ts")],
+          alias: {
+            "@": path.join(dirname, "src"),
+          },
+        },
+      },
+      {
+        test: {
+          name: "logic",
+          environment: "node",
+          include: ["src/**/*.test.ts"],
+          alias: {
+            "@": path.join(dirname, "src"),
+          },
         },
       },
     ],
