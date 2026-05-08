@@ -22,9 +22,11 @@ from .domain.exceptions import (
 from .domain.primitives.feed import FeedEventType
 from .domain.services.feed_routing import FeedRouter
 from .infrastructure.config import settings
+from .infrastructure.messaging.cleanup_worker import cleanup_worker
 from .infrastructure.messaging.redis_subscriber import redis_subscriber
 from .infrastructure.messaging.relay_worker import relay_worker
 from .infrastructure.persistence.orm_models import Base
+from .infrastructure.persistence.sa_uow import make_standalone_uow
 from .infrastructure.persistence.session import AsyncSessionLocal, engine
 from .presentation.api.auth import router as auth_router
 from .presentation.api.feeds import router as feeds_router
@@ -62,17 +64,22 @@ async def lifespan(_: FastAPI):
     feed_router.register(FeedEventType.REQUEST, direct)
     feed_router.register(FeedEventType.REQUEST_UPDATED, direct)
 
+    def _uow_factory():
+        return make_standalone_uow(AsyncSessionLocal)
+
     # DI 経由ではなく、ライフサイクル管理の文脈でシングルトンを取得
     manager = get_manager()
     redis_sub_task = asyncio.create_task(redis_subscriber(manager, feed_router))
-    relay_task = asyncio.create_task(
-        relay_worker(AsyncSessionLocal, settings.REDIS_URL)
-    )
+    relay_task = asyncio.create_task(relay_worker(_uow_factory, settings.REDIS_URL))
+    cleanup_task = asyncio.create_task(cleanup_worker(_uow_factory))
     yield
     relay_task.cancel()
     redis_sub_task.cancel()
+    cleanup_task.cancel()
     try:
-        await asyncio.gather(redis_sub_task, relay_task, return_exceptions=True)
+        await asyncio.gather(
+            redis_sub_task, relay_task, cleanup_task, return_exceptions=True
+        )
     except asyncio.CancelledError:
         pass
     await engine.dispose()
