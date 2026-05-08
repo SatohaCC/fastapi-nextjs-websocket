@@ -29,13 +29,9 @@
 - **LISTEN / NOTIFY**: PostgreSQL の pub/sub 機能を利用。新着メッセージが DB に入った瞬間にリレープロセスへ合図を送り、高頻度なポーリングなしに低遅延配信を実現します。
 - **SKIP LOCKED**: 複数サーバー実行時も `FOR UPDATE SKIP LOCKED` により重複配信を防止し、スケーラビリティを確保します。
 
-## 4. あえて実装しないこと（スコープ外）
-学習の焦点を「信頼性の高いメッセージング」に絞るため、以下の機能は簡略化しています。
-- JWT のトークン更新（Refresh Token）機能。
 
 
-
-## 5. システム構成図
+## 4. システム構成図
 
 ```text
 フロントエンド（Next.js / TypeScript / Vanilla CSS）
@@ -50,7 +46,7 @@
 
 ---
 
-## 6. アーキテクチャ設計：Pydantic とドメインモデルの分離
+## 5. アーキテクチャ設計：Pydantic とドメインモデルの分離
 
 本プロジェクトでは、**Pydantic を HTTP 境界層（入出力 DTO）に限定**し、ドメイン層を Pydantic 非依存に保つ設計を採用しています。
 
@@ -134,6 +130,16 @@ async def login(body: LoginRequest, ...) -> LoginResponse:
 | 変換の可視性 | `to_domain()` / `from_domain()` で変換箇所が一目瞭然 |
 | Always-Valid | Domain Primitive は生成時に必ず検証済み。無効な状態のオブジェクトは存在しない |
 | テスト容易性 | Domain ロジックを Pydantic なしで単体テスト可能 |
+
+---
+
+
+## 6. あえて実装しないこと（スコープ外）
+
+学習の焦点を「信頼性の高いメッセージング」に絞るため、以下の機能は簡略化しています。
+- JWT のトークン更新（Refresh Token）機能。
+- CSSはLLMまかせ
+
 
 ---
 
@@ -225,3 +231,5 @@ uv run ruff check .
 uv run ruff format .
 uv run mypy .
 ```
+
+---
