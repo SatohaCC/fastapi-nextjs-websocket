@@ -82,3 +82,36 @@ export interface UpdateStatusOut {
 export interface PongOut {
   type: "pong";
 }
+
+// Type Guards
+export function isChatMessage(data: unknown): data is ChatMessage {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return (
+    d.type === "message" &&
+    typeof d.id === "number" &&
+    typeof d.text === "string"
+  );
+}
+
+export function isRequestMessage(data: unknown): data is RequestMessage {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return (
+    d.type === "request" &&
+    typeof d.id === "number" &&
+    typeof d.sender === "string"
+  );
+}
+
+export function isRequestUpdateMessage(
+  data: unknown,
+): data is RequestUpdateMessage {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return (
+    d.type === "request_updated" &&
+    typeof d.id === "number" &&
+    typeof d.status === "string"
+  );
+}

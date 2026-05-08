@@ -1,5 +1,6 @@
 import type {
   ChatMessage,
+  ErrorMessage,
   RequestMessage,
   RequestUpdateMessage,
   ServerMessage,
@@ -45,7 +46,7 @@ export function dispatchMessage(
       handlePing(socket, deps);
       break;
     case "error":
-      handleError(data as any, deps);
+      handleError(data as ErrorMessage, deps);
       break;
     default:
       // 未知のメッセージタイプ
