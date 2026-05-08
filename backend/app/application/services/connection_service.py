@@ -1,7 +1,7 @@
 """WebSocket 接続のライフサイクルに関するアプリケーションサービス。"""
 
 from ...domain.entities.delivery_feed import DraftDeliveryFeed
-from ...domain.factories.delivery_feed_factory import DeliveryFeedFactory
+from ...domain.entities.system_event import SystemEvent
 from ...domain.primitives.feed import FeedEventType, SequenceName
 from ...domain.primitives.primitives import Username
 from ..uow import UnitOfWork
@@ -25,12 +25,12 @@ class ConnectionService:
 
     async def handle_user_join(self, username: Username) -> None:
         """ユーザーが入室した際の処理。Outbox にイベントを記録します。"""
-        event_type, payload = DeliveryFeedFactory.create_payload_from_system_event(
-            FeedEventType.JOIN, username
-        )
+        event = SystemEvent(type=FeedEventType.JOIN, username=username)
+        payload = event.to_payload()
+
         feed = DraftDeliveryFeed(
             sequence_name=SequenceName("system_global"),
-            event_type=event_type,
+            event_type=payload.event_type,
             payload=payload,
         )
         async with self._uow:
@@ -39,12 +39,12 @@ class ConnectionService:
 
     async def handle_user_leave(self, username: Username) -> None:
         """ユーザーが退室した際の処理。Outbox にイベントを記録します。"""
-        event_type, payload = DeliveryFeedFactory.create_payload_from_system_event(
-            FeedEventType.LEAVE, username
-        )
+        event = SystemEvent(type=FeedEventType.LEAVE, username=username)
+        payload = event.to_payload()
+
         feed = DraftDeliveryFeed(
             sequence_name=SequenceName("system_global"),
-            event_type=event_type,
+            event_type=payload.event_type,
             payload=payload,
         )
         async with self._uow:
