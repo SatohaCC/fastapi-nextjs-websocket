@@ -4,8 +4,7 @@ export interface FeedResponse {
   sequence_name: string;
   sequence_id: number;
   event_type: "message" | "request" | "request_updated";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: any;
+  payload: unknown;
   created_at: string;
 }
 
