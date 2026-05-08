@@ -5,7 +5,6 @@ from app.domain.primitives.feed import SequenceName
 from ...domain.entities.delivery_feed import DraftDeliveryFeed
 from ...domain.entities.direct_request import DirectRequest, DraftDirectRequest
 from ...domain.exceptions import EntityNotFoundException
-from ...domain.factories.delivery_feed_factory import DeliveryFeedFactory
 from ...domain.primitives.primitives import EntityId, RequestText, Username
 from ...domain.primitives.request_status import RequestStatus
 from ..uow import UnitOfWork
@@ -30,13 +29,11 @@ class RequestService:
         )
         async with self._uow:
             saved_request = await self._uow.requests.save(draft)
+            payload = saved_request.to_payload()
 
-            event_type, payload = DeliveryFeedFactory.create_payload_from_request(
-                saved_request
-            )
             feed = DraftDeliveryFeed(
                 sequence_name=SequenceName("requests_global"),
-                event_type=event_type,
+                event_type=payload.event_type,
                 payload=payload,
             )
             await self._uow.outbox.save(feed)
@@ -70,13 +67,11 @@ class RequestService:
             transitioned = request.transition_to(new_status, operator)
 
             updated_request = await self._uow.requests.save(transitioned)
+            payload = updated_request.to_update_payload()
 
-            event_type, payload = (
-                DeliveryFeedFactory.create_payload_from_request_updated(updated_request)
-            )
             feed = DraftDeliveryFeed(
                 sequence_name=SequenceName("requests_global"),
-                event_type=event_type,
+                event_type=payload.event_type,
                 payload=payload,
             )
             await self._uow.outbox.save(feed)
