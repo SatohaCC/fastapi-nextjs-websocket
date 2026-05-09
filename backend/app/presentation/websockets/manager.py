@@ -1,11 +1,19 @@
 """WebSocket 接続の管理とリアルタイム配信を担うクラス。"""
 
 import asyncio
+from typing import TYPE_CHECKING, Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 
 from ...domain.primitives.primitives import Username
 from ...infrastructure.config import settings
+from .schemas import (
+    BaseResponse,
+    create_response_from_feed,
+)
+
+if TYPE_CHECKING:
+    pass
 
 
 class ChatManager:
@@ -63,10 +71,20 @@ class ChatManager:
             f"残りユーザー: {[u.value for u in self.connections.keys()]}"
         )
 
-    async def send_to_user(self, username: Username, payload: dict) -> None:
+    async def send_to_user(self, username: Username, payload: Any) -> None:
         """特定のユーザーにのみデータを送信します。
         ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
         """
+        from ...domain.entities.delivery_feed import DeliveryFeed
+
+        if isinstance(payload, DeliveryFeed):
+            dto = create_response_from_feed(payload)
+            data = dto.model_dump(mode="json")
+        elif isinstance(payload, BaseResponse):
+            data = payload.model_dump(mode="json")
+        else:
+            data = payload
+
         if username not in self.connections:
             return
 
@@ -75,17 +93,27 @@ class ChatManager:
         # 非同期送信タスクのリストを作成
         tasks = []
         for ws in ws_set:
-            tasks.append(self._send_safe(ws, payload, username))
+            tasks.append(self._send_safe(ws, data, username))
 
         if tasks:
             await asyncio.gather(*tasks)
 
-    async def broadcast(self, payload: dict) -> None:
+    async def broadcast(self, payload: Any) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
+        from ...domain.entities.delivery_feed import DeliveryFeed
+
+        if isinstance(payload, DeliveryFeed):
+            dto = create_response_from_feed(payload)
+            data = dto.model_dump(mode="json")
+        elif isinstance(payload, BaseResponse):
+            data = payload.model_dump(mode="json")
+        else:
+            data = payload
+
         tasks = []
         for user, ws_set in list(self.connections.items()):
             for ws in ws_set:
-                tasks.append(self._send_safe(ws, payload, user))
+                tasks.append(self._send_safe(ws, data, user))
 
         if tasks:
             await asyncio.gather(*tasks)
