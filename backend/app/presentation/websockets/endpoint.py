@@ -2,8 +2,7 @@
 
 import asyncio
 import json
-from collections.abc import Callable, Coroutine
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import (
     APIRouter,
@@ -31,7 +30,6 @@ from ..dependencies import (
 )
 from .manager import ChatManager, heartbeat
 from .schemas import (
-    BaseResponse,
     ChatMessage,
     ChatResponse,
     ErrorResponse,
@@ -43,32 +41,6 @@ from .schemas import (
 )
 
 router = APIRouter(tags=["websockets"])
-
-
-async def _send_initial_data(
-    websocket: WebSocket,
-    username: Username,
-    last_id: int | None,
-    sequence_name: SequenceName,
-    feed_service: FeedQueryService,
-    history_fetcher: Callable[[], Coroutine[Any, Any, list[Any]]],
-    response_model: type[BaseResponse],
-) -> None:
-    """履歴またはギャップデータをクライアントに送信します。"""
-    if last_id is None:
-        history = await history_fetcher()
-        for item in history:
-            await websocket.send_json(
-                response_model.from_domain(item, is_history=True).model_dump(
-                    mode="json"
-                )
-            )
-    else:
-        feeds = await feed_service.get_feeds_after(
-            sequence_name, SequenceId(last_id), username
-        )
-        for feed in feeds:
-            await websocket.send_json(feed.to_response_payload(is_history=True))
 
 
 @router.websocket("/ws")
@@ -89,25 +61,45 @@ async def websocket_endpoint(
 
     try:
         # 履歴とギャップの送信
-        await _send_initial_data(
-            websocket=websocket,
-            username=username,
-            last_id=last_chat_id,
-            sequence_name=SequenceName("chat_global"),
-            feed_service=feed_service,
-            history_fetcher=chat_service.get_recent_messages,
-            response_model=ChatResponse,
-        )
+        if last_chat_id is None:
+            history = await chat_service.get_recent_messages()
+            for h in history:
+                await websocket.send_json(
+                    ChatResponse.from_domain(h, is_history=True).model_dump(mode="json")
+                )
+        else:
+            chat_feeds = await feed_service.get_feeds_after(
+                SequenceName("chat_global"), SequenceId(last_chat_id), username
+            )
+            for feed in chat_feeds:
+                payload = {
+                    **feed.payload.to_dict(),
+                    "seq": feed.sequence_id.value if feed.sequence_id else None,
+                    "sequence_name": feed.sequence_name.value,
+                    "is_history": True,
+                }
+                await websocket.send_json(payload)
 
-        await _send_initial_data(
-            websocket=websocket,
-            username=username,
-            last_id=last_request_id,
-            sequence_name=SequenceName("requests_global"),
-            feed_service=feed_service,
-            history_fetcher=lambda: request_service.get_requests_for_user(username),
-            response_model=RequestResponse,
-        )
+        if last_request_id is None:
+            req_history = await request_service.get_requests_for_user(username)
+            for r in req_history:
+                await websocket.send_json(
+                    RequestResponse.from_domain(r, is_history=True).model_dump(
+                        mode="json"
+                    )
+                )
+        else:
+            request_feeds = await feed_service.get_feeds_after(
+                SequenceName("requests_global"), SequenceId(last_request_id), username
+            )
+            for feed in request_feeds:
+                payload = {
+                    **feed.payload.to_dict(),
+                    "seq": feed.sequence_id.value if feed.sequence_id else None,
+                    "sequence_name": feed.sequence_name.value,
+                    "is_history": True,
+                }
+                await websocket.send_json(payload)
 
         if last_chat_id is None and last_request_id is None:
             # 入室イベントの記録
