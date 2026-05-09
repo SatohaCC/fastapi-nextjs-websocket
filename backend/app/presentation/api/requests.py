@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ...application.services.request_service import RequestService
 from ...domain.primitives.primitives import EntityId, RequestText, Username
@@ -17,7 +17,18 @@ router = APIRouter(prefix="/api", tags=["requests"])
 class StatusUpdatePayload(BaseModel):
     """ステータス更新用のリクエストボディ。"""
 
-    status: RequestStatus
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        """無効なステータス文字列を境界で弾く。"""
+        RequestStatus(v)
+        return v
+
+    def to_domain(self) -> RequestStatus:
+        """Status をドメインプリミティブへ変換します。"""
+        return RequestStatus(self.status)
 
 
 class SendRequestPayload(BaseModel):
@@ -68,5 +79,7 @@ async def update_request_status(
     request_service: Annotated[RequestService, Depends(get_request_service)],
 ) -> dict:
     """ダイレクト・リクエストのステータスを更新します。"""
-    await request_service.update_status(EntityId(request_id), payload.status, username)
+    await request_service.update_status(
+        EntityId(request_id), payload.to_domain(), username
+    )
     return {"status": "ok"}

@@ -67,8 +67,11 @@ async def _send_initial_data(
         feeds = await feed_service.get_feeds_after(
             sequence_name, SequenceId(last_id), username
         )
+        from .schemas import create_response_from_feed
+
         for feed in feeds:
-            await websocket.send_json(feed.to_response_payload(is_history=True))
+            resp_dto = create_response_from_feed(feed, is_history=True)
+            await websocket.send_json(resp_dto.model_dump(mode="json"))
 
 
 @router.websocket("/ws")
