@@ -1,10 +1,9 @@
 """チャットメッセージに関するユースケースを実現するアプリケーションサービス。"""
 
-from app.domain.primitives.feed import SequenceName
-
-from ...domain.entities.delivery_feed import DraftDeliveryFeed
 from ...domain.entities.message import DraftMessage, Message
 from ...domain.primitives.primitives import EntityId, MessageText, Username
+from ..outbox.delivery_feed import CHAT_SEQUENCE, DraftDeliveryFeed
+from ..outbox.payload import MessagePayload
 from ..uow import UnitOfWork
 
 
@@ -20,15 +19,18 @@ class ChatService:
         draft = DraftMessage(username=username, text=text)
         async with self._uow:
             saved_message = await self._uow.messages.save(draft)
-            payload = saved_message.to_payload()
-
+            payload = MessagePayload(
+                id=saved_message.id,
+                username=saved_message.username,
+                text=saved_message.text,
+                created_at=saved_message.created_at,
+            )
             feed = DraftDeliveryFeed(
-                sequence_name=SequenceName("chat_global"),
+                sequence_name=CHAT_SEQUENCE,
                 event_type=payload.event_type,
                 payload=payload,
             )
             await self._uow.outbox.save(feed)
-
             await self._uow.commit()
 
         return saved_message

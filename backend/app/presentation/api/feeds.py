@@ -6,9 +6,8 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from ...application.outbox.delivery_feed import DeliveryFeed, SequenceId, SequenceName
 from ...application.services.feed_query_service import FeedQueryService
-from ...domain.entities.delivery_feed import DeliveryFeed
-from ...domain.primitives.feed import SequenceId, SequenceName
 from ...domain.primitives.primitives import Username
 from ..dependencies import get_authenticated_user, get_feed_query_service
 from ..websockets.schemas import create_response_from_feed

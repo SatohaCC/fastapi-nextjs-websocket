@@ -12,7 +12,10 @@
     "format": "biome format --write",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test": "vitest"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:all": "npm run lint:fix && npm run format && npm run type-check && npm run test:run"
   },
   "dependencies": {
     "next": "16.2.4",

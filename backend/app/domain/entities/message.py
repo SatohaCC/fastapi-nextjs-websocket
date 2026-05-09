@@ -5,8 +5,6 @@ from datetime import datetime, timezone
 
 from app.domain.primitives.primitives import EntityId, MessageText, Username
 
-from .payload import MessagePayload
-
 
 @dataclass(frozen=True, kw_only=True)
 class DraftMessage:
@@ -32,12 +30,3 @@ class Message(DraftMessage):
     """
 
     id: EntityId
-
-    def to_payload(self) -> MessagePayload:
-        """配信用 Payload に変換します。"""
-        return MessagePayload(
-            id=self.id,
-            username=self.username,
-            text=self.text,
-            created_at=self.created_at,
-        )
