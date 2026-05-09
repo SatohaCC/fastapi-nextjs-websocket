@@ -3,8 +3,8 @@ import { API_BASE } from "@/lib/config";
 export interface FeedResponse {
   sequence_name: string;
   sequence_id: number;
-  event_type: "message" | "request" | "request_updated" | "join" | "leave";
-  payload: Record<string, any>;
+  event_type: "message" | "request" | "request_updated";
+  payload: unknown;
   created_at: string;
 }
 
