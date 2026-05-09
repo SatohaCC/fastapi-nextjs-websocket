@@ -5,18 +5,18 @@ from datetime import datetime, timezone
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.delivery_feed import DraftDeliveryFeed
-from app.domain.entities.payload import (
-    MessagePayload,
-    RequestPayload,
-    SystemEventPayload,
-)
-from app.domain.primitives.feed import (
-    FeedEventType,
+from app.application.outbox.delivery_feed import (
+    DraftDeliveryFeed,
     FeedStatus,
     SequenceId,
     SequenceName,
 )
+from app.application.outbox.payload import (
+    MessagePayload,
+    RequestPayload,
+    SystemEventPayload,
+)
+from app.domain.primitives.feed import FeedEventType
 from app.domain.primitives.primitives import (
     EntityId,
     MessageText,

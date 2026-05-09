@@ -75,7 +75,8 @@ class ChatManager:
         """特定のユーザーにのみデータを送信します。
         ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
         """
-        from ...domain.entities.delivery_feed import DeliveryFeed
+        # presentation → application の循環インポートを避けるため関数内でインポート
+        from ...application.outbox.delivery_feed import DeliveryFeed
 
         if isinstance(payload, DeliveryFeed):
             dto = create_response_from_feed(payload)
@@ -100,7 +101,8 @@ class ChatManager:
 
     async def broadcast(self, payload: Any) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
-        from ...domain.entities.delivery_feed import DeliveryFeed
+        # presentation → application の循環インポートを避けるため関数内でインポート
+        from ...application.outbox.delivery_feed import DeliveryFeed
 
         if isinstance(payload, DeliveryFeed):
             dto = create_response_from_feed(payload)

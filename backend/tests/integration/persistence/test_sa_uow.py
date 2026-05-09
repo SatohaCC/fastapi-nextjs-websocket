@@ -4,10 +4,14 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.domain.entities.delivery_feed import DraftDeliveryFeed
+from app.application.outbox.delivery_feed import (
+    DraftDeliveryFeed,
+    SequenceId,
+    SequenceName,
+)
+from app.application.outbox.payload import MessagePayload
 from app.domain.entities.message import DraftMessage
-from app.domain.entities.payload import MessagePayload
-from app.domain.primitives.feed import FeedEventType, SequenceId, SequenceName
+from app.domain.primitives.feed import FeedEventType
 from app.domain.primitives.primitives import EntityId, MessageText, Username
 from app.infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
 

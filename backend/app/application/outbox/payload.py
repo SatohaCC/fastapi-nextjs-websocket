@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 
-from ..primitives.feed import FeedEventType
-from ..primitives.primitives import EntityId, MessageText, RequestText, Username
-from ..primitives.request_status import RequestStatus
+from ...domain.primitives.feed import FeedEventType
+from ...domain.primitives.primitives import EntityId, MessageText, RequestText, Username
+from ...domain.primitives.request_status import RequestStatus
 
 
 @dataclass(frozen=True)

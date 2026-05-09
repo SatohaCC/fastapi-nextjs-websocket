@@ -1,12 +1,11 @@
 """ダイレクトリクエストに関するユースケースを実現するアプリケーションサービス。"""
 
-from app.domain.primitives.feed import SequenceName
-
-from ...domain.entities.delivery_feed import DraftDeliveryFeed
 from ...domain.entities.direct_request import DirectRequest, DraftDirectRequest
 from ...domain.exceptions import EntityNotFoundException
 from ...domain.primitives.primitives import EntityId, RequestText, Username
 from ...domain.primitives.request_status import RequestStatus
+from ..outbox.delivery_feed import REQUESTS_SEQUENCE, DraftDeliveryFeed
+from ..outbox.payload import RequestPayload, RequestUpdatePayload
 from ..uow import UnitOfWork
 
 
@@ -29,15 +28,21 @@ class RequestService:
         )
         async with self._uow:
             saved_request = await self._uow.requests.save(draft)
-            payload = saved_request.to_payload()
-
+            payload = RequestPayload(
+                id=saved_request.id,
+                sender=saved_request.sender,
+                recipient=saved_request.recipient,
+                text=saved_request.text,
+                status=saved_request.status,
+                created_at=saved_request.created_at,
+                updated_at=saved_request.updated_at,
+            )
             feed = DraftDeliveryFeed(
-                sequence_name=SequenceName("requests_global"),
+                sequence_name=REQUESTS_SEQUENCE,
                 event_type=payload.event_type,
                 payload=payload,
             )
             await self._uow.outbox.save(feed)
-
             await self._uow.commit()
 
         return saved_request
@@ -63,19 +68,21 @@ class RequestService:
             if not request:
                 raise EntityNotFoundException(f"Request {request_id} not found")
 
-            # ステータス遷移（内部でバリデーション、権限チェック、時刻更新が行われる）
             transitioned = request.transition_to(new_status, operator)
-
             updated_request = await self._uow.requests.save(transitioned)
-            payload = updated_request.to_update_payload()
-
+            payload = RequestUpdatePayload(
+                id=updated_request.id,
+                status=updated_request.status,
+                sender=updated_request.sender,
+                recipient=updated_request.recipient,
+                updated_at=updated_request.updated_at,
+            )
             feed = DraftDeliveryFeed(
-                sequence_name=SequenceName("requests_global"),
+                sequence_name=REQUESTS_SEQUENCE,
                 event_type=payload.event_type,
                 payload=payload,
             )
             await self._uow.outbox.save(feed)
-
             await self._uow.commit()
 
         return updated_request

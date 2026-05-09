@@ -2,9 +2,9 @@
 
 from typing import Protocol
 
-from ..domain.repositories.delivery_feed_repository import DeliveryFeedRepository
 from ..domain.repositories.message_repository import MessageRepository
 from ..domain.repositories.request_repository import RequestRepository
+from .outbox.repository import DeliveryFeedRepository
 
 
 class UnitOfWork(Protocol):

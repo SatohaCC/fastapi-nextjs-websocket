@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 
 import pytest
 
+from app.application.outbox.delivery_feed import REQUESTS_SEQUENCE
+from app.application.outbox.payload import RequestPayload, RequestUpdatePayload
 from app.application.services.request_service import RequestService
 from app.domain.entities.direct_request import DirectRequest
 from app.domain.exceptions import EntityNotFoundException
@@ -70,6 +72,35 @@ class TestRequestServiceSendRequest:
             Username("alice"), Username("bob"), RequestText("please review")
         )
         assert result == saved_request
+
+    async def test_outbox_feed_payload_maps_entity_fields(
+        self, mock_uow, saved_request
+    ):
+        """Outbox に保存される RequestPayload が entity のフィールドと一致すること。"""
+        mock_uow.requests.save.return_value = saved_request
+        service = RequestService(mock_uow)
+        await service.send_request(
+            Username("alice"), Username("bob"), RequestText("please review")
+        )
+
+        feed = mock_uow.outbox.save.call_args.args[0]
+        assert isinstance(feed.payload, RequestPayload)
+        assert feed.payload.id == saved_request.id
+        assert feed.payload.sender == saved_request.sender
+        assert feed.payload.recipient == saved_request.recipient
+        assert feed.payload.text == saved_request.text
+        assert feed.payload.status == saved_request.status
+
+    async def test_outbox_feed_uses_requests_sequence(self, mock_uow, saved_request):
+        """Outbox に保存されるフィードのシーケンス名が REQUESTS_SEQUENCE であること。"""
+        mock_uow.requests.save.return_value = saved_request
+        service = RequestService(mock_uow)
+        await service.send_request(
+            Username("alice"), Username("bob"), RequestText("please review")
+        )
+
+        feed = mock_uow.outbox.save.call_args.args[0]
+        assert feed.sequence_name == REQUESTS_SEQUENCE
 
 
 class TestRequestServiceUpdateStatus:
@@ -143,6 +174,24 @@ class TestRequestServiceUpdateStatus:
             EntityId(1), RequestStatus.PROCESSING, Username("bob")
         )
         assert result == processing_request
+
+    async def test_outbox_feed_payload_maps_updated_entity_fields(
+        self, mock_uow, saved_request, processing_request
+    ):
+        """update_status の outbox フィードの Payload が entity と一致すること。"""
+        mock_uow.requests.get_by_id.return_value = saved_request
+        mock_uow.requests.save.return_value = processing_request
+        service = RequestService(mock_uow)
+        await service.update_status(
+            EntityId(1), RequestStatus.PROCESSING, Username("bob")
+        )
+
+        feed = mock_uow.outbox.save.call_args.args[0]
+        assert isinstance(feed.payload, RequestUpdatePayload)
+        assert feed.payload.id == processing_request.id
+        assert feed.payload.status == processing_request.status
+        assert feed.payload.sender == processing_request.sender
+        assert feed.payload.recipient == processing_request.recipient
 
 
 class TestRequestServiceGetRequests:

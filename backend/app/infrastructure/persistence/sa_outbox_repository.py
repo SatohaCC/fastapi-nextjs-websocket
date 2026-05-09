@@ -6,18 +6,17 @@ from sqlalchemy import and_, delete, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.primitives.feed import (
-    FeedEventType,
+from app.domain.primitives.feed import FeedEventType
+from app.domain.primitives.primitives import Username
+
+from ...application.outbox.delivery_feed import (
+    DeliveryFeed,
+    DraftDeliveryFeed,
     FeedStatus,
     SequenceId,
     SequenceName,
 )
-from app.domain.primitives.primitives import (
-    Username,
-)
-
-from ...domain.entities.delivery_feed import DeliveryFeed, DraftDeliveryFeed
-from ...domain.repositories.delivery_feed_repository import DeliveryFeedRepository
+from ...application.outbox.repository import DeliveryFeedRepository
 from ..serialization import dict_to_payload, payload_to_dict
 from .orm_models import DeliveryFeedORM, DeliverySequenceORM
 

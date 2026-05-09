@@ -10,9 +10,9 @@ from ..config import settings
 
 
 class JwtServiceImpl:
-    """JwtService の実装。PyJWT を使用します。"""
+    """JwtService の実装。"""
 
-    def authenticate_user(self, username: Username, password: Password) -> bool:
+    def authenticate(self, username: Username, password: Password) -> bool:
         """ユーザー名とパスワードの照合を行います。"""
         return settings.USERS.get(username) == password
 
