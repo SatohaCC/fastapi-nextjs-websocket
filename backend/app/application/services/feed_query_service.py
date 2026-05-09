@@ -1,9 +1,7 @@
 """フィード取得に関するユースケースを実現するアプリケーションサービス。"""
 
-from app.domain.primitives.feed import SequenceId, SequenceName
-from app.domain.primitives.primitives import Username
-
-from ...domain.entities.delivery_feed import DeliveryFeed
+from ...domain.primitives.primitives import Username
+from ..outbox.delivery_feed import DeliveryFeed, SequenceId, SequenceName
 from ..uow import UnitOfWork
 
 

@@ -14,12 +14,12 @@ from fastapi import (
 )
 from pydantic import TypeAdapter, ValidationError
 
+from ...application.outbox.delivery_feed import SequenceId, SequenceName
 from ...application.services.chat_service import ChatService
 from ...application.services.connection_service import ConnectionService
 from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.request_service import RequestService
 from ...domain.exceptions import DomainException
-from ...domain.primitives.feed import SequenceId, SequenceName
 from ...domain.primitives.primitives import Username
 from ..dependencies import (
     get_chat_manager,

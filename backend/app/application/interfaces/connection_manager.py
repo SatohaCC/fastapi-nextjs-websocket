@@ -1,4 +1,4 @@
-"""WebSocket 接続管理を抽象化するリポジトリインターフェース。"""
+"""WebSocket 接続管理を抽象化するインターフェース。"""
 
 from typing import Any, Protocol
 

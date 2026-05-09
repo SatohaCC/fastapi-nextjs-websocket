@@ -9,15 +9,15 @@ from ...domain.entities.direct_request import RequestStatus
 from ...domain.primitives.primitives import EntityId, MessageText, RequestText, Username
 
 if TYPE_CHECKING:
-    from ...domain.entities.delivery_feed import DeliveryFeed
-    from ...domain.entities.direct_request import DirectRequest
-    from ...domain.entities.message import Message
-    from ...domain.entities.payload import (
+    from ...application.outbox.delivery_feed import DeliveryFeed
+    from ...application.outbox.payload import (
         MessagePayload,
         RequestPayload,
         RequestUpdatePayload,
         SystemEventPayload,
     )
+    from ...domain.entities.direct_request import DirectRequest
+    from ...domain.entities.message import Message
 
 # --- Client -> Server Messages (Requests) ---
 
@@ -198,7 +198,7 @@ def create_response_from_feed(
     feed: "DeliveryFeed", is_history: bool = False
 ) -> BaseResponse:
     """DeliveryFeed から適切なレスポンス DTO を生成します。"""
-    from ...domain.entities.payload import (
+    from ...application.outbox.payload import (
         MessagePayload,
         RequestPayload,
         RequestUpdatePayload,

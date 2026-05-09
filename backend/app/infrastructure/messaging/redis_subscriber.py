@@ -4,8 +4,8 @@ import json
 
 import redis.asyncio as aioredis
 
-from ...domain.repositories.connection_manager import ConnectionManager
-from ...domain.services.feed_routing import FeedRouter
+from ...application.interfaces.connection_manager import ConnectionManager
+from ...application.outbox.routing import FeedRouter
 from ..config import settings
 from ..serialization import dict_to_feed
 

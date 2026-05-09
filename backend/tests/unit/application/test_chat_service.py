@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 
 import pytest
 
+from app.application.outbox.delivery_feed import CHAT_SEQUENCE
+from app.application.outbox.payload import MessagePayload
 from app.application.services.chat_service import ChatService
 from app.domain.entities.message import Message
 from app.domain.primitives.primitives import EntityId, MessageText, Username
@@ -61,6 +63,30 @@ class TestChatServiceSendMessage:
         draft = call_args.args[0]
         assert draft.username == Username("alice")
         assert draft.text == MessageText("hello")
+
+    async def test_outbox_feed_payload_maps_entity_fields(
+        self, mock_uow, saved_message
+    ):
+        """Outbox に保存される MessagePayload が entity のフィールドと一致すること。"""
+        mock_uow.messages.save.return_value = saved_message
+        service = ChatService(mock_uow)
+        await service.send_message(Username("alice"), MessageText("hello"))
+
+        feed = mock_uow.outbox.save.call_args.args[0]
+        assert isinstance(feed.payload, MessagePayload)
+        assert feed.payload.id == saved_message.id
+        assert feed.payload.username == saved_message.username
+        assert feed.payload.text == saved_message.text
+        assert feed.payload.created_at == saved_message.created_at
+
+    async def test_outbox_feed_uses_chat_sequence(self, mock_uow, saved_message):
+        """Outbox に保存されるフィードのシーケンス名が CHAT_SEQUENCE であること。"""
+        mock_uow.messages.save.return_value = saved_message
+        service = ChatService(mock_uow)
+        await service.send_message(Username("alice"), MessageText("hello"))
+
+        feed = mock_uow.outbox.save.call_args.args[0]
+        assert feed.sequence_name == CHAT_SEQUENCE
 
 
 class TestChatServiceGetMessages:
