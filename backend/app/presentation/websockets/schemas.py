@@ -1,7 +1,7 @@
 """WebSocket で使用するメッセージスキーマの定義（クライアント↔サーバー）。"""
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
 
 from pydantic import BaseModel, ConfigDict
 
@@ -67,6 +67,11 @@ class BaseResponse(BaseModel):
     """サーバーからクライアントへ送信するレスポンスの基底クラス。"""
 
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_domain(cls, entity: Any, is_history: bool = False) -> "BaseResponse":
+        """ドメインエンティティからレスポンスモデルを生成します。"""
+        raise NotImplementedError
 
 
 class ChatResponse(BaseResponse):
@@ -137,7 +142,9 @@ class RequestUpdateResponse(BaseResponse):
     updated_at: datetime
 
     @classmethod
-    def from_domain(cls, payload: "RequestUpdatePayload") -> "RequestUpdateResponse":
+    def from_domain(
+        cls, payload: "RequestUpdatePayload", is_history: bool = False
+    ) -> "RequestUpdateResponse":
         """RequestUpdatePayload からレスポンスモデルを生成します。"""
         return cls(
             id=payload.id.value,
@@ -148,14 +155,16 @@ class RequestUpdateResponse(BaseResponse):
         )
 
 
-class JoinLeaveResponse(BaseModel):
+class JoinLeaveResponse(BaseResponse):
     """ユーザーの入退室通知。"""
 
     type: Literal["join", "leave"]
     username: str
 
     @classmethod
-    def from_domain(cls, payload: "SystemEventPayload") -> "JoinLeaveResponse":
+    def from_domain(
+        cls, payload: "SystemEventPayload", is_history: bool = False
+    ) -> "JoinLeaveResponse":
         """SystemEventPayload からレスポンスモデルを生成します。"""
         return cls(
             type=cast(Literal["join", "leave"], payload.type.value),
