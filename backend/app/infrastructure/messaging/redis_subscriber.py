@@ -7,6 +7,7 @@ import redis.asyncio as aioredis
 from ...domain.repositories.connection_manager import ConnectionManager
 from ...domain.services.feed_routing import FeedRouter
 from ..config import settings
+from ..serialization import dict_to_feed
 
 
 async def redis_subscriber(
@@ -14,9 +15,6 @@ async def redis_subscriber(
     feed_router: FeedRouter,
 ) -> None:
     """Redis の Pub/Sub を購読し、FeedRouter に配信を委譲します。
-
-    サブスクライバー自体はイベントタイプの解釈を一切行わず、
-    「受け取って FeedRouter に渡すだけ」のシンプルな役割に徹します。
 
     Args:
         connection_manager: 配信を担当するサービス。
@@ -32,7 +30,8 @@ async def redis_subscriber(
                 continue
 
             data = json.loads(raw["data"])
-            await feed_router.route(data, connection_manager)
+            feed = dict_to_feed(data)
+            await feed_router.route(feed, connection_manager)
     finally:
         await pubsub.unsubscribe(settings.REDIS_CHANNEL)
         await client.close()

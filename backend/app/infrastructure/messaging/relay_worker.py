@@ -11,6 +11,7 @@ from redis import asyncio as aioredis
 
 from ...application.uow import UnitOfWork
 from ..config import settings
+from ..serialization import feed_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +65,10 @@ async def _relay_loop(
             if feeds:
                 try:
                     for feed in feeds:
+                        # Redis には再構成可能な形式でシリアライズして送信する
                         await redis.publish(
                             settings.REDIS_CHANNEL,
-                            json.dumps(feed.to_response_payload()),
+                            json.dumps(feed_to_dict(feed)),
                         )
 
                     feed_keys = [

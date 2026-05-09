@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
-from typing import Any
 
 from app.domain.primitives.feed import (
     FeedEventType,
@@ -48,12 +47,3 @@ class DeliveryFeed(DraftDeliveryFeed):
     def mark_failed(self) -> DeliveryFeed:
         """配信失敗ステータスの新しいインスタンスを返します。"""
         return replace(self, status=FeedStatus.FAILED)
-
-    def to_response_payload(self, is_history: bool = False) -> dict[str, Any]:
-        """WebSocket レスポンス用の辞書形式を生成します。"""
-        return {
-            **self.payload.to_dict(),
-            "seq": self.sequence_id.value,
-            "sequence_name": self.sequence_name.value,
-            "is_history": is_history,
-        }

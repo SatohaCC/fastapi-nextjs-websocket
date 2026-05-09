@@ -3,15 +3,21 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from ...domain.entities.direct_request import RequestStatus
 from ...domain.primitives.primitives import EntityId, MessageText, RequestText, Username
 
 if TYPE_CHECKING:
+    from ...domain.entities.delivery_feed import DeliveryFeed
     from ...domain.entities.direct_request import DirectRequest
     from ...domain.entities.message import Message
-    from ...domain.entities.payload import RequestUpdatePayload, SystemEventPayload
+    from ...domain.entities.payload import (
+        MessagePayload,
+        RequestPayload,
+        RequestUpdatePayload,
+        SystemEventPayload,
+    )
 
 # --- Client -> Server Messages (Requests) ---
 
@@ -50,11 +56,18 @@ class StatusUpdateMessage(BaseModel):
 
     type: Literal["update_status"]
     request_id: int
-    status: RequestStatus
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        """無効なステータス文字列を境界で弾く。"""
+        RequestStatus(v)
+        return v
 
     def to_domain(self) -> tuple[EntityId, RequestStatus]:
         """request_id / status をドメインプリミティブへ変換します。"""
-        return EntityId(self.request_id), self.status
+        return EntityId(self.request_id), RequestStatus(self.status)
 
 
 WebSocketMessage = Union[PongMessage, ChatMessage, RequestMessage, StatusUpdateMessage]
@@ -87,14 +100,14 @@ class ChatResponse(BaseResponse):
 
     @classmethod
     def from_domain(
-        cls, message: "Message", is_history: bool = False
+        cls, entity: Union["Message", "MessagePayload"], is_history: bool = False
     ) -> "ChatResponse":
-        """ドメインエンティティからレスポンスモデルを生成します。"""
+        """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
-            id=message.id.value,
-            username=message.username.value,
-            text=message.text.value,
-            created_at=message.created_at,
+            id=entity.id.value,
+            username=entity.username.value,
+            text=entity.text.value,
+            created_at=entity.created_at,
             is_history=is_history,
         )
 
@@ -108,24 +121,26 @@ class RequestResponse(BaseResponse):
     sender: str
     recipient: str
     text: str
-    status: RequestStatus
+    status: str
     created_at: datetime
     updated_at: datetime
     is_history: bool = False
 
     @classmethod
     def from_domain(
-        cls, request: "DirectRequest", is_history: bool = False
+        cls,
+        entity: Union["DirectRequest", "RequestPayload"],
+        is_history: bool = False,
     ) -> "RequestResponse":
-        """ドメインエンティティからレスポンスモデルを生成します。"""
+        """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
-            id=request.id.value,
-            sender=request.sender.value,
-            recipient=request.recipient.value,
-            text=request.text.value,
-            status=request.status,
-            created_at=request.created_at,
-            updated_at=request.updated_at,
+            id=entity.id.value,
+            sender=entity.sender.value,
+            recipient=entity.recipient.value,
+            text=entity.text.value,
+            status=entity.status.value,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
             is_history=is_history,
         )
 
@@ -136,22 +151,22 @@ class RequestUpdateResponse(BaseResponse):
     type: Literal["request_updated"] = "request_updated"
     id: int
     seq: Optional[int] = None
-    status: RequestStatus
+    status: str
     sender: str
     recipient: str
     updated_at: datetime
 
     @classmethod
     def from_domain(
-        cls, payload: "RequestUpdatePayload", is_history: bool = False
+        cls, entity: "RequestUpdatePayload", is_history: bool = False
     ) -> "RequestUpdateResponse":
         """RequestUpdatePayload からレスポンスモデルを生成します。"""
         return cls(
-            id=payload.id.value,
-            status=payload.status,
-            sender=payload.sender.value,
-            recipient=payload.recipient.value,
-            updated_at=payload.updated_at,
+            id=entity.id.value,
+            status=entity.status.value,
+            sender=entity.sender.value,
+            recipient=entity.recipient.value,
+            updated_at=entity.updated_at,
         )
 
 
@@ -163,12 +178,12 @@ class JoinLeaveResponse(BaseResponse):
 
     @classmethod
     def from_domain(
-        cls, payload: "SystemEventPayload", is_history: bool = False
+        cls, entity: "SystemEventPayload", is_history: bool = False
     ) -> "JoinLeaveResponse":
         """SystemEventPayload からレスポンスモデルを生成します。"""
         return cls(
-            type=cast(Literal["join", "leave"], payload.type.value),
-            username=payload.username.value,
+            type=cast(Literal["join", "leave"], entity.type.value),
+            username=entity.username.value,
         )
 
 
@@ -177,3 +192,35 @@ class ErrorResponse(BaseModel):
 
     type: Literal["error"] = "error"
     text: str
+
+
+def create_response_from_feed(
+    feed: "DeliveryFeed", is_history: bool = False
+) -> BaseResponse:
+    """DeliveryFeed から適切なレスポンス DTO を生成します。"""
+    from ...domain.entities.payload import (
+        MessagePayload,
+        RequestPayload,
+        RequestUpdatePayload,
+        SystemEventPayload,
+    )
+
+    payload = feed.payload
+    resp: BaseResponse
+
+    if isinstance(payload, MessagePayload):
+        resp = ChatResponse.from_domain(payload, is_history=is_history)
+    elif isinstance(payload, RequestPayload):
+        resp = RequestResponse.from_domain(payload, is_history=is_history)
+    elif isinstance(payload, RequestUpdatePayload):
+        resp = RequestUpdateResponse.from_domain(payload, is_history=is_history)
+    elif isinstance(payload, SystemEventPayload):
+        resp = JoinLeaveResponse.from_domain(payload, is_history=is_history)
+    else:
+        raise ValueError(f"Unsupported payload type: {type(payload)}")
+
+    # sequence_id がある場合は seq フィールドを設定
+    if hasattr(resp, "seq"):
+        resp.seq = feed.sequence_id.value  # type: ignore[attr-defined]
+
+    return resp

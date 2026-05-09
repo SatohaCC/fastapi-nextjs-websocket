@@ -14,3 +14,4 @@ class EventPublisher(Protocol):  # pylint: disable=too-few-public-methods
         Args:
             event (dict): 配信するイベントデータ。type フィールドを含む必要があります。
         """
+        ...
