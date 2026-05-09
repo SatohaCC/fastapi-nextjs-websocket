@@ -64,13 +64,9 @@ async def _relay_loop(
             if feeds:
                 try:
                     for feed in feeds:
-                        payload_to_publish = {
-                            **feed.payload.to_dict(),
-                            "seq": feed.sequence_id.value if feed.sequence_id else None,
-                            "sequence_name": feed.sequence_name.value,
-                        }
                         await redis.publish(
-                            settings.REDIS_CHANNEL, json.dumps(payload_to_publish)
+                            settings.REDIS_CHANNEL,
+                            json.dumps(feed.to_response_payload()),
                         )
 
                     feed_keys = [
