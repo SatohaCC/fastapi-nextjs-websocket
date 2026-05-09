@@ -13,8 +13,6 @@ from app.domain.exceptions import (
 from app.domain.primitives.primitives import EntityId, RequestText, Username
 from app.domain.primitives.request_status import RequestStatus
 
-from .payload import RequestPayload, RequestUpdatePayload
-
 
 @dataclass(frozen=True, kw_only=True)
 class DraftDirectRequest:
@@ -74,25 +72,3 @@ class DirectRequest(DraftDirectRequest):
             raise InvalidOperationException(
                 f"Invalid status transition: {self.status.value} -> {next_status.value}"
             )
-
-    def to_payload(self) -> RequestPayload:
-        """新規作成時の配信用 Payload に変換します。"""
-        return RequestPayload(
-            id=self.id,
-            sender=self.sender,
-            recipient=self.recipient,
-            text=self.text,
-            status=self.status,
-            created_at=self.created_at,
-            updated_at=self.updated_at,
-        )
-
-    def to_update_payload(self) -> RequestUpdatePayload:
-        """ステータス更新時の配信用 Payload に変換します。"""
-        return RequestUpdatePayload(
-            id=self.id,
-            status=self.status,
-            sender=self.sender,
-            recipient=self.recipient,
-            updated_at=self.updated_at,
-        )

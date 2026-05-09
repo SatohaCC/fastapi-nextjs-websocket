@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...domain.entities.delivery_feed import DeliveryFeed
+    from ..outbox.delivery_feed import DeliveryFeed
 
 from ...domain.primitives.primitives import Username
-from ...domain.repositories.connection_manager import ConnectionManager
+from ..interfaces.connection_manager import ConnectionManager
 
 
 class BroadcastStrategy:
@@ -37,7 +37,7 @@ class DirectStrategy:
         connection_manager: ConnectionManager,
     ) -> None:
         """Sender と recipient にのみ送信します。"""
-        from ...domain.entities.payload import RequestPayload, RequestUpdatePayload
+        from ..outbox.payload import RequestPayload, RequestUpdatePayload
 
         payload = feed.payload
         sender: Username | None = None

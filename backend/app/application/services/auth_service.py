@@ -2,20 +2,20 @@
 
 from app.domain.primitives.primitives import AuthToken, Password, Username
 
-from ...domain.repositories.jwt_service import JwtService
+from ..interfaces.auth import TokenProvider
 
 
 class AuthService:
     """ユーザー認証とトークン発行を管理するアプリケーションサービス。"""
 
-    def __init__(self, jwt: JwtService, users: dict[Username, Password]) -> None:
+    def __init__(self, jwt: TokenProvider, users: dict[Username, Password]) -> None:
         """認証サービスを初期化します。"""
         self._jwt = jwt
         self._users = users
 
     def login(self, username: Username, password: Password) -> AuthToken | None:
         """ユーザー認証を行い、成功した場合は JWT トークンを返します。"""
-        if self._jwt.authenticate_user(username, password):
+        if self._jwt.authenticate(username, password):
             return self._jwt.create_token(username)
         return None
 

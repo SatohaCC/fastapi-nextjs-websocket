@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from .application.outbox.routing import FeedRouter
 from .application.services.routing_strategies import (
     BroadcastStrategy,
     DirectStrategy,
@@ -20,7 +21,6 @@ from .domain.exceptions import (
     UnauthorizedException,
 )
 from .domain.primitives.feed import FeedEventType
-from .domain.services.feed_routing import FeedRouter
 from .infrastructure.config import settings
 from .infrastructure.messaging.cleanup_worker import cleanup_worker
 from .infrastructure.messaging.redis_subscriber import redis_subscriber

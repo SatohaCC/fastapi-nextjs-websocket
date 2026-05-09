@@ -1,4 +1,4 @@
-"""配信フィードのルーティング戦略を定義するドメインサービス。"""
+"""配信フィードのルーティング戦略を定義するサービス。"""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ import logging
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from ..entities.delivery_feed import DeliveryFeed
+    from .delivery_feed import DeliveryFeed
 
-from ..primitives.feed import FeedEventType
-from ..repositories.connection_manager import ConnectionManager
+from ...domain.primitives.feed import FeedEventType
+from ..interfaces.connection_manager import ConnectionManager
 
 logger = logging.getLogger(__name__)
 
