@@ -13,22 +13,12 @@ from app.domain.primitives.feed import (
     SequenceName,
 )
 from app.domain.primitives.primitives import (
-    EntityId,
-    MessageText,
-    RequestText,
     Username,
 )
-from app.domain.primitives.request_status import RequestStatus
 
 from ...domain.entities.delivery_feed import DeliveryFeed, DraftDeliveryFeed
-from ...domain.entities.payload import (
-    FeedPayload,
-    MessagePayload,
-    RequestPayload,
-    RequestUpdatePayload,
-    SystemEventPayload,
-)
 from ...domain.repositories.delivery_feed_repository import DeliveryFeedRepository
+from ..serialization import dict_to_payload, payload_to_dict
 from .orm_models import DeliveryFeedORM, DeliverySequenceORM
 
 
@@ -58,7 +48,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
             sequence_name=feed.sequence_name.value,
             sequence_id=new_id,
             event_type=feed.event_type.value,
-            payload=feed.payload.to_dict(),
+            payload=payload_to_dict(feed.payload),
             status=feed.status.value,
             created_at=feed.created_at,
         )
@@ -137,7 +127,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
 
     async def delete_old_processed_feeds(self, hours: int = 24) -> int:
         """指定された時間以上経過した PROCESSED ステータスのフィードを削除します。"""
-        from datetime import datetime, timedelta, timezone
+        from datetime import timedelta, timezone
 
         threshold = datetime.now(timezone.utc) - timedelta(hours=hours)
         stmt = delete(DeliveryFeedORM).where(
@@ -149,40 +139,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
 
     def _to_domain(self, orm: DeliveryFeedORM) -> DeliveryFeed:
         event_type = FeedEventType(orm.event_type)
-        payload_dict = orm.payload
-
-        # デシリアライズ
-        payload: FeedPayload
-        if event_type == FeedEventType.MESSAGE:
-            payload = MessagePayload(
-                id=EntityId(payload_dict["id"]),
-                username=Username(payload_dict["username"]),
-                text=MessageText(payload_dict["text"]),
-                created_at=datetime.fromisoformat(payload_dict["created_at"]),
-            )
-        elif event_type == FeedEventType.REQUEST:
-            payload = RequestPayload(
-                id=EntityId(payload_dict["id"]),
-                sender=Username(payload_dict["sender"]),
-                recipient=Username(payload_dict["recipient"]),
-                text=RequestText(payload_dict["text"]),
-                status=RequestStatus(payload_dict["status"]),
-                created_at=datetime.fromisoformat(payload_dict["created_at"]),
-                updated_at=datetime.fromisoformat(payload_dict["updated_at"]),
-            )
-        elif event_type == FeedEventType.REQUEST_UPDATED:
-            payload = RequestUpdatePayload(
-                id=EntityId(payload_dict["id"]),
-                status=RequestStatus(payload_dict["status"]),
-                sender=Username(payload_dict["sender"]),
-                recipient=Username(payload_dict["recipient"]),
-                updated_at=datetime.fromisoformat(payload_dict["updated_at"]),
-            )
-        else:
-            payload = SystemEventPayload(
-                type=FeedEventType(payload_dict["type"]),
-                username=Username(payload_dict["username"]),
-            )
+        payload = dict_to_payload(event_type, orm.payload)
 
         return DeliveryFeed(
             sequence_name=SequenceName(orm.sequence_name),

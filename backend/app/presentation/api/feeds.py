@@ -11,6 +11,7 @@ from ...domain.entities.delivery_feed import DeliveryFeed
 from ...domain.primitives.feed import SequenceId, SequenceName
 from ...domain.primitives.primitives import Username
 from ..dependencies import get_authenticated_user, get_feed_query_service
+from ..websockets.schemas import create_response_from_feed
 
 router = APIRouter(tags=["Feeds"])
 
@@ -27,11 +28,13 @@ class FeedResponse(BaseModel):
     @classmethod
     def from_domain(cls, feed: DeliveryFeed) -> "FeedResponse":
         """DeliveryFeed エンティティからレスポンス DTO を生成します。"""
+        # create_response_from_feed を使って適切な DTO を生成し、dict に変換
+        resp_dto = create_response_from_feed(feed)
         return cls(
             sequence_name=feed.sequence_name.value,
             sequence_id=feed.sequence_id.value,
             event_type=feed.event_type.value,
-            payload=feed.payload.to_dict(),
+            payload=resp_dto.model_dump(mode="json"),
             created_at=feed.created_at,
         )
 

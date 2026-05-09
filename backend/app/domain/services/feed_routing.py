@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from ..entities.delivery_feed import DeliveryFeed
 
 from ..primitives.feed import FeedEventType
 from ..repositories.connection_manager import ConnectionManager
@@ -16,13 +19,13 @@ class FeedRoutingStrategy(Protocol):
 
     async def route(
         self,
-        payload: dict[str, Any],
+        feed: DeliveryFeed,
         connection_manager: ConnectionManager,
     ) -> None:
-        """ペイロードを適切な配信先に送信します。
+        """フィードを適切な配信先に送信します。
 
         Args:
-            payload: 配信するイベントデータ。
+            feed: 配信するフィード。
             connection_manager: 接続管理サービス。
         """
         ...
@@ -54,30 +57,23 @@ class FeedRouter:
 
     async def route(
         self,
-        payload: dict[str, Any],
+        feed: DeliveryFeed,
         connection_manager: ConnectionManager,
     ) -> None:
-        """ペイロードの event_type に応じた戦略を解決し、配信します。
+        """フィードの event_type に応じた戦略を解決し、配信します。
 
         未登録の event_type の場合はログに警告を出力し、無視します。
 
         Args:
-            payload: 配信するイベントデータ。
+            feed: 配信するフィード。
             connection_manager: 接続管理サービス。
         """
-        raw_type = payload.get("type")
-        try:
-            event_type = FeedEventType(raw_type)
-        except ValueError:
-            logger.warning("Unknown event type received: %s", raw_type)
-            return
-
-        strategy = self._strategies.get(event_type)
+        strategy = self._strategies.get(feed.event_type)
         if strategy is None:
             logger.warning(
                 "No routing strategy registered for: %s",
-                event_type,
+                feed.event_type,
             )
             return
 
-        await strategy.route(payload, connection_manager)
+        await strategy.route(feed, connection_manager)
