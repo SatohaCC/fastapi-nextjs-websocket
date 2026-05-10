@@ -1,24 +1,21 @@
 "use client";
 
+import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import styles from "./WorkspaceHeader.module.css";
 
-interface Props {
-  username: string | null;
-  isActuallyConnected: boolean;
-  error: string | null;
-  heartbeatStatus: string;
-  syncStatus: string;
-  onLogout: () => void;
-}
+export function WorkspaceHeader() {
+  const {
+    username,
+    isConnected,
+    isOnline,
+    error,
+    heartbeatStatus,
+    syncStatus,
+    onLogout,
+  } = useWorkspaceContext();
 
-export function WorkspaceHeader({
-  username,
-  isActuallyConnected,
-  error,
-  heartbeatStatus,
-  syncStatus,
-  onLogout,
-}: Props) {
+  const isActuallyConnected = isConnected && isOnline;
+
   return (
     <header className={styles.header}>
       <div className={styles.brandGroup}>
