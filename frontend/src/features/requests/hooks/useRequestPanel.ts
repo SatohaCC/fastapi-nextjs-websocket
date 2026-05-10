@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDateTime } from "@/utils/date";
 
 interface UseRequestPanelProps {
   onSend: (to: string, text: string) => void;
@@ -16,8 +17,7 @@ export function useRequestPanel({ onSend }: UseRequestPanelProps) {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return formatDateTime(dateStr);
   };
 
   return {

@@ -1,12 +1,40 @@
 import { API_BASE } from "@/lib/config";
+import type {
+  ChatMessage,
+  JoinLeaveMessage,
+  RequestMessage,
+  RequestUpdateMessage,
+} from "@/types/ws";
 
-export interface FeedResponse {
-  sequence_name: string;
-  sequence_id: number;
-  event_type: "message" | "request" | "request_updated" | "join" | "leave";
-  payload: Record<string, any>;
-  created_at: string;
-}
+export type FeedResponse =
+  | {
+      event_type: "message";
+      payload: ChatMessage;
+      sequence_name: string;
+      sequence_id: number;
+      created_at: string;
+    }
+  | {
+      event_type: "request";
+      payload: RequestMessage;
+      sequence_name: string;
+      sequence_id: number;
+      created_at: string;
+    }
+  | {
+      event_type: "request_updated";
+      payload: RequestUpdateMessage;
+      sequence_name: string;
+      sequence_id: number;
+      created_at: string;
+    }
+  | {
+      event_type: "join" | "leave";
+      payload: JoinLeaveMessage;
+      sequence_name: string;
+      sequence_id: number;
+      created_at: string;
+    };
 
 export async function fetchFeeds(
   token: string,
