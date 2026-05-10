@@ -35,4 +35,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ### 4. 命名規則
 - **Presentational コンポーネント:** 接尾辞なし（例: `GlobalChat.tsx`）
 - **Container コンポーネント:** `Container` 接尾辞（例: `GlobalChatContainer.tsx`）
-- **CSS Modules:** コンポーネント名と同じ名前（例: `GlobalChat.module.css`）
+
+### 5. 作業の完了条件
+実装完了後は必ず以下のコマンドを実行し、エラーがないことを確認すること。
+```bash
+npm run test:all
+```
+※ このコマンドには `lint:fix`, `format`, `type-check`, `test:run` (vitest) が含まれています。
