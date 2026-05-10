@@ -61,15 +61,17 @@ async def _relay_loop(
         wakeup_event.clear()
 
         async with uow_factory() as uow:
-            feeds = await uow.outbox.get_pending(limit=100)
+            feeds = await uow.outbox.get_pending(limit=500)
             if feeds:
                 try:
-                    for feed in feeds:
-                        # Redis には再構成可能な形式でシリアライズして送信する
-                        await redis.publish(
-                            settings.REDIS_CHANNEL,
-                            json.dumps(feed_to_dict(feed)),
-                        )
+                    # pipeline で全件を 1 回の RTT にまとめて送信し、順序を保証する
+                    async with redis.pipeline() as pipe:
+                        for feed in feeds:
+                            pipe.publish(
+                                settings.REDIS_CHANNEL,
+                                json.dumps(feed_to_dict(feed)),
+                            )
+                        await pipe.execute()
 
                     feed_keys = [
                         (f.sequence_name, f.sequence_id)
