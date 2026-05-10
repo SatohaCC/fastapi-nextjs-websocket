@@ -9,7 +9,7 @@ const meta: Meta<typeof LoginForm> = {
   args: {
     onUsernameChange: fn(),
     onPasswordChange: fn(),
-    onSubmit: fn(),
+    action: fn(),
   },
 };
 

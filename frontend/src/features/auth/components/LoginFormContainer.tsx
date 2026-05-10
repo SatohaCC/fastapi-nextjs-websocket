@@ -11,7 +11,7 @@ export function LoginFormContainer() {
     setPassword,
     error,
     loading,
-    handleSubmit,
+    formAction,
   } = useLoginForm();
 
   return (
@@ -22,7 +22,7 @@ export function LoginFormContainer() {
       loading={loading}
       onUsernameChange={setUsername}
       onPasswordChange={setPassword}
-      onSubmit={handleSubmit}
+      action={formAction}
     />
   );
 }

@@ -17,7 +17,7 @@ interface Props {
   loading: boolean;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  action: (formData: FormData) => void;
 }
 
 export function LoginForm({
@@ -27,11 +27,11 @@ export function LoginForm({
   loading,
   onUsernameChange,
   onPasswordChange,
-  onSubmit,
+  action,
 }: Props) {
   return (
     <div className={`fade-in ${styles.container}`}>
-      <form onSubmit={onSubmit} className={styles.form}>
+      <form action={action} className={styles.form}>
         <div className={styles.header}>
           <h1 className={styles.logo}>WebSocket お試しアプリ</h1>
           <p className={styles.subtitle}>
