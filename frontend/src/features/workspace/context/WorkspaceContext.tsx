@@ -1,10 +1,11 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ChatMessage, RequestMessage, RequestStatus } from "@/types/ws";
+import type { ChatMessage, RequestMessage } from "@/types/ws";
 
 interface WorkspaceContextValue {
   username: string;
+  authToken: string | null;
   users: string[];
   chatMessages: ChatMessage[];
   requestMessages: RequestMessage[];
@@ -14,9 +15,6 @@ interface WorkspaceContextValue {
   heartbeatStatus: string;
   syncStatus: string;
   onLogout: () => void;
-  sendChat: (text: string) => Promise<void>;
-  sendRequest: (to: string, text: string) => Promise<void>;
-  updateStatus: (requestId: number, status: RequestStatus) => Promise<void>;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextValue | null>(

@@ -24,9 +24,6 @@ export function WorkspaceContainer() {
     heartbeatStatus,
     syncStatus,
     disconnect,
-    sendChat,
-    sendRequest,
-    updateStatus,
   } = useWebSocket(authToken);
 
   useEffect(() => {
@@ -55,6 +52,7 @@ export function WorkspaceContainer() {
     <WorkspaceContext.Provider
       value={{
         username,
+        authToken,
         users,
         chatMessages,
         requestMessages,
@@ -64,9 +62,6 @@ export function WorkspaceContainer() {
         heartbeatStatus,
         syncStatus,
         onLogout: handleLogout,
-        sendChat,
-        sendRequest,
-        updateStatus,
       }}
     >
       <Workspace />

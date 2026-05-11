@@ -1,16 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRequestPanel } from "@/features/requests/hooks/useRequestPanel";
+import { useRequests } from "@/features/requests/hooks/useRequests";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { RequestPanel } from "./RequestPanel";
 
 export function RequestPanelContainer() {
-  const { users, requestMessages, sendRequest, updateStatus, username } =
-    useWorkspaceContext();
+  const { users, requestMessages, username } = useWorkspaceContext();
 
-  const { targetUser, setTargetUser, text, setText, handleSend, formatDate } =
-    useRequestPanel({ onSend: sendRequest });
+  const {
+    targetUser,
+    setTargetUser,
+    text,
+    setText,
+    handleSend,
+    updateStatus,
+    formatDate,
+  } = useRequests();
 
   const otherUsers = users.filter((u) => u !== username);
 

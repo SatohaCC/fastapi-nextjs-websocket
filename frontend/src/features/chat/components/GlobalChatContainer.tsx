@@ -1,15 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGlobalChat } from "@/features/chat/hooks/useGlobalChat";
+import { useChat } from "@/features/chat/hooks/useChat";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { GlobalChat } from "./GlobalChat";
 
 export function GlobalChatContainer() {
-  const { chatMessages, sendChat, username } = useWorkspaceContext();
-  const { text, setText, handleSend, formatTime } = useGlobalChat({
-    onSend: sendChat,
-  });
+  const { chatMessages, username } = useWorkspaceContext();
+  const { text, setText, handleSend, formatTime } = useChat();
 
   // seq が無い（履歴）場合は id でソートし、seq がある場合は seq でソートする
   const sortedMessages = useMemo(

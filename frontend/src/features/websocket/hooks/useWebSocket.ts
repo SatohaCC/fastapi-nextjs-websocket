@@ -1,20 +1,18 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import {
-  sendRequest as apiSendRequest,
-  sendMessage,
-  updateRequestStatus,
-} from "@/features/websocket/api";
+import { useEffect } from "react";
 import { dispatchMessage } from "@/features/websocket/handlers";
-import type { RequestStatus } from "@/types/ws";
-import { useConnection } from "./useConnection";
+import { useBackoffRetry } from "./useBackoffRetry";
+import { useHeartbeat } from "./useHeartbeat";
 import { useMessageSync } from "./useMessageSync";
+import { useNetworkStatus } from "./useNetworkStatus";
+import { useSocketInstance } from "./useSocketInstance";
 
-const INITIAL_RETRY_MS = 1000;
-
+/**
+ * WebSocket機能のメインオーケストレーター
+ */
 export function useWebSocket(token: string | null) {
-  // 1. メッセージ・同期管理のフック
+  // 1. データストアと同期ロジック
   const {
     chatMessages,
     setChatMessages,
@@ -25,153 +23,87 @@ export function useWebSocket(token: string | null) {
     lastChatId,
     lastRequestId,
     fetchMissingFeeds,
+    clearMessages,
   } = useMessageSync(token);
 
-  // 2. 接続管理のフック
-  const {
-    isConnected,
-    isOnline,
-    setIsOnline,
-    error,
-    setError,
-    heartbeatStatus,
-    setHeartbeatStatus,
-    connect,
-    disconnect,
-    resetPingTimeout,
-    retryMsRef,
-  } = useConnection({
+  // 2. ネットワーク状態と再試行ロジック
+  const isOnline = useNetworkStatus();
+  const { recordSuccess, recordFailure } = useBackoffRetry();
+
+  // 3. WebSocket接続インスタンスの先行定義（socketを取得するため）
+  // 循環参照を避けるため、ハンドラ内でのみresetHeartbeatを使用する
+  const { socket, isConnected, reconnect, disconnect } = useSocketInstance(
     token,
-    lastChatIdRef: lastChatId,
-    lastRequestIdRef: lastRequestId,
-    onMessage: (event, socket) => {
-      dispatchMessage(event, socket, {
-        setChatMessages,
-        setRequestMessages,
-        setError,
-        setSyncStatus,
-        setHeartbeatStatus,
-        lastChatId,
-        lastRequestId,
-        resetPingTimeout,
-        fetchMissingFeeds,
-      });
+    {
+      enabled: isOnline,
+      lastChatIdRef: lastChatId,
+      lastRequestIdRef: lastRequestId,
+      onOpen: () => {
+        recordSuccess();
+        setSyncStatus("接続済み");
+      },
+      onMessage: (event, socket) => {
+        activeResetHeartbeat(); // メッセージ受信時にハートビートをリセット
+        dispatchMessage(event, socket, {
+          setChatMessages,
+          setRequestMessages,
+          setError: (msg) => setSyncStatus(`エラー: ${msg}`),
+          setSyncStatus,
+          setHeartbeatStatus: () => {},
+          lastChatId,
+          lastRequestId,
+          resetPingTimeout: activeResetHeartbeat,
+          fetchMissingFeeds,
+        });
+      },
+      onClose: () => {
+        if (isOnline) {
+          const delay = recordFailure();
+          setSyncStatus(`切断されました。${delay / 1000}秒後に再接続します...`);
+          setTimeout(reconnect, delay);
+        } else {
+          setSyncStatus("ネットワークオフライン");
+        }
+      },
+      onError: () => setSyncStatus("接続エラー"),
     },
-    onStatusChange: setSyncStatus,
+  );
+
+  // 4. 死活監視
+  const { resetHeartbeat: activeResetHeartbeat } = useHeartbeat(socket, {
+    onTimeout: () => {
+      setSyncStatus("通信タイムアウト。再接続します...");
+      socket?.close();
+    },
   });
 
-  // 3. API アクション
-  const sendChat = useCallback(
-    async (text: string) => {
-      if (!token) return;
-      try {
-        await sendMessage(token, text);
-      } catch {
-        setError("メッセージ送信に失敗しました");
-      }
-    },
-    [token, setError],
-  );
+  // ── ライフサイクル管理 ──
 
-  const sendRequest = useCallback(
-    async (to: string, text: string) => {
-      if (!token) return;
-      try {
-        await apiSendRequest(token, { to, text });
-      } catch {
-        setError("リクエスト送信に失敗しました");
-      }
-    },
-    [token, setError],
-  );
-
-  const updateStatus = useCallback(
-    async (requestId: number, status: RequestStatus) => {
-      if (!token) return;
-      try {
-        await updateRequestStatus(token, requestId, status);
-      } catch {
-        setError("ステータス更新に失敗しました");
-      }
-    },
-    [token, setError],
-  );
-
-  // ── トークン監視 ──
+  // トークン変更時に状態をクリア
   useEffect(() => {
-    // トークンが変わったら、古いデータを即座にクリアする
-    setChatMessages([]);
-    setRequestMessages([]);
-    setSyncStatus("待機中...");
-
     if (token) {
-      disconnect(); // 古い接続があれば掃除
-      connect();
+      clearMessages();
     }
-  }, [
-    token,
-    connect,
-    disconnect,
-    setChatMessages,
-    setRequestMessages,
-    setSyncStatus,
-  ]);
+  }, [token, clearMessages]);
 
-  // ── ネットワーク監視 & 定期同期 ──
+  // 定期同期（安全策としてのポーリング）
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      retryMsRef.current = INITIAL_RETRY_MS;
-      setSyncStatus("ネットワーク復帰。再接続しています...");
-      connect();
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      setSyncStatus("ネットワークオフライン");
-      disconnect();
-    };
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
     const syncInterval = setInterval(() => {
-      if (isConnected && navigator.onLine) {
-        setSyncStatus(`最終同期: ${new Date().toLocaleTimeString()}`);
-        if (lastChatId.current !== null || lastRequestId.current !== null) {
-          fetchMissingFeeds();
-        }
+      if (isConnected && isOnline) {
+        fetchMissingFeeds();
       }
     }, 30000);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-      clearInterval(syncInterval);
-    };
-  }, [
-    isConnected,
-    connect,
-    disconnect,
-    fetchMissingFeeds,
-    setSyncStatus,
-    setIsOnline,
-    retryMsRef,
-    lastChatId.current,
-    lastRequestId.current,
-  ]);
+    return () => clearInterval(syncInterval);
+  }, [isConnected, isOnline, fetchMissingFeeds]);
 
   return {
     chatMessages,
     requestMessages,
     isConnected,
     isOnline,
-    error,
-    heartbeatStatus,
+    error: syncStatus.includes("エラー") ? syncStatus : null,
     syncStatus,
-    connect,
+    heartbeatStatus: isConnected ? "接続中" : "切断",
     disconnect,
-    sendChat,
-    sendRequest,
-    updateStatus,
   };
 }
