@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useWebSocket } from "@/features/websocket/hooks/useWebSocket";
-import { WorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useUsers } from "@/features/workspace/hooks/useUsers";
 import { Workspace } from "./Workspace";
 import { WorkspaceLoading } from "./WorkspaceLoading";
@@ -52,24 +51,20 @@ export function WorkspaceContainer() {
   }
 
   return (
-    <WorkspaceContext.Provider
-      value={{
-        username,
-        users,
-        chatMessages,
-        requestMessages,
-        isConnected,
-        isOnline,
-        error,
-        heartbeatStatus,
-        syncStatus,
-        onLogout: handleLogout,
-        sendChat,
-        sendRequest,
-        updateStatus,
-      }}
-    >
-      <Workspace />
-    </WorkspaceContext.Provider>
+    <Workspace
+      username={username}
+      users={users}
+      chatMessages={chatMessages}
+      requestMessages={requestMessages}
+      isConnected={isConnected}
+      isOnline={isOnline}
+      error={error}
+      heartbeatStatus={heartbeatStatus}
+      syncStatus={syncStatus}
+      onLogout={handleLogout}
+      onSendChat={sendChat}
+      onSendRequest={sendRequest}
+      onUpdateStatus={updateStatus}
+    />
   );
 }

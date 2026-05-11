@@ -2,34 +2,45 @@
 
 import { useMemo } from "react";
 import { useRequestPanel } from "@/features/requests/hooks/useRequestPanel";
-import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import type { RequestMessage, RequestStatus } from "@/types/ws";
 import { RequestPanel } from "./RequestPanel";
 
-export function RequestPanelContainer() {
-  const { users, requestMessages, sendRequest, updateStatus, username } =
-    useWorkspaceContext();
+interface Props {
+  users: string[];
+  messages: RequestMessage[];
+  onSend: (to: string, text: string) => void;
+  onUpdateStatus: (id: number, status: RequestStatus) => void;
+  currentUser: string;
+}
 
+export function RequestPanelContainer({
+  users,
+  messages,
+  onSend,
+  onUpdateStatus,
+  currentUser,
+}: Props) {
   const { targetUser, setTargetUser, text, setText, handleSend, formatDate } =
-    useRequestPanel({ onSend: sendRequest });
+    useRequestPanel({ onSend });
 
-  const otherUsers = users.filter((u) => u !== username);
+  const otherUsers = users.filter((u) => u !== currentUser);
 
   // データ加工ロジック（反転）を Container 側で担当
   const reversedMessages = useMemo(() => {
-    return [...requestMessages].reverse();
-  }, [requestMessages]);
+    return [...messages].reverse();
+  }, [messages]);
 
   return (
     <RequestPanel
       otherUsers={otherUsers}
       messages={reversedMessages}
-      currentUser={username}
+      currentUser={currentUser}
       targetUser={targetUser}
       text={text}
       onTargetUserChange={setTargetUser}
       onTextChange={setText}
       onSend={handleSend}
-      onUpdateStatus={updateStatus}
+      onUpdateStatus={onUpdateStatus}
       formatDate={formatDate}
     />
   );

@@ -3,15 +3,52 @@
 import { GlobalChatContainer } from "@/features/chat/components/GlobalChatContainer";
 import { RequestPanelContainer } from "@/features/requests/components/RequestPanelContainer";
 import { WorkspaceHeader } from "@/features/workspace/components/WorkspaceHeader";
-import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import type { ChatMessage, RequestMessage, RequestStatus } from "@/types/ws";
 import styles from "./Workspace.module.css";
 
-export function Workspace() {
-  const { error } = useWorkspaceContext();
+interface Props {
+  username: string | null;
+  users: string[];
+  chatMessages: ChatMessage[];
+  requestMessages: RequestMessage[];
+  isConnected: boolean;
+  isOnline: boolean;
+  error: string | null;
+  heartbeatStatus: string;
+  syncStatus: string;
+  onLogout: () => void;
+  onSendChat: (text: string) => void;
+  onSendRequest: (to: string, text: string) => void;
+  onUpdateStatus: (id: number, status: RequestStatus) => void;
+}
+
+export function Workspace({
+  username,
+  users,
+  chatMessages,
+  requestMessages,
+  isConnected,
+  isOnline,
+  error,
+  heartbeatStatus,
+  syncStatus,
+  onLogout,
+  onSendChat,
+  onSendRequest,
+  onUpdateStatus,
+}: Props) {
+  const isActuallyConnected = isConnected && isOnline;
 
   return (
     <div className={styles.container}>
-      <WorkspaceHeader />
+      <WorkspaceHeader
+        username={username}
+        isActuallyConnected={isActuallyConnected}
+        error={error}
+        heartbeatStatus={heartbeatStatus}
+        syncStatus={syncStatus}
+        onLogout={onLogout}
+      />
 
       {error && (
         <div className={`fade-in ${styles.errorToast}`}>
@@ -20,8 +57,18 @@ export function Workspace() {
       )}
 
       <main className={styles.main}>
-        <GlobalChatContainer />
-        <RequestPanelContainer />
+        <GlobalChatContainer
+          messages={chatMessages}
+          onSend={onSendChat}
+          currentUser={username || ""}
+        />
+        <RequestPanelContainer
+          users={users}
+          messages={requestMessages}
+          onSend={onSendRequest}
+          onUpdateStatus={onUpdateStatus}
+          currentUser={username || ""}
+        />
       </main>
 
       <footer className={styles.footer}>

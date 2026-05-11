@@ -1,19 +1,22 @@
 "use client";
 
 import { useGlobalChat } from "@/features/chat/hooks/useGlobalChat";
-import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import type { ChatMessage } from "@/types/ws";
 import { GlobalChat } from "./GlobalChat";
 
-export function GlobalChatContainer() {
-  const { chatMessages, sendChat, username } = useWorkspaceContext();
-  const { text, setText, handleSend, formatTime } = useGlobalChat({
-    onSend: sendChat,
-  });
+interface Props {
+  messages: ChatMessage[];
+  onSend: (text: string) => void;
+  currentUser: string;
+}
+
+export function GlobalChatContainer({ messages, onSend, currentUser }: Props) {
+  const { text, setText, handleSend, formatTime } = useGlobalChat({ onSend });
 
   return (
     <GlobalChat
-      messages={chatMessages}
-      currentUser={username}
+      messages={messages}
+      currentUser={currentUser}
       text={text}
       onTextChange={setText}
       onSend={handleSend}
