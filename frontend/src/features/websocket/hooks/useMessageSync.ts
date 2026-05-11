@@ -28,6 +28,8 @@ export function useMessageSync(token: string | null) {
         lastRequestId.current,
       );
 
+      setSyncStatus(`最終同期: ${new Date().toLocaleTimeString()}`);
+
       if (feeds.length === 0) return;
 
       setChatMessages((prev) => {
