@@ -66,7 +66,7 @@ const mockRequests: RequestMessage[] = [
 export const Default: Story = {
   args: {
     otherUsers: ["bob", "charlie"],
-    messages: mockRequests,
+    requests: mockRequests,
     currentUser: "alice",
     targetUser: "",
     text: "",
@@ -76,7 +76,7 @@ export const Default: Story = {
 export const Empty: Story = {
   args: {
     otherUsers: ["bob", "charlie"],
-    messages: [],
+    requests: [],
     currentUser: "alice",
     targetUser: "",
     text: "",
@@ -86,7 +86,7 @@ export const Empty: Story = {
 export const Typing: Story = {
   args: {
     otherUsers: ["bob", "charlie"],
-    messages: mockRequests,
+    requests: mockRequests,
     currentUser: "alice",
     targetUser: "bob",
     text: "急ぎでお願いします！",

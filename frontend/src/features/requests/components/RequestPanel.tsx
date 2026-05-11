@@ -9,7 +9,7 @@ import styles from "./RequestPanel.module.css";
 
 interface Props {
   otherUsers: string[];
-  messages: RequestMessage[];
+  requests: RequestMessage[];
   currentUser: string;
   targetUser: string;
   text: string;
@@ -22,7 +22,7 @@ interface Props {
 
 export function RequestPanel({
   otherUsers,
-  messages,
+  requests,
   currentUser,
   targetUser,
   text,
@@ -82,10 +82,10 @@ export function RequestPanel({
       </form>
 
       <div className={styles.requestList}>
-        {messages.length === 0 ? (
+        {requests.length === 0 ? (
           <div className={styles.emptyState}>現在リクエストはありません。</div>
         ) : (
-          messages.map((m) => {
+          requests.map((m) => {
             const isFromMe = m.sender === currentUser;
             const canUpdate =
               m.recipient === currentUser && m.status !== "completed";
