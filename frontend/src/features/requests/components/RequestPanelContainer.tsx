@@ -14,15 +14,25 @@ export function RequestPanelContainer() {
 
   const otherUsers = users.filter((u) => u !== username);
 
-  // データ加工ロジック（反転）を Container 側で担当
-  const reversedMessages = useMemo(() => {
-    return [...requestMessages].reverse();
-  }, [requestMessages]);
+  // seq が無い（履歴）場合は id でソートし、seq がある場合は seq でソートする。
+  // 表示は新しい順なので最後に reverse する
+  const displayRequests = useMemo(
+    () =>
+      [...requestMessages]
+        .sort((a, b) => {
+          const aSeq = a.seq ?? 0;
+          const bSeq = b.seq ?? 0;
+          if (aSeq !== bSeq) return aSeq - bSeq;
+          return (a.id ?? 0) - (b.id ?? 0);
+        })
+        .reverse(),
+    [requestMessages],
+  );
 
   return (
     <RequestPanel
       otherUsers={otherUsers}
-      messages={reversedMessages}
+      requests={displayRequests}
       currentUser={username}
       targetUser={targetUser}
       text={text}

@@ -15,7 +15,7 @@ export default function Loading() {
         className="logo-glow"
         style={{ fontSize: "32px", fontWeight: "900" }}
       >
-        AETHER
+        App
       </div>
       <div
         style={{

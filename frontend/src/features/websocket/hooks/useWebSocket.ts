@@ -160,24 +160,9 @@ export function useWebSocket(token: string | null) {
     lastRequestId.current,
   ]);
 
-  // ソート済みメッセージの提供
-  // seq が無い（履歴）場合は id でソートし、seq がある場合は seq でソートする。
-  const sortedChatMessages = [...chatMessages].sort((a, b) => {
-    const aSeq = a.seq ?? 0;
-    const bSeq = b.seq ?? 0;
-    if (aSeq !== bSeq) return aSeq - bSeq;
-    return (a.id ?? 0) - (b.id ?? 0);
-  });
-  const sortedRequestMessages = [...requestMessages].sort((a, b) => {
-    const aSeq = a.seq ?? 0;
-    const bSeq = b.seq ?? 0;
-    if (aSeq !== bSeq) return aSeq - bSeq;
-    return (a.id ?? 0) - (b.id ?? 0);
-  });
-
   return {
-    chatMessages: sortedChatMessages,
-    requestMessages: sortedRequestMessages,
+    chatMessages,
+    requestMessages,
     isConnected,
     isOnline,
     error,
