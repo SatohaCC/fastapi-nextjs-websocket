@@ -1,6 +1,6 @@
 "use client";
 
-import { GlobalChatContainer } from "@/features/chat/components/GlobalChatContainer";
+import { GlobalChatContainer } from "@/features/global_chat/components/GlobalChatContainer";
 import { RequestPanelContainer } from "@/features/requests/components/RequestPanelContainer";
 import { WorkspaceHeader } from "@/features/workspace/components/WorkspaceHeader";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";

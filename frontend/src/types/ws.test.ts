@@ -1,21 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { isChatMessage, isRequestMessage, isRequestUpdateMessage } from "./ws";
+import {
+  isGlobalChatMessage,
+  isRequestMessage,
+  isRequestUpdateMessage,
+} from "./ws";
 
 describe("WebSocket Type Guards", () => {
-  it("should correctly identify ChatMessage", () => {
+  it("should correctly identify GlobalChatMessage", () => {
     const mockChat = {
-      type: "message",
+      type: "global_chat",
       id: 1,
       text: "hello",
       username: "alice",
       created_at: "2024-01-01",
       seq: 1,
     } as const;
-    const invalidChat = { type: "message", id: 1 };
+    const invalidChat = { type: "global_chat", id: 1 };
 
-    expect(isChatMessage(mockChat)).toBe(true);
-    expect(isChatMessage(invalidChat)).toBe(false);
-    expect(isChatMessage(null)).toBe(false);
+    expect(isGlobalChatMessage(mockChat)).toBe(true);
+    expect(isGlobalChatMessage(invalidChat)).toBe(false);
+    expect(isGlobalChatMessage(null)).toBe(false);
   });
 
   it("should correctly identify RequestMessage", () => {

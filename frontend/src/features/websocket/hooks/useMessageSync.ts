@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { fetchFeeds } from "@/features/websocket/api";
 import { mergeById } from "@/features/websocket/utils/mergeById";
-import type { ChatMessage, RequestMessage } from "@/types/ws";
+import type { GlobalChatMessage, RequestMessage } from "@/types/ws";
 
 export function useMessageSync(token: string | null) {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<GlobalChatMessage[]>([]);
   const [requestMessages, setRequestMessages] = useState<RequestMessage[]>([]);
   const [syncStatus, setSyncStatus] = useState<string>("未同期");
 
@@ -20,7 +20,7 @@ export function useMessageSync(token: string | null) {
         lastRequestId.current,
       );
       for (const feed of feeds) {
-        if (feed.event_type === "message") {
+        if (feed.event_type === "global_chat") {
           setChatMessages((prev) =>
             mergeById(prev, [
               {
@@ -58,7 +58,7 @@ export function useMessageSync(token: string | null) {
 
         // シーケンスIDの更新
         if (
-          feed.sequence_name === "chat_global" &&
+          feed.sequence_name === "global_chat" &&
           feed.sequence_id > (lastChatId.current ?? -1)
         ) {
           lastChatId.current = feed.sequence_id;

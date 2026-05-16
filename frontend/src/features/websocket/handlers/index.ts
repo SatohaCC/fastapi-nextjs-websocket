@@ -1,11 +1,11 @@
 import type {
-  ChatMessage,
   ErrorMessage,
+  GlobalChatMessage,
   RequestMessage,
   RequestUpdateMessage,
   ServerMessage,
 } from "@/types/ws";
-import { handleChatMessage } from "./chatHandler";
+import { handleGlobalChatMessage } from "./globalChatHandler";
 import { handleRequestMessage, handleRequestUpdated } from "./requestHandler";
 import { handleError, handlePing, handleSeqGap } from "./systemHandler";
 import type { HandlerDeps } from "./types";
@@ -33,8 +33,8 @@ export function dispatchMessage(
 
   // 各メッセージタイプに応じた処理
   switch (data.type) {
-    case "message":
-      handleChatMessage(data as ChatMessage, deps);
+    case "global_chat":
+      handleGlobalChatMessage(data as GlobalChatMessage, deps);
       break;
     case "request":
       handleRequestMessage(data as RequestMessage, deps);

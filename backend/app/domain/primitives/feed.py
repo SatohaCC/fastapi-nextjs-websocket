@@ -7,7 +7,7 @@ class FeedEventType(str, Enum):
     """ビジネスイベントの種類を表すドメインプリミティブ。"""
 
     __slots__ = ()
-    MESSAGE = "message"
+    GLOBAL_CHAT = "global_chat"
     REQUEST = "request"
     REQUEST_UPDATED = "request_updated"
     JOIN = "join"

@@ -9,7 +9,7 @@ from app.application.outbox.delivery_feed import (
     SequenceId,
     SequenceName,
 )
-from app.application.outbox.payload import MessagePayload
+from app.application.outbox.payload import GlobalChatPayload
 from app.domain.entities.message import DraftMessage
 from app.domain.primitives.feed import FeedEventType
 from app.domain.primitives.primitives import EntityId, MessageText, Username
@@ -33,8 +33,8 @@ async def test_uow_commit_saves_multiple_entities(db_uow: SqlAlchemyUnitOfWork):
         await db_uow.outbox.save(
             DraftDeliveryFeed(
                 sequence_name=SequenceName("chat"),
-                event_type=FeedEventType.MESSAGE,
-                payload=MessagePayload(
+                event_type=FeedEventType.GLOBAL_CHAT,
+                payload=GlobalChatPayload(
                     id=msg.id,
                     username=msg.username,
                     text=msg.text,

@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 
 from app.application.outbox.payload import (
-    MessagePayload,
+    GlobalChatPayload,
     RequestPayload,
     RequestUpdatePayload,
     SystemEventPayload,
@@ -18,23 +18,23 @@ from app.domain.primitives.primitives import (
 from app.domain.primitives.request_status import RequestStatus
 
 
-class TestMessagePayload:
-    """MessagePayload のテスト。"""
+class TestGlobalChatPayload:
+    """GlobalChatPayload のテスト。"""
 
     def test_event_type(self):
-        """event_type が MESSAGE であること。"""
-        payload = MessagePayload(
+        """event_type が GLOBAL_CHAT であること。"""
+        payload = GlobalChatPayload(
             id=EntityId(10),
             username=Username("alice"),
             text=MessageText("hello"),
             created_at=datetime.now(timezone.utc),
         )
-        assert payload.event_type == FeedEventType.MESSAGE
+        assert payload.event_type == FeedEventType.GLOBAL_CHAT
 
     def test_fields_are_stored(self):
         """指定したフィールドが正しく保持されること。"""
         now = datetime.now(timezone.utc)
-        payload = MessagePayload(
+        payload = GlobalChatPayload(
             id=EntityId(10),
             username=Username("alice"),
             text=MessageText("hello"),

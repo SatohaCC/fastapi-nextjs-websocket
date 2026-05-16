@@ -19,7 +19,11 @@ describe("handleSeqGap", () => {
 
   it("正常なシーケンスの場合、lastId を更新し、ギャップ検知は行わない", () => {
     const deps = createMockDeps({ lastChatId: { current: 10 } });
-    const message = { type: "message", sequence_name: "chat_global", seq: 11 };
+    const message = {
+      type: "global_chat",
+      sequence_name: "global_chat",
+      seq: 11,
+    };
 
     handleSeqGap(message as unknown as ServerMessage, deps);
 
@@ -29,20 +33,28 @@ describe("handleSeqGap", () => {
 
   it("シーケンスにギャップがある場合、fetchMissingFeeds を呼び出し、ステータスを更新する", () => {
     const deps = createMockDeps({ lastChatId: { current: 10 } });
-    const message = { type: "message", sequence_name: "chat_global", seq: 12 };
+    const message = {
+      type: "global_chat",
+      sequence_name: "global_chat",
+      seq: 12,
+    };
 
     handleSeqGap(message as unknown as ServerMessage, deps);
 
     expect(deps.lastChatId.current).toBe(12);
     expect(deps.fetchMissingFeeds).toHaveBeenCalled();
     expect(deps.setSyncStatus).toHaveBeenCalledWith(
-      expect.stringContaining("Gap detected in chat_global!"),
+      expect.stringContaining("Gap detected in global_chat!"),
     );
   });
 
   it("古いメッセージ（seq が現在より小さい）の場合、何もしない", () => {
     const deps = createMockDeps({ lastChatId: { current: 10 } });
-    const message = { type: "message", sequence_name: "chat_global", seq: 9 };
+    const message = {
+      type: "global_chat",
+      sequence_name: "global_chat",
+      seq: 9,
+    };
 
     handleSeqGap(message as unknown as ServerMessage, deps);
 
@@ -52,7 +64,11 @@ describe("handleSeqGap", () => {
 
   it("初回受信（lastId が null）の場合、lastId を更新する", () => {
     const deps = createMockDeps({ lastChatId: { current: null } });
-    const message = { type: "message", sequence_name: "chat_global", seq: 5 };
+    const message = {
+      type: "global_chat",
+      sequence_name: "global_chat",
+      seq: 5,
+    };
 
     handleSeqGap(message as unknown as ServerMessage, deps);
 
@@ -62,7 +78,11 @@ describe("handleSeqGap", () => {
 
   it("対象外のシーケンス名の場合は何もしない", () => {
     const deps = createMockDeps({ lastChatId: { current: 10 } });
-    const message = { type: "message", sequence_name: "unknown_seq", seq: 11 };
+    const message = {
+      type: "global_chat",
+      sequence_name: "unknown_seq",
+      seq: 11,
+    };
 
     handleSeqGap(message as unknown as ServerMessage, deps);
 
@@ -72,8 +92,8 @@ describe("handleSeqGap", () => {
   it("seq が null の場合は何もしない", () => {
     const deps = createMockDeps({ lastChatId: { current: 10 } });
     const message = {
-      type: "message",
-      sequence_name: "chat_global",
+      type: "global_chat",
+      sequence_name: "global_chat",
       seq: null,
     };
 
