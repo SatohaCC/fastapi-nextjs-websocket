@@ -1,10 +1,10 @@
 import { API_BASE } from "@/lib/config";
-import type { DirectRequestMessage } from "@/types/ws";
+import type { DirectRequestServerMessage } from "@/types/ws";
 
 export async function fetchRequests(
   token: string,
   afterId: number,
-): Promise<DirectRequestMessage[]> {
+): Promise<DirectRequestServerMessage[]> {
   const res = await fetch(
     `${API_BASE}/api/direct_requests?after_id=${afterId}`,
     {

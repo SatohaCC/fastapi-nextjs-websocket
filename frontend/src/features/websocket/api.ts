@@ -1,36 +1,36 @@
 import { API_BASE } from "@/lib/config";
 import type {
-  DirectRequestMessage,
-  DirectRequestUpdateMessage,
-  GlobalChatMessage,
-  JoinLeaveMessage,
+  DirectRequestServerMessage,
+  DirectRequestUpdatedServerMessage,
+  GlobalChatServerMessage,
+  JoinLeaveServerMessage,
 } from "@/types/ws";
 
 export type FeedResponse =
   | {
       event_type: "global_chat";
-      payload: GlobalChatMessage;
+      payload: GlobalChatServerMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
     }
   | {
       event_type: "direct_request";
-      payload: DirectRequestMessage;
+      payload: DirectRequestServerMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
     }
   | {
       event_type: "direct_request_updated";
-      payload: DirectRequestUpdateMessage;
+      payload: DirectRequestUpdatedServerMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
     }
   | {
       event_type: "join" | "leave";
-      payload: JoinLeaveMessage;
+      payload: JoinLeaveServerMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
