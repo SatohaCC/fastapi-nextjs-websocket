@@ -18,6 +18,21 @@ export const handlers = [
     return new HttpResponse(null, { status: 200 });
   }),
 
+  // ダイレクトリクエスト送信 API
+  http.post(`${API_BASE}/api/direct_requests`, async ({ request }) => {
+    const _data = await request.json();
+    return new HttpResponse(null, { status: 200 });
+  }),
+
+  // ダイレクトリクエストのステータス更新 API
+  http.patch(
+    `${API_BASE}/api/direct_requests/:taskId/status`,
+    async ({ request }) => {
+      const _data = await request.json();
+      return new HttpResponse(null, { status: 200 });
+    },
+  ),
+
   // フィード同期 API
   http.get(`${API_BASE}/api/feeds`, ({ request }) => {
     const url = new URL(request.url);
