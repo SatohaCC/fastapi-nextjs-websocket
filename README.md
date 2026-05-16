@@ -39,7 +39,7 @@
     ↕ WebSocket / REST API
 バックエンド（FastAPI / Python）
     ├─ PostgreSQL（Single Source of Truth）
-    │   ├── messages / requests     （永続データ）
+    │   ├── messages / tasks        （永続データ）
     │   ├── delivery_sequences      （厳密連番カウンタ）
     │   └── delivery_feeds          （Outbox 兼 配信ログ）
     └─ Redis（複数インスタンス間ブロードキャスト用）
@@ -154,6 +154,23 @@ PostgreSQL, Redis, pgAdmin を起動します。
 docker-compose up -d postgres redis pgadmin
 ```
 - **pgAdmin**: `http://localhost:5050` (ID: `admin@example.com`, PW: `admin`)
+
+> **注: 命名統一リファクタ後の初回起動**
+>
+> `direct_request` 機能の entity を `Task` にリネームしたため、テーブル名が `requests` → `tasks` に変わりました。`Base.metadata.create_all` は既存テーブルを drop しないので、旧 DB を引き継ぐ場合は手動で旧テーブル／旧 sequence 行を削除してください。
+>
+> ```bash
+> docker-compose exec postgres psql -U user -d chat_db -c \
+>   "DROP TABLE IF EXISTS requests; \
+>    DELETE FROM delivery_sequences WHERE name IN ('chat_global', 'requests_global');"
+> ```
+>
+> もしくはボリュームごと初期化:
+>
+> ```bash
+> docker-compose down -v
+> docker-compose up -d postgres redis pgadmin
+> ```
 
 ### 2. バックエンドの起動 (Python)
 `backend` ディレクトリでライブラリをインストールし、サーバーを起動します。

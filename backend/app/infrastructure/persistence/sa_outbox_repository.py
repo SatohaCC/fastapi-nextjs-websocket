@@ -111,11 +111,11 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         )
 
         if username:
-            # message イベント、または送信元/宛先が該当ユーザーの
+            # global_chat イベント、または送信元/宛先が該当ユーザーの
             # request 系イベントをフィルタリング
             stmt = stmt.where(
                 or_(
-                    DeliveryFeedORM.event_type == FeedEventType.MESSAGE.value,
+                    DeliveryFeedORM.event_type == FeedEventType.GLOBAL_CHAT.value,
                     DeliveryFeedORM.payload["sender"].astext == username.value,
                     DeliveryFeedORM.payload["recipient"].astext == username.value,
                 )

@@ -12,18 +12,18 @@ from app.application.outbox.delivery_feed import (
     SequenceName,
 )
 from app.application.outbox.payload import (
-    MessagePayload,
-    RequestPayload,
+    DirectRequestPayload,
+    GlobalChatPayload,
     SystemEventPayload,
 )
 from app.domain.primitives.feed import FeedEventType
 from app.domain.primitives.primitives import (
     EntityId,
     MessageText,
-    RequestText,
+    TaskText,
     Username,
 )
-from app.domain.primitives.request_status import RequestStatus
+from app.domain.primitives.task_status import TaskStatus
 from app.infrastructure.persistence.sa_outbox_repository import (
     SqlAlchemyDeliveryFeedRepository,
 )
@@ -95,8 +95,8 @@ async def test_get_after_filtering(repo: SqlAlchemyDeliveryFeedRepository):
     await repo.save(
         DraftDeliveryFeed(
             sequence_name=seq_name,
-            event_type=FeedEventType.MESSAGE,
-            payload=MessagePayload(
+            event_type=FeedEventType.GLOBAL_CHAT,
+            payload=GlobalChatPayload(
                 id=EntityId(1),
                 username=Username("alice"),
                 text=MessageText("hello"),
@@ -104,17 +104,17 @@ async def test_get_after_filtering(repo: SqlAlchemyDeliveryFeedRepository):
             ),
         )
     )
-    # Bob へのリクエスト
+    # Bob へのダイレクトリクエスト
     await repo.save(
         DraftDeliveryFeed(
             sequence_name=seq_name,
-            event_type=FeedEventType.REQUEST,
-            payload=RequestPayload(
+            event_type=FeedEventType.DIRECT_REQUEST,
+            payload=DirectRequestPayload(
                 id=EntityId(2),
                 sender=Username("charlie"),
                 recipient=Username("bob"),
-                text=RequestText("hey"),
-                status=RequestStatus.REQUESTED,
+                text=TaskText("hey"),
+                status=TaskStatus.REQUESTED,
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc),
             ),

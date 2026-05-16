@@ -1,12 +1,15 @@
 import type {
-  ChatMessage,
+  DirectRequestMessage,
+  DirectRequestUpdateMessage,
   ErrorMessage,
-  RequestMessage,
-  RequestUpdateMessage,
+  GlobalChatMessage,
   ServerMessage,
 } from "@/types/ws";
-import { handleChatMessage } from "./chatHandler";
-import { handleRequestMessage, handleRequestUpdated } from "./requestHandler";
+import {
+  handleDirectRequestMessage,
+  handleDirectRequestUpdated,
+} from "./directRequestHandler";
+import { handleGlobalChatMessage } from "./globalChatHandler";
 import { handleError, handlePing, handleSeqGap } from "./systemHandler";
 import type { HandlerDeps } from "./types";
 
@@ -33,14 +36,14 @@ export function dispatchMessage(
 
   // 各メッセージタイプに応じた処理
   switch (data.type) {
-    case "message":
-      handleChatMessage(data as ChatMessage, deps);
+    case "global_chat":
+      handleGlobalChatMessage(data as GlobalChatMessage, deps);
       break;
-    case "request":
-      handleRequestMessage(data as RequestMessage, deps);
+    case "direct_request":
+      handleDirectRequestMessage(data as DirectRequestMessage, deps);
       break;
-    case "request_updated":
-      handleRequestUpdated(data as RequestUpdateMessage, deps);
+    case "direct_request_updated":
+      handleDirectRequestUpdated(data as DirectRequestUpdateMessage, deps);
       break;
     case "ping":
       handlePing(socket, deps);

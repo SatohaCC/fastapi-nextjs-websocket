@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from ...application.outbox.repository import DeliveryFeedRepository
 from ...application.uow import UnitOfWork
 from ...domain.repositories.message_repository import MessageRepository
-from ...domain.repositories.request_repository import RequestRepository
+from ...domain.repositories.task_repository import TaskRepository
 from .sa_message_repository import SqlAlchemyMessageRepository
 from .sa_outbox_repository import SqlAlchemyDeliveryFeedRepository
-from .sa_request_repository import SqlAlchemyRequestRepository
+from .sa_task_repository import SqlAlchemyTaskRepository
 
 
 class SqlAlchemyUnitOfWork(UnitOfWork):
@@ -20,13 +20,13 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
     def __init__(
         self,
         session: AsyncSession,
-        requests: RequestRepository,
+        tasks: TaskRepository,
         messages: MessageRepository,
         outbox: DeliveryFeedRepository,
     ):
         """UnitOfWork を初期化します。"""
         self._session = session
-        self.requests = requests
+        self.tasks = tasks
         self.messages = messages
         self.outbox = outbox
 
@@ -61,7 +61,7 @@ async def make_standalone_uow(
     async with session_factory() as session:
         yield SqlAlchemyUnitOfWork(
             session,
-            SqlAlchemyRequestRepository(session),
+            SqlAlchemyTaskRepository(session),
             SqlAlchemyMessageRepository(session),
             SqlAlchemyDeliveryFeedRepository(session),
         )

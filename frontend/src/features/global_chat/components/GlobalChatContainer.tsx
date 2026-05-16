@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGlobalChat } from "@/features/chat/hooks/useGlobalChat";
+import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { GlobalChat } from "./GlobalChat";
 

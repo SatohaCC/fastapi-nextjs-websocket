@@ -5,19 +5,19 @@ from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from ...domain.entities.direct_request import RequestStatus
-from ...domain.primitives.primitives import EntityId, MessageText, RequestText, Username
+from ...domain.primitives.primitives import EntityId, MessageText, TaskText, Username
+from ...domain.primitives.task_status import TaskStatus
 
 if TYPE_CHECKING:
     from ...application.outbox.delivery_feed import DeliveryFeed
     from ...application.outbox.payload import (
-        MessagePayload,
-        RequestPayload,
-        RequestUpdatePayload,
+        DirectRequestPayload,
+        DirectRequestUpdatePayload,
+        GlobalChatPayload,
         SystemEventPayload,
     )
-    from ...domain.entities.direct_request import DirectRequest
     from ...domain.entities.message import Message
+    from ...domain.entities.task import Task
 
 # --- Client -> Server Messages (Requests) ---
 
@@ -28,10 +28,10 @@ class PongMessage(BaseModel):
     type: Literal["pong"]
 
 
-class ChatMessage(BaseModel):
-    """一般チャットメッセージ。"""
+class GlobalChatMessage(BaseModel):
+    """グローバルチャットメッセージ。"""
 
-    type: Literal["message"]
+    type: Literal["global_chat"]
     text: str
 
     def to_domain(self) -> MessageText:
@@ -39,38 +39,43 @@ class ChatMessage(BaseModel):
         return MessageText(self.text)
 
 
-class RequestMessage(BaseModel):
+class DirectRequestMessage(BaseModel):
     """特定のユーザーへのダイレクトリクエスト送信。"""
 
-    type: Literal["request"]
+    type: Literal["direct_request"]
     to: str
     text: str
 
-    def to_domain(self) -> tuple[Username, RequestText]:
+    def to_domain(self) -> tuple[Username, TaskText]:
         """To / text フィールドをドメインプリミティブへ変換します。"""
-        return Username(self.to), RequestText(self.text)
+        return Username(self.to), TaskText(self.text)
 
 
-class StatusUpdateMessage(BaseModel):
-    """リクエストのステータス更新通知（承諾・拒否など）。"""
+class UpdateDirectRequestStatusMessage(BaseModel):
+    """ダイレクトリクエストのステータス更新通知（承諾・拒否など）。"""
 
     type: Literal["update_status"]
-    request_id: int
+    task_id: int
     status: str
 
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
         """無効なステータス文字列を境界で弾く。"""
-        RequestStatus(v)
+        TaskStatus(v)
         return v
 
-    def to_domain(self) -> tuple[EntityId, RequestStatus]:
-        """request_id / status をドメインプリミティブへ変換します。"""
-        return EntityId(self.request_id), RequestStatus(self.status)
+    def to_domain(self) -> tuple[EntityId, TaskStatus]:
+        """task_id / status をドメインプリミティブへ変換します。"""
+        return EntityId(self.task_id), TaskStatus(self.status)
 
 
-WebSocketMessage = Union[PongMessage, ChatMessage, RequestMessage, StatusUpdateMessage]
+WebSocketMessage = Union[
+    PongMessage,
+    GlobalChatMessage,
+    DirectRequestMessage,
+    UpdateDirectRequestStatusMessage,
+]
 
 
 # --- Server -> Client Messages (Responses) ---
@@ -87,10 +92,10 @@ class BaseResponse(BaseModel):
         raise NotImplementedError
 
 
-class ChatResponse(BaseResponse):
-    """チャットメッセージのレスポンス。"""
+class GlobalChatResponse(BaseResponse):
+    """グローバルチャットメッセージのレスポンス。"""
 
-    type: Literal["message"] = "message"
+    type: Literal["global_chat"] = "global_chat"
     id: int
     seq: Optional[int] = None
     username: str
@@ -100,8 +105,8 @@ class ChatResponse(BaseResponse):
 
     @classmethod
     def from_domain(
-        cls, entity: Union["Message", "MessagePayload"], is_history: bool = False
-    ) -> "ChatResponse":
+        cls, entity: Union["Message", "GlobalChatPayload"], is_history: bool = False
+    ) -> "GlobalChatResponse":
         """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
@@ -112,10 +117,10 @@ class ChatResponse(BaseResponse):
         )
 
 
-class RequestResponse(BaseResponse):
+class DirectRequestResponse(BaseResponse):
     """ダイレクトリクエストの詳細レスポンス。"""
 
-    type: Literal["request"] = "request"
+    type: Literal["direct_request"] = "direct_request"
     id: int
     seq: Optional[int] = None
     sender: str
@@ -129,9 +134,9 @@ class RequestResponse(BaseResponse):
     @classmethod
     def from_domain(
         cls,
-        entity: Union["DirectRequest", "RequestPayload"],
+        entity: Union["Task", "DirectRequestPayload"],
         is_history: bool = False,
-    ) -> "RequestResponse":
+    ) -> "DirectRequestResponse":
         """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
@@ -145,10 +150,10 @@ class RequestResponse(BaseResponse):
         )
 
 
-class RequestUpdateResponse(BaseResponse):
-    """リクエストステータスが更新された際の通知レスポンス。"""
+class DirectRequestUpdateResponse(BaseResponse):
+    """ダイレクトリクエストのステータスが更新された際の通知レスポンス。"""
 
-    type: Literal["request_updated"] = "request_updated"
+    type: Literal["direct_request_updated"] = "direct_request_updated"
     id: int
     seq: Optional[int] = None
     status: str
@@ -158,9 +163,9 @@ class RequestUpdateResponse(BaseResponse):
 
     @classmethod
     def from_domain(
-        cls, entity: "RequestUpdatePayload", is_history: bool = False
-    ) -> "RequestUpdateResponse":
-        """RequestUpdatePayload からレスポンスモデルを生成します。"""
+        cls, entity: "DirectRequestUpdatePayload", is_history: bool = False
+    ) -> "DirectRequestUpdateResponse":
+        """DirectRequestUpdatePayload からレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
             status=entity.status.value,
@@ -199,21 +204,21 @@ def create_response_from_feed(
 ) -> BaseResponse:
     """DeliveryFeed から適切なレスポンス DTO を生成します。"""
     from ...application.outbox.payload import (
-        MessagePayload,
-        RequestPayload,
-        RequestUpdatePayload,
+        DirectRequestPayload,
+        DirectRequestUpdatePayload,
+        GlobalChatPayload,
         SystemEventPayload,
     )
 
     payload = feed.payload
     resp: BaseResponse
 
-    if isinstance(payload, MessagePayload):
-        resp = ChatResponse.from_domain(payload, is_history=is_history)
-    elif isinstance(payload, RequestPayload):
-        resp = RequestResponse.from_domain(payload, is_history=is_history)
-    elif isinstance(payload, RequestUpdatePayload):
-        resp = RequestUpdateResponse.from_domain(payload, is_history=is_history)
+    if isinstance(payload, GlobalChatPayload):
+        resp = GlobalChatResponse.from_domain(payload, is_history=is_history)
+    elif isinstance(payload, DirectRequestPayload):
+        resp = DirectRequestResponse.from_domain(payload, is_history=is_history)
+    elif isinstance(payload, DirectRequestUpdatePayload):
+        resp = DirectRequestUpdateResponse.from_domain(payload, is_history=is_history)
     elif isinstance(payload, SystemEventPayload):
         resp = JoinLeaveResponse.from_domain(payload, is_history=is_history)
     else:

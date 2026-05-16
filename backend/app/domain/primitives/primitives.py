@@ -35,15 +35,15 @@ class MessageText(DomainPrimitive[str]):
             raise DomainValidationError("Message text is too long")
 
 
-class RequestText(DomainPrimitive[str]):
-    """リクエスト本文を表すドメインプリミティブ。"""
+class TaskText(DomainPrimitive[str]):
+    """タスク本文を表すドメインプリミティブ。"""
 
     def validate(self):
         """バリデーションルールを適用します。"""
         if not self.value or not self.value.strip():
-            raise DomainValidationError("Request text cannot be empty")
+            raise DomainValidationError("Task text cannot be empty")
         if len(self.value) > 500:
-            raise DomainValidationError("Request text is too long")
+            raise DomainValidationError("Task text is too long")
 
 
 class AuthToken(DomainPrimitive[str]):
