@@ -1,14 +1,14 @@
 // Server -> Client Messages
 export type ServerMessage =
-  | ChatMessage
+  | GlobalChatMessage
   | RequestMessage
   | RequestUpdateMessage
   | JoinLeaveMessage
   | PingMessage
   | ErrorMessage;
 
-export interface ChatMessage {
-  type: "message";
+export interface GlobalChatMessage {
+  type: "global_chat";
   username: string;
   text: string;
   id: number;
@@ -60,10 +60,14 @@ export interface ErrorMessage {
 }
 
 // Client -> Server Messages
-export type ClientMessage = ChatOut | RequestOut | UpdateStatusOut | PongOut;
+export type ClientMessage =
+  | GlobalChatOut
+  | RequestOut
+  | UpdateStatusOut
+  | PongOut;
 
-export interface ChatOut {
-  type: "message";
+export interface GlobalChatOut {
+  type: "global_chat";
   text: string;
 }
 
@@ -84,11 +88,11 @@ export interface PongOut {
 }
 
 // Type Guards
-export function isChatMessage(data: unknown): data is ChatMessage {
+export function isGlobalChatMessage(data: unknown): data is GlobalChatMessage {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
   return (
-    d.type === "message" &&
+    d.type === "global_chat" &&
     typeof d.id === "number" &&
     typeof d.text === "string"
   );

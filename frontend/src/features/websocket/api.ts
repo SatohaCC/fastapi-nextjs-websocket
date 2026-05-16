@@ -1,6 +1,6 @@
 import { API_BASE } from "@/lib/config";
 import type {
-  ChatMessage,
+  GlobalChatMessage,
   JoinLeaveMessage,
   RequestMessage,
   RequestUpdateMessage,
@@ -8,8 +8,8 @@ import type {
 
 export type FeedResponse =
   | {
-      event_type: "message";
-      payload: ChatMessage;
+      event_type: "global_chat";
+      payload: GlobalChatMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
@@ -66,7 +66,7 @@ export async function fetchFeeds(
 }
 
 export async function sendMessage(token: string, text: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/messages`, {
+  const res = await fetch(`${API_BASE}/api/global_chat/messages`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

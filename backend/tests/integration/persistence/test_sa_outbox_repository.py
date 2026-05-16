@@ -12,7 +12,7 @@ from app.application.outbox.delivery_feed import (
     SequenceName,
 )
 from app.application.outbox.payload import (
-    MessagePayload,
+    GlobalChatPayload,
     RequestPayload,
     SystemEventPayload,
 )
@@ -95,8 +95,8 @@ async def test_get_after_filtering(repo: SqlAlchemyDeliveryFeedRepository):
     await repo.save(
         DraftDeliveryFeed(
             sequence_name=seq_name,
-            event_type=FeedEventType.MESSAGE,
-            payload=MessagePayload(
+            event_type=FeedEventType.GLOBAL_CHAT,
+            payload=GlobalChatPayload(
                 id=EntityId(1),
                 username=Username("alice"),
                 text=MessageText("hello"),

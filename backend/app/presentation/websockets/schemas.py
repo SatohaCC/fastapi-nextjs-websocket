@@ -11,7 +11,7 @@ from ...domain.primitives.primitives import EntityId, MessageText, RequestText, 
 if TYPE_CHECKING:
     from ...application.outbox.delivery_feed import DeliveryFeed
     from ...application.outbox.payload import (
-        MessagePayload,
+        GlobalChatPayload,
         RequestPayload,
         RequestUpdatePayload,
         SystemEventPayload,
@@ -28,10 +28,10 @@ class PongMessage(BaseModel):
     type: Literal["pong"]
 
 
-class ChatMessage(BaseModel):
-    """一般チャットメッセージ。"""
+class GlobalChatMessage(BaseModel):
+    """グローバルチャットメッセージ。"""
 
-    type: Literal["message"]
+    type: Literal["global_chat"]
     text: str
 
     def to_domain(self) -> MessageText:
@@ -70,7 +70,9 @@ class StatusUpdateMessage(BaseModel):
         return EntityId(self.request_id), RequestStatus(self.status)
 
 
-WebSocketMessage = Union[PongMessage, ChatMessage, RequestMessage, StatusUpdateMessage]
+WebSocketMessage = Union[
+    PongMessage, GlobalChatMessage, RequestMessage, StatusUpdateMessage
+]
 
 
 # --- Server -> Client Messages (Responses) ---
@@ -87,10 +89,10 @@ class BaseResponse(BaseModel):
         raise NotImplementedError
 
 
-class ChatResponse(BaseResponse):
-    """チャットメッセージのレスポンス。"""
+class GlobalChatResponse(BaseResponse):
+    """グローバルチャットメッセージのレスポンス。"""
 
-    type: Literal["message"] = "message"
+    type: Literal["global_chat"] = "global_chat"
     id: int
     seq: Optional[int] = None
     username: str
@@ -100,8 +102,8 @@ class ChatResponse(BaseResponse):
 
     @classmethod
     def from_domain(
-        cls, entity: Union["Message", "MessagePayload"], is_history: bool = False
-    ) -> "ChatResponse":
+        cls, entity: Union["Message", "GlobalChatPayload"], is_history: bool = False
+    ) -> "GlobalChatResponse":
         """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
@@ -199,7 +201,7 @@ def create_response_from_feed(
 ) -> BaseResponse:
     """DeliveryFeed から適切なレスポンス DTO を生成します。"""
     from ...application.outbox.payload import (
-        MessagePayload,
+        GlobalChatPayload,
         RequestPayload,
         RequestUpdatePayload,
         SystemEventPayload,
@@ -208,8 +210,8 @@ def create_response_from_feed(
     payload = feed.payload
     resp: BaseResponse
 
-    if isinstance(payload, MessagePayload):
-        resp = ChatResponse.from_domain(payload, is_history=is_history)
+    if isinstance(payload, GlobalChatPayload):
+        resp = GlobalChatResponse.from_domain(payload, is_history=is_history)
     elif isinstance(payload, RequestPayload):
         resp = RequestResponse.from_domain(payload, is_history=is_history)
     elif isinstance(payload, RequestUpdatePayload):

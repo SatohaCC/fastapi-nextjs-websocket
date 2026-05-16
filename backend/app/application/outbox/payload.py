@@ -23,8 +23,8 @@ class FeedPayload(ABC):
 
 
 @dataclass(frozen=True)
-class MessagePayload(FeedPayload):
-    """チャットメッセージのペイロード。"""
+class GlobalChatPayload(FeedPayload):
+    """グローバルチャットメッセージのペイロード。"""
 
     id: EntityId
     username: Username
@@ -34,7 +34,7 @@ class MessagePayload(FeedPayload):
     @property
     def event_type(self) -> FeedEventType:
         """イベントタイプを返します。"""
-        return FeedEventType.MESSAGE
+        return FeedEventType.GLOBAL_CHAT
 
 
 @dataclass(frozen=True)

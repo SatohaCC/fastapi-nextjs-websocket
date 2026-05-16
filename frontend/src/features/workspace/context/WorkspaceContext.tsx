@@ -1,12 +1,16 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ChatMessage, RequestMessage, RequestStatus } from "@/types/ws";
+import type {
+  GlobalChatMessage,
+  RequestMessage,
+  RequestStatus,
+} from "@/types/ws";
 
 interface WorkspaceContextValue {
   username: string;
   users: string[];
-  chatMessages: ChatMessage[];
+  chatMessages: GlobalChatMessage[];
   requestMessages: RequestMessage[];
   isConnected: boolean;
   isOnline: boolean;

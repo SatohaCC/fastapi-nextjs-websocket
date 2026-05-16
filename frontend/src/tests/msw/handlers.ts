@@ -13,7 +13,7 @@ export const handlers = [
   }),
 
   // メッセージ送信 API
-  http.post(`${API_BASE}/api/messages`, async ({ request }) => {
+  http.post(`${API_BASE}/api/global_chat/messages`, async ({ request }) => {
     const _data = await request.json();
     return new HttpResponse(null, { status: 200 });
   }),
@@ -26,9 +26,9 @@ export const handlers = [
     // テストケースに応じてデータを返す（今はシンプルな例）
     return HttpResponse.json([
       {
-        sequence_name: "chat_global",
+        sequence_name: "global_chat",
         sequence_id: (Number(afterChatId) || 0) + 1,
-        event_type: "message",
+        event_type: "global_chat",
         payload: { id: 100, username: "bot", text: "auto-sync message" },
         created_at: new Date().toISOString(),
       },

@@ -11,7 +11,7 @@ from ..application.outbox.delivery_feed import (
 )
 from ..application.outbox.payload import (
     FeedPayload,
-    MessagePayload,
+    GlobalChatPayload,
     RequestPayload,
     RequestUpdatePayload,
     SystemEventPayload,
@@ -28,7 +28,7 @@ from ..domain.primitives.request_status import RequestStatus
 
 def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
     """FeedPayload を JSON シリアライズ可能な辞書に変換します。"""
-    if isinstance(payload, MessagePayload):
+    if isinstance(payload, GlobalChatPayload):
         return {
             "id": payload.id.value,
             "username": payload.username.value,
@@ -63,8 +63,8 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
 
 def dict_to_payload(event_type: FeedEventType, data: dict[str, Any]) -> FeedPayload:
     """辞書から FeedPayload を再構成します。"""
-    if event_type == FeedEventType.MESSAGE:
-        return MessagePayload(
+    if event_type == FeedEventType.GLOBAL_CHAT:
+        return GlobalChatPayload(
             id=EntityId(data["id"]),
             username=Username(data["username"]),
             text=MessageText(data["text"]),

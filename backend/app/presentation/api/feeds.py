@@ -54,7 +54,7 @@ async def get_feeds_since(
 
     if after_chat_id is not None:
         chat_feeds = await feed_service.get_feeds_after(
-            SequenceName("chat_global"), SequenceId(after_chat_id), username
+            SequenceName("global_chat"), SequenceId(after_chat_id), username
         )
         feeds.extend(chat_feeds)
 

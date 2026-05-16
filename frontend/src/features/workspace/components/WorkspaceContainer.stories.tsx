@@ -53,7 +53,7 @@ export const IntegrationTest: Story = {
 
     // サーバーからのメッセージをエミュレート
     ws.receive({
-      type: "message",
+      type: "global_chat",
       id: 123,
       username: "bob",
       text: "Nice to meet you!",

@@ -15,26 +15,26 @@ from fastapi import (
 from pydantic import TypeAdapter, ValidationError
 
 from ...application.outbox.delivery_feed import SequenceId, SequenceName
-from ...application.services.chat_service import ChatService
 from ...application.services.connection_service import ConnectionService
 from ...application.services.feed_query_service import FeedQueryService
+from ...application.services.global_chat_service import GlobalChatService
 from ...application.services.request_service import RequestService
 from ...domain.exceptions import DomainException
 from ...domain.primitives.primitives import Username
 from ..dependencies import (
     get_chat_manager,
-    get_chat_service,
     get_connection_service,
     get_feed_query_service,
+    get_global_chat_service,
     get_request_service,
     get_ws_authenticated_user,
 )
 from .manager import ChatManager, heartbeat
 from .schemas import (
     BaseResponse,
-    ChatMessage,
-    ChatResponse,
     ErrorResponse,
+    GlobalChatMessage,
+    GlobalChatResponse,
     PongMessage,
     RequestMessage,
     RequestResponse,
@@ -78,7 +78,7 @@ async def _send_initial_data(
 async def websocket_endpoint(
     websocket: WebSocket,
     username: Annotated[Username, Depends(get_ws_authenticated_user)],
-    chat_service: Annotated[ChatService, Depends(get_chat_service)],
+    global_chat_service: Annotated[GlobalChatService, Depends(get_global_chat_service)],
     request_service: Annotated[RequestService, Depends(get_request_service)],
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
     connection_service: Annotated[ConnectionService, Depends(get_connection_service)],
@@ -96,10 +96,10 @@ async def websocket_endpoint(
             websocket=websocket,
             username=username,
             last_id=last_chat_id,
-            sequence_name=SequenceName("chat_global"),
+            sequence_name=SequenceName("global_chat"),
             feed_service=feed_service,
-            history_fetcher=chat_service.get_recent_messages,
-            response_model=ChatResponse,
+            history_fetcher=global_chat_service.get_recent_messages,
+            response_model=GlobalChatResponse,
         )
 
         await _send_initial_data(
@@ -151,8 +151,8 @@ async def websocket_endpoint(
             try:
                 if isinstance(msg, PongMessage):
                     pong_event.set()
-                elif isinstance(msg, ChatMessage):
-                    await chat_service.send_message(
+                elif isinstance(msg, GlobalChatMessage):
+                    await global_chat_service.send_message(
                         username=username, text=msg.to_domain()
                     )
                 elif isinstance(msg, RequestMessage):
