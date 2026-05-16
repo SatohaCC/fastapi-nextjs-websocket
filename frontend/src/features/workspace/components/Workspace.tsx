@@ -1,7 +1,7 @@
 "use client";
 
-import { GlobalChatContainer } from "@/features/chat/components/GlobalChatContainer";
-import { RequestPanelContainer } from "@/features/requests/components/RequestPanelContainer";
+import { DirectRequestPanelContainer } from "@/features/direct_request/components/DirectRequestPanelContainer";
+import { GlobalChatContainer } from "@/features/global_chat/components/GlobalChatContainer";
 import { WorkspaceHeader } from "@/features/workspace/components/WorkspaceHeader";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import styles from "./Workspace.module.css";
@@ -21,7 +21,7 @@ export function Workspace() {
 
       <main className={styles.main}>
         <GlobalChatContainer />
-        <RequestPanelContainer />
+        <DirectRequestPanelContainer />
       </main>
 
       <footer className={styles.footer}>

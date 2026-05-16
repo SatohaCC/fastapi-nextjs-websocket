@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import type { ChatMessage } from "@/types/ws";
+import type { GlobalChatMessage } from "@/types/ws";
 import { GlobalChat } from "./GlobalChat";
 
 const meta: Meta<typeof GlobalChat> = {
-  title: "Features/Chat/GlobalChat",
+  title: "Features/GlobalChat/GlobalChat",
   component: GlobalChat,
   tags: ["autodocs"],
   args: {
@@ -20,9 +20,9 @@ const meta: Meta<typeof GlobalChat> = {
 export default meta;
 type Story = StoryObj<typeof GlobalChat>;
 
-const mockMessages: ChatMessage[] = [
+const mockMessages: GlobalChatMessage[] = [
   {
-    type: "message",
+    type: "global_chat",
     id: 1,
     seq: 1,
     username: "alice",
@@ -30,7 +30,7 @@ const mockMessages: ChatMessage[] = [
     created_at: new Date().toISOString(),
   },
   {
-    type: "message",
+    type: "global_chat",
     id: 2,
     seq: 2,
     username: "bob",
@@ -38,7 +38,7 @@ const mockMessages: ChatMessage[] = [
     created_at: new Date().toISOString(),
   },
   {
-    type: "message",
+    type: "global_chat",
     id: 3,
     seq: 3,
     username: "alice",

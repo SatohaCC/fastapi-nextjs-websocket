@@ -1,26 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { isChatMessage, isRequestMessage, isRequestUpdateMessage } from "./ws";
+import {
+  isDirectRequestMessage,
+  isDirectRequestUpdateMessage,
+  isGlobalChatMessage,
+} from "./ws";
 
 describe("WebSocket Type Guards", () => {
-  it("should correctly identify ChatMessage", () => {
+  it("should correctly identify GlobalChatMessage", () => {
     const mockChat = {
-      type: "message",
+      type: "global_chat",
       id: 1,
       text: "hello",
       username: "alice",
       created_at: "2024-01-01",
       seq: 1,
     } as const;
-    const invalidChat = { type: "message", id: 1 };
+    const invalidChat = { type: "global_chat", id: 1 };
 
-    expect(isChatMessage(mockChat)).toBe(true);
-    expect(isChatMessage(invalidChat)).toBe(false);
-    expect(isChatMessage(null)).toBe(false);
+    expect(isGlobalChatMessage(mockChat)).toBe(true);
+    expect(isGlobalChatMessage(invalidChat)).toBe(false);
+    expect(isGlobalChatMessage(null)).toBe(false);
   });
 
-  it("should correctly identify RequestMessage", () => {
+  it("should correctly identify DirectRequestMessage", () => {
     const mockRequest = {
-      type: "request",
+      type: "direct_request",
       id: 2,
       sender: "alice",
       recipient: "bob",
@@ -30,22 +34,22 @@ describe("WebSocket Type Guards", () => {
       updated_at: "2024-01-01",
       seq: 2,
     } as const;
-    const invalidRequest = { type: "request", sender: "alice" };
+    const invalidRequest = { type: "direct_request", sender: "alice" };
 
-    expect(isRequestMessage(mockRequest)).toBe(true);
-    expect(isRequestMessage(invalidRequest)).toBe(false);
+    expect(isDirectRequestMessage(mockRequest)).toBe(true);
+    expect(isDirectRequestMessage(invalidRequest)).toBe(false);
   });
 
-  it("should correctly identify RequestUpdateMessage", () => {
+  it("should correctly identify DirectRequestUpdateMessage", () => {
     const mockUpdate = {
-      type: "request_updated",
+      type: "direct_request_updated",
       id: 3,
       status: "completed",
       updated_at: "2024-01-01",
       seq: 3,
     } as const;
 
-    expect(isRequestUpdateMessage(mockUpdate)).toBe(true);
-    expect(isRequestUpdateMessage({ type: "other" })).toBe(false);
+    expect(isDirectRequestUpdateMessage(mockUpdate)).toBe(true);
+    expect(isDirectRequestUpdateMessage({ type: "other" })).toBe(false);
   });
 });

@@ -3,7 +3,7 @@
 from typing import Protocol
 
 from ..domain.repositories.message_repository import MessageRepository
-from ..domain.repositories.request_repository import RequestRepository
+from ..domain.repositories.task_repository import TaskRepository
 from .outbox.repository import DeliveryFeedRepository
 
 
@@ -12,7 +12,7 @@ class UnitOfWork(Protocol):
     リポジトリへのアクセスポイント（Repository Accessor）も提供します。
     """
 
-    requests: RequestRepository
+    tasks: TaskRepository
     messages: MessageRepository
     outbox: DeliveryFeedRepository
 

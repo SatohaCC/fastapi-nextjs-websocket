@@ -1,4 +1,4 @@
-"""ドメインプリミティブのバリデーションと RequestStatus 遷移のユニットテスト。"""
+"""ドメインプリミティブのバリデーションと TaskStatus 遷移のユニットテスト。"""
 
 import pytest
 
@@ -8,10 +8,10 @@ from app.domain.primitives.primitives import (
     EntityId,
     MessageText,
     Password,
-    RequestText,
+    TaskText,
     Username,
 )
-from app.domain.primitives.request_status import RequestStatus
+from app.domain.primitives.task_status import TaskStatus
 
 
 class TestEntityId:
@@ -85,26 +85,26 @@ class TestMessageText:
         MessageText("a" * 1000)
 
 
-class TestRequestText:
-    """RequestText のバリデーションテスト。"""
+class TestTaskText:
+    """TaskText のバリデーションテスト。"""
 
     def test_valid(self):
-        """通常のリクエスト本文は有効。"""
-        assert RequestText("please do this").value == "please do this"
+        """通常の Task 本文は有効。"""
+        assert TaskText("please do this").value == "please do this"
 
     def test_empty_raises(self):
         """空文字列は DomainValidationError を送出する。"""
         with pytest.raises(DomainValidationError):
-            RequestText("")
+            TaskText("")
 
     def test_too_long_raises(self):
         """501文字以上は DomainValidationError を送出する。"""
         with pytest.raises(DomainValidationError):
-            RequestText("a" * 501)
+            TaskText("a" * 501)
 
     def test_max_length_is_valid(self):
         """500文字ちょうどは有効（境界値）。"""
-        RequestText("a" * 500)
+        TaskText("a" * 500)
 
 
 class TestAuthToken:
@@ -148,29 +148,29 @@ class TestPassword:
         Password("abcd")
 
 
-class TestRequestStatusTransitions:
-    """RequestStatus のステータス遷移ルールテスト。"""
+class TestTaskStatusTransitions:
+    """TaskStatus のステータス遷移ルールテスト。"""
 
     def test_requested_to_processing_is_valid(self):
         """REQUESTED → PROCESSING は有効な遷移。"""
-        assert RequestStatus.REQUESTED.can_transition_to(RequestStatus.PROCESSING)
+        assert TaskStatus.REQUESTED.can_transition_to(TaskStatus.PROCESSING)
 
     def test_requested_to_completed_is_valid(self):
         """REQUESTED → COMPLETED は有効な遷移。"""
-        assert RequestStatus.REQUESTED.can_transition_to(RequestStatus.COMPLETED)
+        assert TaskStatus.REQUESTED.can_transition_to(TaskStatus.COMPLETED)
 
     def test_processing_to_completed_is_valid(self):
         """PROCESSING → COMPLETED は有効な遷移。"""
-        assert RequestStatus.PROCESSING.can_transition_to(RequestStatus.COMPLETED)
+        assert TaskStatus.PROCESSING.can_transition_to(TaskStatus.COMPLETED)
 
     def test_completed_to_requested_is_invalid(self):
         """COMPLETED → REQUESTED は無効な遷移（完了済みに戻れない）。"""
-        assert not RequestStatus.COMPLETED.can_transition_to(RequestStatus.REQUESTED)
+        assert not TaskStatus.COMPLETED.can_transition_to(TaskStatus.REQUESTED)
 
     def test_completed_to_processing_is_invalid(self):
         """COMPLETED → PROCESSING は無効な遷移。"""
-        assert not RequestStatus.COMPLETED.can_transition_to(RequestStatus.PROCESSING)
+        assert not TaskStatus.COMPLETED.can_transition_to(TaskStatus.PROCESSING)
 
     def test_processing_to_requested_is_invalid(self):
         """PROCESSING → REQUESTED は無効な遷移。"""
-        assert not RequestStatus.PROCESSING.can_transition_to(RequestStatus.REQUESTED)
+        assert not TaskStatus.PROCESSING.can_transition_to(TaskStatus.REQUESTED)

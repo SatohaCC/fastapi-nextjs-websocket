@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { formatDateTime } from "@/utils/date";
 
-interface UseRequestPanelProps {
+interface UseDirectRequestPanelProps {
   onSend: (to: string, text: string) => void;
 }
 
-export function useRequestPanel({ onSend }: UseRequestPanelProps) {
+export function useDirectRequestPanel({ onSend }: UseDirectRequestPanelProps) {
   const [targetUser, setTargetUser] = useState("");
   const [text, setText] = useState("");
 

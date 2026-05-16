@@ -7,10 +7,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..application.services.auth_service import AuthService
-from ..application.services.chat_service import ChatService
 from ..application.services.connection_service import ConnectionService
+from ..application.services.direct_request_service import DirectRequestService
 from ..application.services.feed_query_service import FeedQueryService
-from ..application.services.request_service import RequestService
+from ..application.services.global_chat_service import GlobalChatService
 from ..application.uow import UnitOfWork
 from ..domain.exceptions import DomainValidationError
 from ..domain.primitives.primitives import AuthToken, Username
@@ -22,8 +22,8 @@ from ..infrastructure.persistence.sa_message_repository import (
 from ..infrastructure.persistence.sa_outbox_repository import (
     SqlAlchemyDeliveryFeedRepository,
 )
-from ..infrastructure.persistence.sa_request_repository import (
-    SqlAlchemyRequestRepository,
+from ..infrastructure.persistence.sa_task_repository import (
+    SqlAlchemyTaskRepository,
 )
 from ..infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
 from ..infrastructure.persistence.session import get_db
@@ -38,7 +38,7 @@ def get_uow(db: Annotated[AsyncSession, Depends(get_db)]) -> UnitOfWork:
     """UnitOfWork の取得"""
     return SqlAlchemyUnitOfWork(
         db,
-        SqlAlchemyRequestRepository(db),
+        SqlAlchemyTaskRepository(db),
         SqlAlchemyMessageRepository(db),
         SqlAlchemyDeliveryFeedRepository(db),
     )
@@ -57,18 +57,18 @@ def get_auth_service() -> AuthService:
     return AuthService(jwt=JwtServiceImpl(), users=settings.USERS)
 
 
-def get_chat_service(
+def get_global_chat_service(
     uow: Annotated[UnitOfWork, Depends(get_uow)],
-) -> ChatService:
-    """ChatService の取得"""
-    return ChatService(uow)
+) -> GlobalChatService:
+    """GlobalChatService の取得"""
+    return GlobalChatService(uow)
 
 
-def get_request_service(
+def get_direct_request_service(
     uow: Annotated[UnitOfWork, Depends(get_uow)],
-) -> RequestService:
-    """RequestService の取得"""
-    return RequestService(uow)
+) -> DirectRequestService:
+    """DirectRequestService の取得"""
+    return DirectRequestService(uow)
 
 
 def get_connection_service(

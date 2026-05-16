@@ -78,6 +78,6 @@ class DeliveryFeed(DraftDeliveryFeed):
 
 
 # シーケンス名定数（魔法文字列の一元管理）
-CHAT_SEQUENCE = SequenceName("chat_global")
+GLOBAL_CHAT_SEQUENCE = SequenceName("global_chat")
 SYSTEM_SEQUENCE = SequenceName("system_global")
-REQUESTS_SEQUENCE = SequenceName("requests_global")
+DIRECT_REQUEST_SEQUENCE = SequenceName("direct_request")
