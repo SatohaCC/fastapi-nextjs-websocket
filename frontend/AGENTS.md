@@ -4,6 +4,8 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+> backend / frontend をまたぐ命名・構造の規約は [../CONVENTIONS.md](../CONVENTIONS.md) を参照すること。本ドキュメントは frontend 固有の運用ルールに絞る。
+
 ## アーキテクチャの基本方針
 本プロジェクトは、**Feature-Based Architecture** と **Container/Presentational パターン** を採用し、関心の分離を徹底しています。
 
