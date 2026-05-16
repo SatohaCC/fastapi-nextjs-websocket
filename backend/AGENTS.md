@@ -1,6 +1,8 @@
 # FastAPIのルール
 - Docstringを必ず実施して。
 
+> backend / frontend をまたぐ命名・構造の規約は [../CONVENTIONS.md](../CONVENTIONS.md) を参照すること。本ドキュメントは backend 固有の運用ルールに絞る。
+
 # 実装完了時に必ず実行するコマンド
 
 実装が終わったら、以下を **この順番で** すべてパスさせること。
