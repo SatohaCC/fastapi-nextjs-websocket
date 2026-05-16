@@ -26,10 +26,10 @@ class MessageORM(Base):
     )
 
 
-class RequestORM(Base):
-    """ダイレクト・リクエストのテーブル定義"""
+class TaskORM(Base):
+    """ダイレクトリクエスト機能の Task テーブル定義。"""
 
-    __tablename__ = "requests"
+    __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     sender: Mapped[str] = mapped_column(String(50), nullable=False)

@@ -4,23 +4,23 @@ import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { Card, CardHeader } from "@/components/ui/Card/Card";
 import { Input, Select } from "@/components/ui/Input/Input";
-import type { RequestMessage, RequestStatus } from "@/types/ws";
-import styles from "./RequestPanel.module.css";
+import type { DirectRequestMessage, TaskStatus } from "@/types/ws";
+import styles from "./DirectRequestPanel.module.css";
 
 interface Props {
   otherUsers: string[];
-  requests: RequestMessage[];
+  requests: DirectRequestMessage[];
   currentUser: string;
   targetUser: string;
   text: string;
   onTargetUserChange: (value: string) => void;
   onTextChange: (value: string) => void;
   onSend: (e: React.FormEvent) => void;
-  onUpdateStatus: (id: number, status: RequestStatus) => void;
+  onUpdateStatus: (id: number, status: TaskStatus) => void;
   formatDate: (dateStr: string) => string;
 }
 
-export function RequestPanel({
+export function DirectRequestPanel({
   otherUsers,
   requests,
   currentUser,

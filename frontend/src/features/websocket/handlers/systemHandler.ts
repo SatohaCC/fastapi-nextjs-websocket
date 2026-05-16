@@ -19,7 +19,7 @@ export function handleSeqGap(data: ServerMessage, deps: HandlerDeps): void {
 
   if (seqName === "global_chat") {
     lastIdRef = deps.lastChatId;
-  } else if (seqName === "requests_global") {
+  } else if (seqName === "direct_request") {
     lastIdRef = deps.lastRequestId;
   }
 

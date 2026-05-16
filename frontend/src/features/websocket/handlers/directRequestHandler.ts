@@ -1,10 +1,13 @@
 import { mergeById } from "@/features/websocket/utils/mergeById";
-import type { RequestMessage, RequestUpdateMessage } from "@/types/ws";
+import type {
+  DirectRequestMessage,
+  DirectRequestUpdateMessage,
+} from "@/types/ws";
 import type { HandlerDeps } from "./types";
 
-/** リクエストメッセージを受信し、状態を更新する */
-export function handleRequestMessage(
-  data: RequestMessage,
+/** ダイレクトリクエストメッセージを受信し、状態を更新する */
+export function handleDirectRequestMessage(
+  data: DirectRequestMessage,
   deps: HandlerDeps,
 ): void {
   deps.setRequestMessages((prev) => {
@@ -13,9 +16,9 @@ export function handleRequestMessage(
   });
 }
 
-/** リクエストのステータス更新を処理する */
-export function handleRequestUpdated(
-  data: RequestUpdateMessage,
+/** ダイレクトリクエストのステータス更新を処理する */
+export function handleDirectRequestUpdated(
+  data: DirectRequestUpdateMessage,
   deps: HandlerDeps,
 ): void {
   deps.setRequestMessages((prev) =>

@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRequestPanel } from "@/features/requests/hooks/useRequestPanel";
+import { useDirectRequestPanel } from "@/features/direct_request/hooks/useDirectRequestPanel";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
-import { RequestPanel } from "./RequestPanel";
+import { DirectRequestPanel } from "./DirectRequestPanel";
 
-export function RequestPanelContainer() {
+export function DirectRequestPanelContainer() {
   const { users, requestMessages, sendRequest, updateStatus, username } =
     useWorkspaceContext();
 
   const { targetUser, setTargetUser, text, setText, handleSend, formatDate } =
-    useRequestPanel({ onSend: sendRequest });
+    useDirectRequestPanel({ onSend: sendRequest });
 
   const otherUsers = users.filter((u) => u !== username);
 
@@ -30,7 +30,7 @@ export function RequestPanelContainer() {
   );
 
   return (
-    <RequestPanel
+    <DirectRequestPanel
       otherUsers={otherUsers}
       requests={displayRequests}
       currentUser={username}

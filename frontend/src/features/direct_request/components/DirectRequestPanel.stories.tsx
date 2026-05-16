@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import type { RequestMessage } from "@/types/ws";
-import { RequestPanel } from "./RequestPanel";
+import type { DirectRequestMessage } from "@/types/ws";
+import { DirectRequestPanel } from "./DirectRequestPanel";
 
-const meta: Meta<typeof RequestPanel> = {
-  title: "Features/Requests/RequestPanel",
-  component: RequestPanel,
+const meta: Meta<typeof DirectRequestPanel> = {
+  title: "Features/DirectRequest/DirectRequestPanel",
+  component: DirectRequestPanel,
   tags: ["autodocs"],
   args: {
     onTargetUserChange: fn(),
@@ -25,11 +25,11 @@ const meta: Meta<typeof RequestPanel> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof RequestPanel>;
+type Story = StoryObj<typeof DirectRequestPanel>;
 
-const mockRequests: RequestMessage[] = [
+const mockRequests: DirectRequestMessage[] = [
   {
-    type: "request",
+    type: "direct_request",
     id: 1,
     seq: 1,
     sender: "bob",
@@ -40,7 +40,7 @@ const mockRequests: RequestMessage[] = [
     updated_at: new Date(Date.now() - 3600000).toISOString(),
   },
   {
-    type: "request",
+    type: "direct_request",
     id: 2,
     seq: 2,
     sender: "alice",
@@ -51,7 +51,7 @@ const mockRequests: RequestMessage[] = [
     updated_at: new Date(Date.now() - 1800000).toISOString(),
   },
   {
-    type: "request",
+    type: "direct_request",
     id: 3,
     seq: 3,
     sender: "charlie",

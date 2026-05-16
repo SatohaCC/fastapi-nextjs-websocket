@@ -10,20 +10,20 @@ from ..application.outbox.delivery_feed import (
     SequenceName,
 )
 from ..application.outbox.payload import (
+    DirectRequestPayload,
+    DirectRequestUpdatePayload,
     FeedPayload,
     GlobalChatPayload,
-    RequestPayload,
-    RequestUpdatePayload,
     SystemEventPayload,
 )
 from ..domain.primitives.feed import FeedEventType
 from ..domain.primitives.primitives import (
     EntityId,
     MessageText,
-    RequestText,
+    TaskText,
     Username,
 )
-from ..domain.primitives.request_status import RequestStatus
+from ..domain.primitives.task_status import TaskStatus
 
 
 def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
@@ -35,7 +35,7 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
             "text": payload.text.value,
             "created_at": payload.created_at.isoformat(),
         }
-    elif isinstance(payload, RequestPayload):
+    elif isinstance(payload, DirectRequestPayload):
         return {
             "id": payload.id.value,
             "sender": payload.sender.value,
@@ -45,7 +45,7 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
             "created_at": payload.created_at.isoformat(),
             "updated_at": payload.updated_at.isoformat(),
         }
-    elif isinstance(payload, RequestUpdatePayload):
+    elif isinstance(payload, DirectRequestUpdatePayload):
         return {
             "id": payload.id.value,
             "status": payload.status.value,
@@ -70,20 +70,20 @@ def dict_to_payload(event_type: FeedEventType, data: dict[str, Any]) -> FeedPayl
             text=MessageText(data["text"]),
             created_at=datetime.fromisoformat(data["created_at"]),
         )
-    elif event_type == FeedEventType.REQUEST:
-        return RequestPayload(
+    elif event_type == FeedEventType.DIRECT_REQUEST:
+        return DirectRequestPayload(
             id=EntityId(data["id"]),
             sender=Username(data["sender"]),
             recipient=Username(data["recipient"]),
-            text=RequestText(data["text"]),
-            status=RequestStatus(data["status"]),
+            text=TaskText(data["text"]),
+            status=TaskStatus(data["status"]),
             created_at=datetime.fromisoformat(data["created_at"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),
         )
-    elif event_type == FeedEventType.REQUEST_UPDATED:
-        return RequestUpdatePayload(
+    elif event_type == FeedEventType.DIRECT_REQUEST_UPDATED:
+        return DirectRequestUpdatePayload(
             id=EntityId(data["id"]),
-            status=RequestStatus(data["status"]),
+            status=TaskStatus(data["status"]),
             sender=Username(data["sender"]),
             recipient=Username(data["recipient"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),
