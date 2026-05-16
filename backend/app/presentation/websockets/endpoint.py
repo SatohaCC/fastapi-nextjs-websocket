@@ -16,29 +16,29 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...application.outbox.delivery_feed import SequenceId, SequenceName
 from ...application.services.connection_service import ConnectionService
+from ...application.services.direct_request_service import DirectRequestService
 from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.global_chat_service import GlobalChatService
-from ...application.services.request_service import RequestService
 from ...domain.exceptions import DomainException
 from ...domain.primitives.primitives import Username
 from ..dependencies import (
     get_chat_manager,
     get_connection_service,
+    get_direct_request_service,
     get_feed_query_service,
     get_global_chat_service,
-    get_request_service,
     get_ws_authenticated_user,
 )
 from .manager import ChatManager, heartbeat
 from .schemas import (
     BaseResponse,
+    DirectRequestMessage,
+    DirectRequestResponse,
     ErrorResponse,
     GlobalChatMessage,
     GlobalChatResponse,
     PongMessage,
-    RequestMessage,
-    RequestResponse,
-    StatusUpdateMessage,
+    UpdateDirectRequestStatusMessage,
     WebSocketMessage,
 )
 
@@ -79,7 +79,9 @@ async def websocket_endpoint(
     websocket: WebSocket,
     username: Annotated[Username, Depends(get_ws_authenticated_user)],
     global_chat_service: Annotated[GlobalChatService, Depends(get_global_chat_service)],
-    request_service: Annotated[RequestService, Depends(get_request_service)],
+    direct_request_service: Annotated[
+        DirectRequestService, Depends(get_direct_request_service)
+    ],
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
     connection_service: Annotated[ConnectionService, Depends(get_connection_service)],
     ws_manager: Annotated[ChatManager, Depends(get_chat_manager)],
@@ -106,10 +108,10 @@ async def websocket_endpoint(
             websocket=websocket,
             username=username,
             last_id=last_request_id,
-            sequence_name=SequenceName("requests_global"),
+            sequence_name=SequenceName("direct_request"),
             feed_service=feed_service,
-            history_fetcher=lambda: request_service.get_requests_for_user(username),
-            response_model=RequestResponse,
+            history_fetcher=lambda: direct_request_service.get_tasks_for_user(username),
+            response_model=DirectRequestResponse,
         )
 
         if last_chat_id is None and last_request_id is None:
@@ -155,17 +157,17 @@ async def websocket_endpoint(
                     await global_chat_service.send_message(
                         username=username, text=msg.to_domain()
                     )
-                elif isinstance(msg, RequestMessage):
+                elif isinstance(msg, DirectRequestMessage):
                     recipient, text = msg.to_domain()
-                    await request_service.send_request(
+                    await direct_request_service.send_request(
                         sender=username,
                         recipient=recipient,
                         text=text,
                     )
-                elif isinstance(msg, StatusUpdateMessage):
-                    request_id, new_status = msg.to_domain()
-                    await request_service.update_status(
-                        request_id=request_id,
+                elif isinstance(msg, UpdateDirectRequestStatusMessage):
+                    task_id, new_status = msg.to_domain()
+                    await direct_request_service.update_status(
+                        task_id=task_id,
                         new_status=new_status,
                         operator=username,
                     )

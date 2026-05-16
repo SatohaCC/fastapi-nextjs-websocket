@@ -25,8 +25,8 @@ from app.infrastructure.persistence.sa_message_repository import (
 from app.infrastructure.persistence.sa_outbox_repository import (
     SqlAlchemyDeliveryFeedRepository,
 )
-from app.infrastructure.persistence.sa_request_repository import (
-    SqlAlchemyRequestRepository,
+from app.infrastructure.persistence.sa_task_repository import (
+    SqlAlchemyTaskRepository,
 )
 from app.infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
 
@@ -38,7 +38,7 @@ def mock_uow():
     uow.__aenter__ = AsyncMock(return_value=uow)
     uow.__aexit__ = AsyncMock(return_value=None)
     uow.messages = AsyncMock()
-    uow.requests = AsyncMock()
+    uow.tasks = AsyncMock()
     uow.outbox = AsyncMock()
     return uow
 
@@ -149,7 +149,7 @@ async def db_uow(db_session: AsyncSession) -> SqlAlchemyUnitOfWork:
     """本物の DB セッションを使用した UnitOfWork を提供します。"""
     return SqlAlchemyUnitOfWork(
         db_session,
-        SqlAlchemyRequestRepository(db_session),
+        SqlAlchemyTaskRepository(db_session),
         SqlAlchemyMessageRepository(db_session),
         SqlAlchemyDeliveryFeedRepository(db_session),
     )

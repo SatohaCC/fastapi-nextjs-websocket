@@ -29,9 +29,9 @@ from .infrastructure.persistence.orm_models import Base
 from .infrastructure.persistence.sa_uow import make_standalone_uow
 from .infrastructure.persistence.session import AsyncSessionLocal, engine
 from .presentation.api.auth import router as auth_router
+from .presentation.api.direct_requests import router as direct_requests_router
 from .presentation.api.feeds import router as feeds_router
 from .presentation.api.global_chat import router as global_chat_router
-from .presentation.api.requests import router as requests_router
 from .presentation.websockets.endpoint import router as ws_router
 from .presentation.websockets.manager import get_manager
 
@@ -47,7 +47,7 @@ async def lifespan(_: FastAPI):
                 "INSERT INTO delivery_sequences"
                 "(name, last_id) "
                 "VALUES('global_chat', 0), "
-                "('requests_global', 0), "
+                "('direct_request', 0), "
                 "('system_global', 0) "
                 "ON CONFLICT (name) DO NOTHING"
             )
@@ -61,8 +61,8 @@ async def lifespan(_: FastAPI):
     feed_router.register(FeedEventType.GLOBAL_CHAT, broadcast)
     feed_router.register(FeedEventType.JOIN, broadcast)
     feed_router.register(FeedEventType.LEAVE, broadcast)
-    feed_router.register(FeedEventType.REQUEST, direct)
-    feed_router.register(FeedEventType.REQUEST_UPDATED, direct)
+    feed_router.register(FeedEventType.DIRECT_REQUEST, direct)
+    feed_router.register(FeedEventType.DIRECT_REQUEST_UPDATED, direct)
 
     def _uow_factory():
         return make_standalone_uow(AsyncSessionLocal)
@@ -143,5 +143,5 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(feeds_router)
 app.include_router(global_chat_router)
-app.include_router(requests_router)
+app.include_router(direct_requests_router)
 app.include_router(ws_router)

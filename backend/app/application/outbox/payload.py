@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from ...domain.primitives.feed import FeedEventType
-from ...domain.primitives.primitives import EntityId, MessageText, RequestText, Username
-from ...domain.primitives.request_status import RequestStatus
+from ...domain.primitives.primitives import EntityId, MessageText, TaskText, Username
+from ...domain.primitives.task_status import TaskStatus
 
 
 @dataclass(frozen=True)
@@ -38,29 +38,29 @@ class GlobalChatPayload(FeedPayload):
 
 
 @dataclass(frozen=True)
-class RequestPayload(FeedPayload):
+class DirectRequestPayload(FeedPayload):
     """ダイレクトリクエスト作成時のペイロード。"""
 
     id: EntityId
     sender: Username
     recipient: Username
-    text: RequestText
-    status: RequestStatus
+    text: TaskText
+    status: TaskStatus
     created_at: datetime
     updated_at: datetime
 
     @property
     def event_type(self) -> FeedEventType:
         """イベントタイプを返します。"""
-        return FeedEventType.REQUEST
+        return FeedEventType.DIRECT_REQUEST
 
 
 @dataclass(frozen=True)
-class RequestUpdatePayload(FeedPayload):
+class DirectRequestUpdatePayload(FeedPayload):
     """ダイレクトリクエスト更新時のペイロード。"""
 
     id: EntityId
-    status: RequestStatus
+    status: TaskStatus
     sender: Username
     recipient: Username
     updated_at: datetime
@@ -68,7 +68,7 @@ class RequestUpdatePayload(FeedPayload):
     @property
     def event_type(self) -> FeedEventType:
         """イベントタイプを返します。"""
-        return FeedEventType.REQUEST_UPDATED
+        return FeedEventType.DIRECT_REQUEST_UPDATED
 
 
 @dataclass(frozen=True)

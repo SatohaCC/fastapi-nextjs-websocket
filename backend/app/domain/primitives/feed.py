@@ -8,7 +8,7 @@ class FeedEventType(str, Enum):
 
     __slots__ = ()
     GLOBAL_CHAT = "global_chat"
-    REQUEST = "request"
-    REQUEST_UPDATED = "request_updated"
+    DIRECT_REQUEST = "direct_request"
+    DIRECT_REQUEST_UPDATED = "direct_request_updated"
     JOIN = "join"
     LEAVE = "leave"

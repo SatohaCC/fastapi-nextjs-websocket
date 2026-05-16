@@ -71,7 +71,7 @@ export const IntegrationTest: Story = {
 
     // --- ダイレクトリクエストの受信テスト ---
     ws.receive({
-      type: "request",
+      type: "direct_request",
       id: 456,
       seq: 2,
       sender: "charlie",

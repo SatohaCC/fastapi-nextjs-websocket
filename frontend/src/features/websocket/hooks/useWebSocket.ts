@@ -7,7 +7,7 @@ import {
   updateRequestStatus,
 } from "@/features/websocket/api";
 import { dispatchMessage } from "@/features/websocket/handlers";
-import type { RequestStatus } from "@/types/ws";
+import type { TaskStatus } from "@/types/ws";
 import { useConnection } from "./useConnection";
 import { useMessageSync } from "./useMessageSync";
 
@@ -86,10 +86,10 @@ export function useWebSocket(token: string | null) {
   );
 
   const updateStatus = useCallback(
-    async (requestId: number, status: RequestStatus) => {
+    async (taskId: number, status: TaskStatus) => {
       if (!token) return;
       try {
-        await updateRequestStatus(token, requestId, status);
+        await updateRequestStatus(token, taskId, status);
       } catch {
         setError("ステータス更新に失敗しました");
       }

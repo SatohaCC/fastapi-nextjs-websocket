@@ -60,7 +60,7 @@ async def get_feeds_since(
 
     if after_request_id is not None:
         request_feeds = await feed_service.get_feeds_after(
-            SequenceName("requests_global"), SequenceId(after_request_id), username
+            SequenceName("direct_request"), SequenceId(after_request_id), username
         )
         feeds.extend(request_feeds)
 

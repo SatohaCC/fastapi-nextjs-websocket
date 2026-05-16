@@ -1,9 +1,9 @@
 import { API_BASE } from "@/lib/config";
 import type {
+  DirectRequestMessage,
+  DirectRequestUpdateMessage,
   GlobalChatMessage,
   JoinLeaveMessage,
-  RequestMessage,
-  RequestUpdateMessage,
 } from "@/types/ws";
 
 export type FeedResponse =
@@ -15,15 +15,15 @@ export type FeedResponse =
       created_at: string;
     }
   | {
-      event_type: "request";
-      payload: RequestMessage;
+      event_type: "direct_request";
+      payload: DirectRequestMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
     }
   | {
-      event_type: "request_updated";
-      payload: RequestUpdateMessage;
+      event_type: "direct_request_updated";
+      payload: DirectRequestUpdateMessage;
       sequence_name: string;
       sequence_id: number;
       created_at: string;
@@ -81,7 +81,7 @@ export async function sendRequest(
   token: string,
   data: { to: string; text: string },
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/requests`, {
+  const res = await fetch(`${API_BASE}/api/direct_requests`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -94,10 +94,10 @@ export async function sendRequest(
 
 export async function updateRequestStatus(
   token: string,
-  requestId: number,
+  taskId: number,
   status: string,
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/requests/${requestId}/status`, {
+  const res = await fetch(`${API_BASE}/api/direct_requests/${taskId}/status`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,

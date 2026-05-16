@@ -1,8 +1,8 @@
 // Server -> Client Messages
 export type ServerMessage =
   | GlobalChatMessage
-  | RequestMessage
-  | RequestUpdateMessage
+  | DirectRequestMessage
+  | DirectRequestUpdateMessage
   | JoinLeaveMessage
   | PingMessage
   | ErrorMessage;
@@ -18,28 +18,28 @@ export interface GlobalChatMessage {
   is_history?: boolean;
 }
 
-export type RequestStatus = "requested" | "processing" | "completed";
+export type TaskStatus = "requested" | "processing" | "completed";
 
-export interface RequestMessage {
-  type: "request";
+export interface DirectRequestMessage {
+  type: "direct_request";
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
   sequence_name?: string;
   sender: string;
   recipient: string;
   text: string;
-  status: RequestStatus;
+  status: TaskStatus;
   created_at: string;
   updated_at: string;
   is_history?: boolean;
 }
 
-export interface RequestUpdateMessage {
-  type: "request_updated";
+export interface DirectRequestUpdateMessage {
+  type: "direct_request_updated";
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
   sequence_name?: string;
-  status: RequestStatus;
+  status: TaskStatus;
   sender: string;
   recipient: string;
   updated_at: string;
@@ -62,8 +62,8 @@ export interface ErrorMessage {
 // Client -> Server Messages
 export type ClientMessage =
   | GlobalChatOut
-  | RequestOut
-  | UpdateStatusOut
+  | DirectRequestOut
+  | UpdateDirectRequestStatusOut
   | PongOut;
 
 export interface GlobalChatOut {
@@ -71,16 +71,16 @@ export interface GlobalChatOut {
   text: string;
 }
 
-export interface RequestOut {
-  type: "request";
+export interface DirectRequestOut {
+  type: "direct_request";
   to: string;
   text: string;
 }
 
-export interface UpdateStatusOut {
+export interface UpdateDirectRequestStatusOut {
   type: "update_status";
-  request_id: number;
-  status: RequestStatus;
+  task_id: number;
+  status: TaskStatus;
 }
 
 export interface PongOut {
@@ -98,23 +98,25 @@ export function isGlobalChatMessage(data: unknown): data is GlobalChatMessage {
   );
 }
 
-export function isRequestMessage(data: unknown): data is RequestMessage {
+export function isDirectRequestMessage(
+  data: unknown,
+): data is DirectRequestMessage {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
   return (
-    d.type === "request" &&
+    d.type === "direct_request" &&
     typeof d.id === "number" &&
     typeof d.sender === "string"
   );
 }
 
-export function isRequestUpdateMessage(
+export function isDirectRequestUpdateMessage(
   data: unknown,
-): data is RequestUpdateMessage {
+): data is DirectRequestUpdateMessage {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
   return (
-    d.type === "request_updated" &&
+    d.type === "direct_request_updated" &&
     typeof d.id === "number" &&
     typeof d.status === "string"
   );

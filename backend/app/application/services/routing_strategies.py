@@ -37,13 +37,13 @@ class DirectStrategy:
         connection_manager: ConnectionManager,
     ) -> None:
         """Sender と recipient にのみ送信します。"""
-        from ..outbox.payload import RequestPayload, RequestUpdatePayload
+        from ..outbox.payload import DirectRequestPayload, DirectRequestUpdatePayload
 
         payload = feed.payload
         sender: Username | None = None
         recipient: Username | None = None
 
-        if isinstance(payload, (RequestPayload, RequestUpdatePayload)):
+        if isinstance(payload, (DirectRequestPayload, DirectRequestUpdatePayload)):
             sender = payload.sender
             recipient = payload.recipient
 
