@@ -20,6 +20,11 @@ class DraftTask:
 
     アプリケーション層で Task を生成する際に使用します。
     永続化前のため id / updated_at を持ちません。
+
+    Note:
+        ``Task`` はダイレクトリクエスト機能の **作業単位** を表す汎用エンティティで、
+        ユーザー向けの業務用語 "DirectRequest" に対応する内部表現である。
+        詳細は CONVENTIONS.md 第 6 節を参照。
     """
 
     sender: Username  # 送信者

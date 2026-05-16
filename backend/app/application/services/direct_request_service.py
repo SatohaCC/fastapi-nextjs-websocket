@@ -10,7 +10,12 @@ from ..uow import UnitOfWork
 
 
 class DirectRequestService:
-    """ダイレクトリクエストに関するユースケースをまとめたアプリケーションサービス。"""
+    """ダイレクトリクエストに関するユースケースをまとめたアプリケーションサービス。
+
+    Note:
+        内部では ``Task`` エンティティを使用する (``Task`` ≒ DirectRequest)。
+        詳細は CONVENTIONS.md 第 6 節を参照。
+    """
 
     def __init__(self, uow: UnitOfWork) -> None:
         """ダイレクトリクエストサービスを初期化します。"""
