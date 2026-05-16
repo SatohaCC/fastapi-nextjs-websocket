@@ -9,7 +9,7 @@ from ...application.services.direct_request_service import DirectRequestService
 from ...domain.primitives.primitives import EntityId, TaskText, Username
 from ...domain.primitives.task_status import TaskStatus
 from ..dependencies import get_authenticated_user, get_direct_request_service
-from ..websockets.schemas import DirectRequestResponse
+from ..websockets.schemas import DirectRequestServerMessage
 
 router = APIRouter(prefix="/api/direct_requests", tags=["direct_requests"])
 
@@ -56,13 +56,13 @@ async def get_requests_since(
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
-) -> list[DirectRequestResponse]:
+) -> list[DirectRequestServerMessage]:
     """
     指定された ID 以降の、自分に関連するすべてのダイレクトリクエストを取得します。
     """
     tasks = await direct_request_service.get_tasks_after(username, EntityId(after_id))
     return [
-        DirectRequestResponse.from_domain(t, is_history=True)
+        DirectRequestServerMessage.from_domain(t, is_history=True)
         for t in tasks
         if t.id is not None
     ]

@@ -1,10 +1,10 @@
 import { API_BASE } from "@/lib/config";
-import type { GlobalChatMessage } from "@/types/ws";
+import type { GlobalChatServerMessage } from "@/types/ws";
 
 export async function fetchMessages(
   token: string,
   afterId: number,
-): Promise<GlobalChatMessage[]> {
+): Promise<GlobalChatServerMessage[]> {
   const res = await fetch(
     `${API_BASE}/api/global_chat/messages?after_id=${afterId}`,
     {

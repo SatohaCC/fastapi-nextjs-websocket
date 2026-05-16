@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  isDirectRequestMessage,
-  isDirectRequestUpdateMessage,
-  isGlobalChatMessage,
+  isDirectRequestServerMessage,
+  isDirectRequestUpdatedServerMessage,
+  isGlobalChatServerMessage,
 } from "./ws";
 
 describe("WebSocket Type Guards", () => {
-  it("should correctly identify GlobalChatMessage", () => {
+  it("should correctly identify GlobalChatServerMessage", () => {
     const mockChat = {
       type: "global_chat",
       id: 1,
@@ -17,12 +17,12 @@ describe("WebSocket Type Guards", () => {
     } as const;
     const invalidChat = { type: "global_chat", id: 1 };
 
-    expect(isGlobalChatMessage(mockChat)).toBe(true);
-    expect(isGlobalChatMessage(invalidChat)).toBe(false);
-    expect(isGlobalChatMessage(null)).toBe(false);
+    expect(isGlobalChatServerMessage(mockChat)).toBe(true);
+    expect(isGlobalChatServerMessage(invalidChat)).toBe(false);
+    expect(isGlobalChatServerMessage(null)).toBe(false);
   });
 
-  it("should correctly identify DirectRequestMessage", () => {
+  it("should correctly identify DirectRequestServerMessage", () => {
     const mockRequest = {
       type: "direct_request",
       id: 2,
@@ -36,11 +36,11 @@ describe("WebSocket Type Guards", () => {
     } as const;
     const invalidRequest = { type: "direct_request", sender: "alice" };
 
-    expect(isDirectRequestMessage(mockRequest)).toBe(true);
-    expect(isDirectRequestMessage(invalidRequest)).toBe(false);
+    expect(isDirectRequestServerMessage(mockRequest)).toBe(true);
+    expect(isDirectRequestServerMessage(invalidRequest)).toBe(false);
   });
 
-  it("should correctly identify DirectRequestUpdateMessage", () => {
+  it("should correctly identify DirectRequestUpdatedServerMessage", () => {
     const mockUpdate = {
       type: "direct_request_updated",
       id: 3,
@@ -49,7 +49,7 @@ describe("WebSocket Type Guards", () => {
       seq: 3,
     } as const;
 
-    expect(isDirectRequestUpdateMessage(mockUpdate)).toBe(true);
-    expect(isDirectRequestUpdateMessage({ type: "other" })).toBe(false);
+    expect(isDirectRequestUpdatedServerMessage(mockUpdate)).toBe(true);
+    expect(isDirectRequestUpdatedServerMessage({ type: "other" })).toBe(false);
   });
 });

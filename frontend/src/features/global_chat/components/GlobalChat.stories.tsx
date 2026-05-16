@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import type { GlobalChatMessage } from "@/types/ws";
+import type { GlobalChatServerMessage } from "@/types/ws";
 import { GlobalChat } from "./GlobalChat";
 
 const meta: Meta<typeof GlobalChat> = {
@@ -20,7 +20,7 @@ const meta: Meta<typeof GlobalChat> = {
 export default meta;
 type Story = StoryObj<typeof GlobalChat>;
 
-const mockMessages: GlobalChatMessage[] = [
+const mockMessages: GlobalChatServerMessage[] = [
   {
     type: "global_chat",
     id: 1,

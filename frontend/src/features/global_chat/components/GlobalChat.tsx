@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/Button/Button";
 import { Card, CardHeader } from "@/components/ui/Card/Card";
 import { Input } from "@/components/ui/Input/Input";
-import type { GlobalChatMessage } from "@/types/ws";
+import type { GlobalChatServerMessage } from "@/types/ws";
 import styles from "./GlobalChat.module.css";
 
 interface Props {
-  messages: GlobalChatMessage[];
+  messages: GlobalChatServerMessage[];
   currentUser: string;
   text: string;
   onTextChange: (value: string) => void;
