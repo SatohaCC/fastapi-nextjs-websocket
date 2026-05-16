@@ -7,7 +7,7 @@ import { Input, Select } from "@/components/ui/Input/Input";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
 import styles from "./DirectRequestPanel.module.css";
 
-interface Props {
+export interface DirectRequestPanelProps {
   otherUsers: string[];
   requests: DirectRequestServerMessage[];
   currentUser: string;
@@ -31,7 +31,7 @@ export function DirectRequestPanel({
   onSend,
   onUpdateStatus,
   formatDate,
-}: Props) {
+}: DirectRequestPanelProps) {
   return (
     <Card className={`fade-in ${styles.container}`}>
       <CardHeader>
