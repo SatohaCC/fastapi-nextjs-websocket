@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input/Input";
 import type { GlobalChatServerMessage } from "@/types/ws";
 import styles from "./GlobalChat.module.css";
 
-interface Props {
+export interface GlobalChatProps {
   messages: GlobalChatServerMessage[];
   currentUser: string;
   text: string;
@@ -22,7 +22,7 @@ export function GlobalChat({
   onTextChange,
   onSend,
   formatTime,
-}: Props) {
+}: GlobalChatProps) {
   return (
     <Card className={`fade-in ${styles.container}`}>
       <CardHeader className={styles.header}>
