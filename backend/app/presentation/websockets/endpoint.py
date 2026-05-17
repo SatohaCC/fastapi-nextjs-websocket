@@ -1,7 +1,6 @@
 """WebSocket エンドポイントの定義とメッセージハンドリング。"""
 
 import asyncio
-import json
 from collections.abc import Callable, Coroutine
 from typing import Annotated, Any
 
@@ -137,12 +136,13 @@ async def websocket_endpoint(
     pong_event = asyncio.Event()
     task = asyncio.create_task(heartbeat(websocket, pong_event))
 
+    # iter_json() は WebSocketDisconnect を内部で吸収するので、
+    # 正常切断時はループが普通に終了する。RuntimeError は state 違反の保険。
     try:
-        while True:
+        async for data in websocket.iter_json():
             try:
-                data = await websocket.receive_json()
                 msg: ClientMessage = TypeAdapter(ClientMessage).validate_python(data)
-            except (json.JSONDecodeError, ValidationError) as e:
+            except ValidationError as e:
                 await websocket.send_json(
                     ErrorServerMessage(text=str(e)).model_dump(mode="json")
                 )
@@ -173,9 +173,9 @@ async def websocket_endpoint(
                 await websocket.send_json(
                     ErrorServerMessage(text=str(e)).model_dump(mode="json")
                 )
-
-    except (WebSocketDisconnect, RuntimeError):
-        ws_manager.disconnect(websocket, username)
-        await connection_service.handle_user_leave(username)
+    except RuntimeError:
+        pass
     finally:
         task.cancel()
+        ws_manager.disconnect(websocket, username)
+        await connection_service.handle_user_leave(username)
