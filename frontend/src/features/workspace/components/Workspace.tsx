@@ -1,13 +1,17 @@
 "use client";
 
+import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
 import { DirectRequestPanelContainer } from "@/features/direct_request/components/DirectRequestPanelContainer";
 import { GlobalChatContainer } from "@/features/global_chat/components/GlobalChatContainer";
 import { WorkspaceHeader } from "@/features/workspace/components/WorkspaceHeader";
-import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import styles from "./Workspace.module.css";
 
-export function Workspace() {
-  const { error } = useWorkspaceContext();
+interface WorkspaceProps {
+  token: string | null;
+}
+
+export function Workspace({ token }: WorkspaceProps) {
+  const { error } = useWebSocketContext();
 
   return (
     <div className={styles.container}>
@@ -20,8 +24,8 @@ export function Workspace() {
       )}
 
       <main className={styles.main}>
-        <GlobalChatContainer />
-        <DirectRequestPanelContainer />
+        <GlobalChatContainer token={token} />
+        <DirectRequestPanelContainer token={token} />
       </main>
 
       <footer className={styles.footer}>

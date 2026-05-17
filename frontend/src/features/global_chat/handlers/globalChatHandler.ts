@@ -1,12 +1,12 @@
-import { mergeById } from "@/features/websocket/utils/mergeById";
+import type { Dispatch, SetStateAction } from "react";
+import { mergeById } from "@/features/common/websocket/utils/mergeById";
 import type { GlobalChatServerMessage } from "@/types/ws";
-import type { HandlerDeps } from "./types";
 
 export function handleGlobalChatMessage(
   data: GlobalChatServerMessage,
-  deps: HandlerDeps,
+  setChatMessages: Dispatch<SetStateAction<GlobalChatServerMessage[]>>,
 ): void {
-  deps.setChatMessages((prev) => {
+  setChatMessages((prev) => {
     if (prev.some((m) => m.id === data.id)) return prev;
     return mergeById(prev, [data]);
   });
