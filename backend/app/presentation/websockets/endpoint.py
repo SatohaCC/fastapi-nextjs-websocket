@@ -133,7 +133,8 @@ async def websocket_endpoint(
         traceback.print_exc()
         ws_manager.disconnect(websocket, username)
         try:
-            await websocket.close(code=1011)  # Internal Error
+            # 1011 = Internal Error。reason は debugging 用にクライアントへ届く。
+            await websocket.close(code=1011, reason="Initialization failed")
         except Exception:
             pass
         return
