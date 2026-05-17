@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useWebSocket } from "@/features/websocket/hooks/useWebSocket";
+import { WebSocketProvider } from "@/features/common/websocket/context/WebSocketContext";
 import { WorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useUsers } from "@/features/workspace/hooks/useUsers";
 import { Workspace } from "./Workspace";
@@ -14,20 +14,6 @@ export function WorkspaceContainer() {
   const [authToken, setAuthToken] = useState<string | null>(null);
 
   const { users, loading: usersLoading } = useUsers(authToken);
-
-  const {
-    chatMessages,
-    requestMessages,
-    isConnected,
-    isOnline,
-    error,
-    heartbeatStatus,
-    syncStatus,
-    disconnect,
-    sendChat,
-    sendRequest,
-    updateStatus,
-  } = useWebSocket(authToken);
 
   useEffect(() => {
     const t = sessionStorage.getItem("token");
@@ -41,7 +27,7 @@ export function WorkspaceContainer() {
   }, [router]);
 
   const handleLogout = () => {
-    disconnect();
+    setAuthToken(null);
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     router.replace("/");
@@ -52,24 +38,12 @@ export function WorkspaceContainer() {
   }
 
   return (
-    <WorkspaceContext.Provider
-      value={{
-        username,
-        users,
-        chatMessages,
-        requestMessages,
-        isConnected,
-        isOnline,
-        error,
-        heartbeatStatus,
-        syncStatus,
-        onLogout: handleLogout,
-        sendChat,
-        sendRequest,
-        updateStatus,
-      }}
-    >
-      <Workspace />
-    </WorkspaceContext.Provider>
+    <WebSocketProvider token={authToken}>
+      <WorkspaceContext.Provider
+        value={{ username, users, onLogout: handleLogout }}
+      >
+        <Workspace token={authToken} />
+      </WorkspaceContext.Provider>
+    </WebSocketProvider>
   );
 }

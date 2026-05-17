@@ -28,7 +28,7 @@ export const handlers = [
     },
   ),
 
-  http.get(`${API_BASE}/api/feeds`, ({ request }) => {
+  http.get(`${API_BASE}/api/feeds/global_chat`, ({ request }) => {
     const url = new URL(request.url);
     const afterChatId = url.searchParams.get("after_chat_id");
 
@@ -38,6 +38,29 @@ export const handlers = [
         sequence_id: (Number(afterChatId) || 0) + 1,
         event_type: "global_chat",
         payload: { id: 100, username: "bot", text: "auto-sync message" },
+        created_at: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE}/api/feeds/direct_requests`, ({ request }) => {
+    const url = new URL(request.url);
+    const afterRequestId = url.searchParams.get("after_request_id");
+
+    return HttpResponse.json([
+      {
+        sequence_name: "direct_request",
+        sequence_id: (Number(afterRequestId) || 0) + 1,
+        event_type: "direct_request",
+        payload: {
+          id: 200,
+          sender: "bot",
+          recipient: "alice",
+          text: "auto-sync request",
+          status: "requested",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
         created_at: new Date().toISOString(),
       },
     ]);
