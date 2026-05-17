@@ -23,5 +23,10 @@
     },
     "[json]": {
         "editor.defaultFormatter": "biomejs.biome"
-    }
+    },
+    "cSpell.words": [
+        "pycache",
+        "starlette",
+        "venv"
+    ]
 }
