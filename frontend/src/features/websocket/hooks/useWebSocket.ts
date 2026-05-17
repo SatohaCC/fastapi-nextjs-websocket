@@ -14,7 +14,7 @@ import { useMessageSync } from "./useMessageSync";
 const INITIAL_RETRY_MS = 1000;
 
 export function useWebSocket(token: string | null) {
-  // 1. メッセージ・同期管理のフック
+  // --- メッセージ・同期管理のフック ---
   const {
     chatMessages,
     setChatMessages,
@@ -27,7 +27,7 @@ export function useWebSocket(token: string | null) {
     fetchMissingFeeds,
   } = useMessageSync(token);
 
-  // 2. 接続管理のフック
+  // --- 接続管理のフック ---
   const {
     isConnected,
     isOnline,
@@ -60,7 +60,7 @@ export function useWebSocket(token: string | null) {
     onStatusChange: setSyncStatus,
   });
 
-  // 3. API アクション
+  // --- API アクション ---
   const sendChat = useCallback(
     async (text: string) => {
       if (!token) return;
@@ -97,7 +97,7 @@ export function useWebSocket(token: string | null) {
     [token, setError],
   );
 
-  // ── トークン監視 ──
+  // --- トークン監視 ---
   useEffect(() => {
     // トークンが変わったら、古いデータを即座にクリアする
     setChatMessages([]);
@@ -117,7 +117,7 @@ export function useWebSocket(token: string | null) {
     setSyncStatus,
   ]);
 
-  // ── ネットワーク監視 & 定期同期 ──
+  // --- ネットワーク監視 & 定期同期 ---
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);

@@ -2,7 +2,7 @@
 //   - *ServerMessage: サーバー → クライアント (受信)
 //   - *ClientMessage: クライアント → サーバー (送信)
 
-// Server -> Client Messages
+// --- Server -> Client Messages ---
 export type ServerMessage =
   | GlobalChatServerMessage
   | DirectRequestServerMessage
@@ -63,7 +63,7 @@ export interface ErrorServerMessage {
   text: string;
 }
 
-// Client -> Server Messages
+// --- Client -> Server Messages ---
 export type ClientMessage =
   | GlobalChatClientMessage
   | DirectRequestClientMessage
@@ -91,7 +91,7 @@ export interface PongClientMessage {
   type: "pong";
 }
 
-// Type Guards
+// --- Type Guards ---
 export function isGlobalChatServerMessage(
   data: unknown,
 ): data is GlobalChatServerMessage {

@@ -5,7 +5,6 @@ import type {
 } from "@/types/ws";
 import type { HandlerDeps } from "./types";
 
-/** ダイレクトリクエストメッセージを受信し、状態を更新する */
 export function handleDirectRequestMessage(
   data: DirectRequestServerMessage,
   deps: HandlerDeps,
@@ -16,7 +15,6 @@ export function handleDirectRequestMessage(
   });
 }
 
-/** ダイレクトリクエストのステータス更新を処理する */
 export function handleDirectRequestUpdated(
   data: DirectRequestUpdatedServerMessage,
   deps: HandlerDeps,

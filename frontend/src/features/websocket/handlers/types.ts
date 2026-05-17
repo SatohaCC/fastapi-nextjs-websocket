@@ -4,7 +4,6 @@ import type {
   GlobalChatServerMessage,
 } from "@/types/ws";
 
-/** 各ハンドラが共有する依存オブジェクト */
 export interface HandlerDeps {
   setChatMessages: Dispatch<SetStateAction<GlobalChatServerMessage[]>>;
   setRequestMessages: Dispatch<SetStateAction<DirectRequestServerMessage[]>>;

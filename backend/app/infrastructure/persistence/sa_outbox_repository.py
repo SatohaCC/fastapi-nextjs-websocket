@@ -77,7 +77,6 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         if not feed_keys:
             return
 
-        # tuple のリストから複合条件を作成
         conditions = [
             and_(
                 DeliveryFeedORM.sequence_name == name.value,
