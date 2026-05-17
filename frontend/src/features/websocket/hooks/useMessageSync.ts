@@ -1,12 +1,17 @@
 import { useCallback, useRef, useState } from "react";
 import { fetchFeeds } from "@/features/websocket/api";
 import { mergeById } from "@/features/websocket/utils/mergeById";
-import type { DirectRequestMessage, GlobalChatMessage } from "@/types/ws";
+import type {
+  DirectRequestServerMessage,
+  GlobalChatServerMessage,
+} from "@/types/ws";
 
 export function useMessageSync(token: string | null) {
-  const [chatMessages, setChatMessages] = useState<GlobalChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<GlobalChatServerMessage[]>(
+    [],
+  );
   const [requestMessages, setRequestMessages] = useState<
-    DirectRequestMessage[]
+    DirectRequestServerMessage[]
   >([]);
   const [syncStatus, setSyncStatus] = useState<string>("未同期");
 

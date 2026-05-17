@@ -2,11 +2,13 @@
 
 import styles from "./WorkspaceLoading.module.css";
 
-interface Props {
+export interface WorkspaceLoadingProps {
   message?: string;
 }
 
-export function WorkspaceLoading({ message = "Initializing App..." }: Props) {
+export function WorkspaceLoading({
+  message = "Initializing App...",
+}: WorkspaceLoadingProps) {
   return (
     <div className={styles.loadingContainer}>
       <div className="fade-in">{message}</div>

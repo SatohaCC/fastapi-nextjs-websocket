@@ -1,16 +1,13 @@
 import { API_BASE } from "@/lib/config";
-import type { GlobalChatMessage } from "@/types/ws";
 
-export async function fetchMessages(
-  token: string,
-  afterId: number,
-): Promise<GlobalChatMessage[]> {
-  const res = await fetch(
-    `${API_BASE}/api/global_chat/messages?after_id=${afterId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
+export async function sendMessage(token: string, text: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/global_chat/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
-  );
-  if (!res.ok) throw new Error("Failed to fetch messages");
-  return res.json();
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error("Failed to send message");
 }

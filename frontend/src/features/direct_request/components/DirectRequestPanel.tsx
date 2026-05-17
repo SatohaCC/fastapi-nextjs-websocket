@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { Card, CardHeader } from "@/components/ui/Card/Card";
 import { Input, Select } from "@/components/ui/Input/Input";
-import type { DirectRequestMessage, TaskStatus } from "@/types/ws";
+import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
 import styles from "./DirectRequestPanel.module.css";
 
-interface Props {
+export interface DirectRequestPanelProps {
   otherUsers: string[];
-  requests: DirectRequestMessage[];
+  requests: DirectRequestServerMessage[];
   currentUser: string;
   targetUser: string;
   text: string;
@@ -31,7 +31,7 @@ export function DirectRequestPanel({
   onSend,
   onUpdateStatus,
   formatDate,
-}: Props) {
+}: DirectRequestPanelProps) {
   return (
     <Card className={`fade-in ${styles.container}`}>
       <CardHeader>

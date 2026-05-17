@@ -3,9 +3,9 @@
 import { useCallback, useEffect } from "react";
 import {
   sendRequest as apiSendRequest,
-  sendMessage,
   updateRequestStatus,
-} from "@/features/websocket/api";
+} from "@/features/direct_request/api";
+import { sendMessage } from "@/features/global_chat/api";
 import { dispatchMessage } from "@/features/websocket/handlers";
 import type { TaskStatus } from "@/types/ws";
 import { useConnection } from "./useConnection";

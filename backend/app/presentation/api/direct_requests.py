@@ -9,13 +9,17 @@ from ...application.services.direct_request_service import DirectRequestService
 from ...domain.primitives.primitives import EntityId, TaskText, Username
 from ...domain.primitives.task_status import TaskStatus
 from ..dependencies import get_authenticated_user, get_direct_request_service
-from ..websockets.schemas import DirectRequestResponse
+from ..websockets.schemas import DirectRequestServerMessage
 
 router = APIRouter(prefix="/api/direct_requests", tags=["direct_requests"])
 
 
-class StatusUpdatePayload(BaseModel):
-    """ステータス更新用のリクエストボディ。"""
+class UpdateDirectRequestStatusRequest(BaseModel):
+    """ステータス更新用のリクエストボディ。
+
+    REST の Body は ``*Request`` で統一する (CONVENTIONS.md 第 1 節)。
+    ``*Payload`` は DeliveryFeed のイベントペイロード専用語であり、ここでは使わない。
+    """
 
     status: str
 
@@ -31,8 +35,11 @@ class StatusUpdatePayload(BaseModel):
         return TaskStatus(self.status)
 
 
-class SendDirectRequestPayload(BaseModel):
-    """ダイレクトリクエスト送信用のリクエストボディ。"""
+class SendDirectRequestRequest(BaseModel):
+    """ダイレクトリクエスト送信用のリクエストボディ。
+
+    REST の Body は ``*Request`` で統一する (CONVENTIONS.md 第 1 節)。
+    """
 
     to: str
     text: str
@@ -49,13 +56,13 @@ async def get_requests_since(
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
-) -> list[DirectRequestResponse]:
+) -> list[DirectRequestServerMessage]:
     """
     指定された ID 以降の、自分に関連するすべてのダイレクトリクエストを取得します。
     """
     tasks = await direct_request_service.get_tasks_after(username, EntityId(after_id))
     return [
-        DirectRequestResponse.from_domain(t, is_history=True)
+        DirectRequestServerMessage.from_domain(t, is_history=True)
         for t in tasks
         if t.id is not None
     ]
@@ -63,14 +70,14 @@ async def get_requests_since(
 
 @router.post("")
 async def send_request(
-    payload: SendDirectRequestPayload,
+    body: SendDirectRequestRequest,
     username: Annotated[Username, Depends(get_authenticated_user)],
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
 ) -> dict:
     """ダイレクトリクエストを新規送信します。"""
-    recipient, text = payload.to_domain()
+    recipient, text = body.to_domain()
     await direct_request_service.send_request(username, recipient, text)
     return {"status": "ok"}
 
@@ -78,7 +85,7 @@ async def send_request(
 @router.patch("/{task_id}/status")
 async def update_request_status(
     task_id: int,
-    payload: StatusUpdatePayload,
+    body: UpdateDirectRequestStatusRequest,
     username: Annotated[Username, Depends(get_authenticated_user)],
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
@@ -86,6 +93,6 @@ async def update_request_status(
 ) -> dict:
     """ダイレクトリクエストのステータスを更新します。"""
     await direct_request_service.update_status(
-        EntityId(task_id), payload.to_domain(), username
+        EntityId(task_id), body.to_domain(), username
     )
     return {"status": "ok"}

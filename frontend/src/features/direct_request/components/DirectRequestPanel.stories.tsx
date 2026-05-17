@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import type { DirectRequestMessage } from "@/types/ws";
+import type { DirectRequestServerMessage } from "@/types/ws";
 import { DirectRequestPanel } from "./DirectRequestPanel";
 
 const meta: Meta<typeof DirectRequestPanel> = {
@@ -27,7 +27,7 @@ const meta: Meta<typeof DirectRequestPanel> = {
 export default meta;
 type Story = StoryObj<typeof DirectRequestPanel>;
 
-const mockRequests: DirectRequestMessage[] = [
+const mockRequests: DirectRequestServerMessage[] = [
   {
     type: "direct_request",
     id: 1,
