@@ -1,7 +1,7 @@
 """WebSocket エンドポイントの定義とメッセージハンドリング。"""
 
 import asyncio
-import json
+import logging
 from collections.abc import Callable, Coroutine
 from typing import Annotated, Any
 
@@ -41,6 +41,8 @@ from .schemas import (
     PongClientMessage,
     UpdateDirectRequestStatusClientMessage,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["websockets"])
 
@@ -89,7 +91,7 @@ async def websocket_endpoint(
     last_request_id: Annotated[int | None, Query()] = None,
 ) -> None:
     """WebSocket メインハンドラ"""
-    print(f"DEBUG: WebSocket authenticated as: {username.value}")
+    logger.debug("WebSocket authenticated as: %s", username.value)
     await ws_manager.connect(username, websocket)
 
     try:
@@ -118,31 +120,65 @@ async def websocket_endpoint(
             # 入室イベントの記録
             await connection_service.handle_user_join(username)
 
-    except WebSocketDisconnect:
-        # 初期化中の切断はよくあることなので、静かに終了する
+    except WebSocketDisconnect as e:
+        # 初期化中の切断はよくあることなので、静かに終了する。
+        # ただし切断 code / reason は診断のために記録する。
+        logger.info(
+            "disconnect during init: user=%s code=%s reason=%r",
+            username.value,
+            e.code,
+            e.reason,
+        )
         ws_manager.disconnect(websocket, username)
         return
-    except Exception as e:
-        print(f"[error] WebSocket initialization failed for {username.value}: {e}")
-        import traceback
-
-        traceback.print_exc()
+    except Exception:
+        logger.exception("WebSocket initialization failed for %s", username.value)
         ws_manager.disconnect(websocket, username)
         try:
-            await websocket.close(code=1011)  # Internal Error
+            # 1011 = Internal Error。reason は debugging 用にクライアントへ届く。
+            await websocket.close(code=1011, reason="Initialization failed")
         except Exception:
             pass
         return
 
     pong_event = asyncio.Event()
-    task = asyncio.create_task(heartbeat(websocket, pong_event))
-
+    # heartbeat とメッセージループを TaskGroup で並列実行する。
+    # 片方が抜けたら TaskGroup が残りを cancel し、最後に finally で cleanup する。
     try:
-        while True:
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(heartbeat(websocket, pong_event))
+            tg.create_task(
+                _client_message_loop(
+                    websocket=websocket,
+                    username=username,
+                    pong_event=pong_event,
+                    global_chat_service=global_chat_service,
+                    direct_request_service=direct_request_service,
+                )
+            )
+    finally:
+        ws_manager.disconnect(websocket, username)
+        await connection_service.handle_user_leave(username)
+
+
+async def _client_message_loop(
+    *,
+    websocket: WebSocket,
+    username: Username,
+    pong_event: asyncio.Event,
+    global_chat_service: GlobalChatService,
+    direct_request_service: DirectRequestService,
+) -> None:
+    """クライアントからの inbound メッセージをディスパッチする。
+
+    ``iter_json()`` は WebSocketDisconnect を内部で吸収するので、
+    正常切断時はループが普通に終了する。RuntimeError は state 違反の保険。
+    """
+    try:
+        async for data in websocket.iter_json():
             try:
-                data = await websocket.receive_json()
                 msg: ClientMessage = TypeAdapter(ClientMessage).validate_python(data)
-            except (json.JSONDecodeError, ValidationError) as e:
+            except ValidationError as e:
                 await websocket.send_json(
                     ErrorServerMessage(text=str(e)).model_dump(mode="json")
                 )
@@ -173,9 +209,5 @@ async def websocket_endpoint(
                 await websocket.send_json(
                     ErrorServerMessage(text=str(e)).model_dump(mode="json")
                 )
-
-    except (WebSocketDisconnect, RuntimeError):
-        ws_manager.disconnect(websocket, username)
-        await connection_service.handle_user_leave(username)
-    finally:
-        task.cancel()
+    except RuntimeError:
+        pass

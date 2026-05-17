@@ -1,9 +1,12 @@
 """WebSocket 接続の管理とリアルタイム配信を担うクラス。"""
 
 import asyncio
+import json
+import logging
 from typing import TYPE_CHECKING, Any
 
 from fastapi import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
 
 from ...domain.primitives.primitives import Username
 from ...infrastructure.config import settings
@@ -14,6 +17,8 @@ from .schemas import (
 
 if TYPE_CHECKING:
     pass
+
+logger = logging.getLogger(__name__)
 
 
 class ChatManager:
@@ -28,17 +33,18 @@ class ChatManager:
         """新しい WebSocket 接続を受け入れ、管理リストに追加します。"""
         await websocket.accept()
         ws_id = id(websocket)
-        print(f"[connect] {username.value} (ws:{ws_id}) が入室完了")
+        logger.info("connect: user=%s ws=%d", username.value, ws_id)
 
         if username not in self.connections:
             self.connections[username] = set()
         self.connections[username].add(websocket)
 
         active_users = [u.value for u in self.connections.keys()]
-        print(
-            f"DEBUG: {username.value} connections: "
-            f"{len(self.connections[username])} | "
-            f"Total users: {active_users}"
+        logger.debug(
+            "active connections: user=%s count=%d total_users=%s",
+            username.value,
+            len(self.connections[username]),
+            active_users,
         )
 
     def disconnect(
@@ -66,67 +72,88 @@ class ChatManager:
         user_str = (
             actual_user.value if isinstance(actual_user, Username) else actual_user
         )
-        print(
-            f"[disconnect] {user_str} (ws:{ws_id}) が退室 | "
-            f"残りユーザー: {[u.value for u in self.connections.keys()]}"
+        logger.info(
+            "disconnect: user=%s ws=%d remaining_users=%s",
+            user_str,
+            ws_id,
+            [u.value for u in self.connections.keys()],
         )
 
-    async def send_to_user(self, username: Username, payload: Any) -> None:
-        """特定のユーザーにのみデータを送信します。
-        ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
+    @staticmethod
+    def _serialize(payload: Any) -> str:
+        """Payload を 1 回だけ JSON 文字列化する。
+
+        ``broadcast`` のように複数の WS へ同じ payload を送る場合に、
+        Pydantic ``model_dump_json`` を 1 回呼ぶだけで済むようにする。
+        Starlette の ``send_text`` はバイト化のみ行う。
         """
         # presentation → application の循環インポートを避けるため関数内でインポート
         from ...application.outbox.delivery_feed import DeliveryFeed
 
         if isinstance(payload, DeliveryFeed):
-            dto = create_server_message_from_feed(payload)
-            data = dto.model_dump(mode="json")
-        elif isinstance(payload, BaseServerMessage):
-            data = payload.model_dump(mode="json")
-        else:
-            data = payload
+            return create_server_message_from_feed(payload).model_dump_json()
+        if isinstance(payload, BaseServerMessage):
+            return payload.model_dump_json()
+        # dict などのフォールバック (Starlette と同じ separators / ensure_ascii)
+        return json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
 
+    async def send_to_user(self, username: Username, payload: Any) -> None:
+        """特定のユーザーにのみデータを送信します。
+        ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
+        """
         if username not in self.connections:
             return
 
+        text = self._serialize(payload)
         ws_set = self.connections[username]
 
         # 非同期送信タスクのリストを作成
-        tasks = []
-        for ws in ws_set:
-            tasks.append(self._send_safe(ws, data, username))
-
+        tasks = [self._send_safe(ws, text, username) for ws in ws_set]
         if tasks:
             await asyncio.gather(*tasks)
 
     async def broadcast(self, payload: Any) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
-        # presentation → application の循環インポートを避けるため関数内でインポート
-        from ...application.outbox.delivery_feed import DeliveryFeed
+        text = self._serialize(payload)
 
-        if isinstance(payload, DeliveryFeed):
-            dto = create_server_message_from_feed(payload)
-            data = dto.model_dump(mode="json")
-        elif isinstance(payload, BaseServerMessage):
-            data = payload.model_dump(mode="json")
-        else:
-            data = payload
-
-        tasks = []
-        for user, ws_set in list(self.connections.items()):
-            for ws in ws_set:
-                tasks.append(self._send_safe(ws, data, user))
-
+        tasks = [
+            self._send_safe(ws, text, user)
+            for user, ws_set in list(self.connections.items())
+            for ws in ws_set
+        ]
         if tasks:
             await asyncio.gather(*tasks)
 
     async def _send_safe(
-        self, ws: WebSocket, payload: dict, username: Username | None = None
+        self, ws: WebSocket, text: str, username: Username | None = None
     ) -> None:
-        """内部用の安全な送信メソッド。"""
+        """内部用の安全な送信メソッド。
+
+        ``text`` は事前にシリアライズ済みの JSON 文字列であることを前提とする。
+        """
+        user_str = username.value if username else "unknown"
+        # 既に close 済みの socket への送信を未然に skip し、例外ノイズを減らす。
+        # 例外ベースの cleanup は維持しているため、これは最適化目的のみ。
+        if ws.application_state != WebSocketState.CONNECTED:
+            logger.debug(
+                "send_safe skip: user=%s state=%s", user_str, ws.application_state
+            )
+            self.disconnect(ws, username)
+            return
         try:
-            await ws.send_json(payload)
-        except (WebSocketDisconnect, RuntimeError):
+            await ws.send_text(text)
+        except WebSocketDisconnect as e:
+            # Starlette は OSError も WebSocketDisconnect(code=1006) に変換する。
+            logger.info(
+                "send_safe disconnect: user=%s code=%s reason=%r",
+                user_str,
+                e.code,
+                e.reason,
+            )
+            self.disconnect(ws, username)
+        except RuntimeError as e:
+            # state 違反等 (例: 既に close 済みの ws へ send)。
+            logger.warning("send_safe runtime error: user=%s err=%s", user_str, e)
             self.disconnect(ws, username)
 
 
@@ -148,13 +175,22 @@ async def heartbeat(websocket: WebSocket, pong_event: asyncio.Event) -> None:
         pong_event.clear()
         try:
             await websocket.send_json({"type": "ping"})
-        except (WebSocketDisconnect, RuntimeError):
+        except WebSocketDisconnect as e:
+            logger.info(
+                "heartbeat ping failed, peer disconnected: code=%s reason=%r",
+                e.code,
+                e.reason,
+            )
+            _manager.disconnect(websocket)
+            break
+        except RuntimeError as e:
+            logger.warning("heartbeat ping failed, runtime error: %s", e)
             _manager.disconnect(websocket)
             break
         try:
             await asyncio.wait_for(pong_event.wait(), timeout=settings.PONG_TIMEOUT)
         except asyncio.TimeoutError:
-            print("[timeout] pong が返らなかったため切断")
+            logger.info("heartbeat timeout: closing connection")
             try:
                 await websocket.close(code=1001, reason="pong timeout")
             except RuntimeError:
