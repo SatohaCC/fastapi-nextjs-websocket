@@ -34,3 +34,5 @@ Docs/
 frontend/.git/
 backend/.git/
 .agents/
+
+starlette/
