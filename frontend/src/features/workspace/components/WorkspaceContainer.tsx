@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useUsers } from "@/features/auth/hooks/useUsers";
 import { WebSocketProvider } from "@/features/common/websocket/context/WebSocketContext";
 import { WorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
@@ -10,39 +11,30 @@ import { WorkspaceLoading } from "./WorkspaceLoading";
 
 export function WorkspaceContainer() {
   const router = useRouter();
-  const [username, setUsername] = useState<string | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
-
-  const { users, loading: usersLoading } = useUsers(authToken);
+  const { token, username, isSessionLoaded, clearSession } = useAuth();
+  const { users, loading: usersLoading } = useUsers(token);
 
   useEffect(() => {
-    const t = sessionStorage.getItem("token");
-    const u = sessionStorage.getItem("username");
-    if (!t || !u) {
+    if (isSessionLoaded && (!token || !username)) {
       router.replace("/");
-      return;
     }
-    setUsername(u);
-    setAuthToken(t);
-  }, [router]);
+  }, [isSessionLoaded, token, username, router]);
 
   const handleLogout = () => {
-    setAuthToken(null);
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
+    clearSession();
     router.replace("/");
   };
 
-  if (usersLoading || !username) {
+  if (!isSessionLoaded || usersLoading || !username) {
     return <WorkspaceLoading />;
   }
 
   return (
-    <WebSocketProvider token={authToken}>
+    <WebSocketProvider token={token}>
       <WorkspaceContext.Provider
         value={{ username, users, onLogout: handleLogout }}
       >
-        <Workspace token={authToken} />
+        <Workspace token={token} />
       </WorkspaceContext.Provider>
     </WebSocketProvider>
   );
