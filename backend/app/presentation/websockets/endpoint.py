@@ -117,8 +117,13 @@ async def websocket_endpoint(
             # 入室イベントの記録
             await connection_service.handle_user_join(username)
 
-    except WebSocketDisconnect:
-        # 初期化中の切断はよくあることなので、静かに終了する
+    except WebSocketDisconnect as e:
+        # 初期化中の切断はよくあることなので、静かに終了する。
+        # ただし切断 code / reason は診断のために記録する。
+        print(
+            f"[disconnect] {username.value} during init "
+            f"(code={e.code} reason={e.reason!r})"
+        )
         ws_manager.disconnect(websocket, username)
         return
     except Exception as e:
