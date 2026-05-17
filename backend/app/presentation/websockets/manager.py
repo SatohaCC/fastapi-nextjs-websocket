@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from fastapi import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
 
 from ...domain.primitives.primitives import Username
 from ...infrastructure.config import settings
@@ -131,6 +132,14 @@ class ChatManager:
         ``text`` は事前にシリアライズ済みの JSON 文字列であることを前提とする。
         """
         user_str = username.value if username else "unknown"
+        # 既に close 済みの socket への送信を未然に skip し、例外ノイズを減らす。
+        # 例外ベースの cleanup は維持しているため、これは最適化目的のみ。
+        if ws.application_state != WebSocketState.CONNECTED:
+            logger.debug(
+                "send_safe skip: user=%s state=%s", user_str, ws.application_state
+            )
+            self.disconnect(ws, username)
+            return
         try:
             await ws.send_text(text)
         except WebSocketDisconnect as e:
