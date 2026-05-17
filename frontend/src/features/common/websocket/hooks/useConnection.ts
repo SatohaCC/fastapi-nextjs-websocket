@@ -6,18 +6,18 @@ const PING_TIMEOUT_MS = (10 + 5 + 2) * 1000;
 const INITIAL_RETRY_MS = 1000;
 const MAX_RETRY_MS = 30000;
 
+export type SeqProvider = () => number | null;
+
 interface UseConnectionProps {
   token: string | null;
-  lastChatIdRef: RefObject<number | null>;
-  lastRequestIdRef: RefObject<number | null>;
+  seqProvidersRef: RefObject<Map<string, SeqProvider>>;
   onMessage: (event: MessageEvent, socket: WebSocket) => void;
   onStatusChange?: (status: string) => void;
 }
 
 export function useConnection({
   token,
-  lastChatIdRef,
-  lastRequestIdRef,
+  seqProvidersRef,
   onMessage,
   onStatusChange,
 }: UseConnectionProps) {
@@ -32,7 +32,6 @@ export function useConnection({
   const pingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isManualRef = useRef(false);
 
-  // トークンの最新値を常にRefに同期 (レンダリングパスで同期して最新を保証)
   const currentTokenRef = useRef<string | null>(token);
   currentTokenRef.current = token;
 
@@ -74,13 +73,13 @@ export function useConnection({
 
     const url = new URL(`${WS_BASE}/ws`);
     url.searchParams.set("token", activeToken);
-    if (lastChatIdRef.current !== null)
-      url.searchParams.set("last_chat_id", lastChatIdRef.current.toString());
-    if (lastRequestIdRef.current !== null)
-      url.searchParams.set(
-        "last_request_id",
-        lastRequestIdRef.current.toString(),
-      );
+    const providers = seqProvidersRef.current;
+    if (providers) {
+      for (const [paramName, get] of providers.entries()) {
+        const v = get();
+        if (v !== null) url.searchParams.set(paramName, v.toString());
+      }
+    }
 
     const socket = new WebSocket(url.toString());
     wsRef.current = socket;
@@ -113,7 +112,7 @@ export function useConnection({
     socket.onerror = () => {
       setError("WebSocket connection error");
     };
-  }, [resetPingTimeout, clearPingTimeout, lastChatIdRef, lastRequestIdRef]);
+  }, [resetPingTimeout, clearPingTimeout, seqProvidersRef]);
 
   const connect = useCallback(() => {
     if (!currentTokenRef.current) return;
@@ -124,6 +123,10 @@ export function useConnection({
 
   const disconnect = useCallback(() => {
     isManualRef.current = true;
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
@@ -133,7 +136,6 @@ export function useConnection({
   }, []);
 
   return {
-    ws: wsRef.current,
     isConnected,
     isOnline,
     setIsOnline,

@@ -1,21 +1,32 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "@storybook/test";
-import { useMessageSync } from "./useMessageSync";
+import { useRef, useState } from "react";
+import type { GlobalChatServerMessage } from "@/types/ws";
+import { useChatSync } from "./useChatSync";
 
-// Hook を使用するテスト用コンポーネント
 const TestHookComponent = () => {
-  const { chatMessages, syncStatus, fetchMissingFeeds } =
-    useMessageSync("mock-token");
+  const [chatMessages, setChatMessages] = useState<GlobalChatServerMessage[]>(
+    [],
+  );
+  const lastChatId = useRef<number | null>(null);
+  const [syncStatus, setSyncStatus] = useState<string>("未同期");
+
+  const { fetchChatMissing } = useChatSync(
+    "mock-token",
+    setChatMessages,
+    lastChatId,
+    setSyncStatus,
+  );
 
   return (
     <div style={{ padding: "20px", border: "1px solid #ccc" }}>
-      <h3>useMessageSync Test</h3>
+      <h3>useChatSync Test</h3>
       <p data-testid="sync-status">Status: {syncStatus}</p>
       <p data-testid="chat-count">Messages: {chatMessages.length}</p>
       <button
         type="button"
         data-testid="sync-button"
-        onClick={() => fetchMissingFeeds()}
+        onClick={() => fetchChatMissing()}
       >
         Manual Sync
       </button>
@@ -29,7 +40,7 @@ const TestHookComponent = () => {
 };
 
 const meta: Meta<typeof TestHookComponent> = {
-  title: "Hooks/useMessageSync",
+  title: "Hooks/useChatSync",
   component: TestHookComponent,
 };
 
@@ -40,15 +51,11 @@ export const SyncSuccess: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // 初期状態の検証
     await expect(canvas.getByTestId("sync-status")).toHaveTextContent("未同期");
     await expect(canvas.getByTestId("chat-count")).toHaveTextContent("0");
 
-    // 同期ボタンをクリック
     await userEvent.click(canvas.getByTestId("sync-button"));
 
-    // MSW のレスポンスを待機して検証
-    // expect.poll は @storybook/test には無いため、findBy を使用
     const message = await canvas.findByText("auto-sync message");
     await expect(message).toBeInTheDocument();
     await expect(canvas.getByTestId("chat-count")).toHaveTextContent("1");

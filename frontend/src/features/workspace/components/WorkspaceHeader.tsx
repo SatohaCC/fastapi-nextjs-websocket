@@ -1,18 +1,13 @@
 "use client";
 
+import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import styles from "./WorkspaceHeader.module.css";
 
 export function WorkspaceHeader() {
-  const {
-    username,
-    isConnected,
-    isOnline,
-    error,
-    heartbeatStatus,
-    syncStatus,
-    onLogout,
-  } = useWorkspaceContext();
+  const { username, onLogout } = useWorkspaceContext();
+  const { isConnected, isOnline, error, heartbeatStatus, syncStatus } =
+    useWebSocketContext();
 
   const isActuallyConnected = isConnected && isOnline;
 

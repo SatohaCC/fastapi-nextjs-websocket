@@ -1,22 +1,28 @@
 "use client";
 
 import { useMemo } from "react";
+import { useDirectRequest } from "@/features/direct_request/hooks/useDirectRequest";
 import { useDirectRequestForm } from "@/features/direct_request/hooks/useDirectRequestForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { formatDateTime } from "@/utils/date";
 import { DirectRequestPanel } from "./DirectRequestPanel";
 
-export function DirectRequestPanelContainer() {
-  const { users, requestMessages, sendRequest, updateStatus, username } =
-    useWorkspaceContext();
+interface DirectRequestPanelContainerProps {
+  token: string | null;
+}
+
+export function DirectRequestPanelContainer({
+  token,
+}: DirectRequestPanelContainerProps) {
+  const { users, username } = useWorkspaceContext();
+  const { requestMessages, sendRequest, updateStatus } =
+    useDirectRequest(token);
 
   const { targetUser, setTargetUser, text, setText, handleSend } =
     useDirectRequestForm({ onSend: sendRequest });
 
   const otherUsers = users.filter((u) => u !== username);
 
-  // seq が無い（履歴）場合は id でソートし、seq がある場合は seq でソートする。
-  // 表示は新しい順なので最後に reverse する
   const displayRequests = useMemo(
     () =>
       [...requestMessages]
