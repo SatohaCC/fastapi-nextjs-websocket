@@ -2,7 +2,6 @@ import type { RefObject } from "react";
 import type { ServerMessage } from "@/types/ws";
 import type { HandlerDeps } from "./types";
 
-/** シーケンスギャップを検出し、不足データを補完する */
 export function handleSeqGap(data: ServerMessage, deps: HandlerDeps): void {
   if (
     !("seq" in data) ||
@@ -37,14 +36,12 @@ export function handleSeqGap(data: ServerMessage, deps: HandlerDeps): void {
   }
 }
 
-/** Ping メッセージに応答する */
 export function handlePing(socket: WebSocket, deps: HandlerDeps): void {
   socket.send(JSON.stringify({ type: "pong" }));
   deps.resetPingTimeout(socket);
   deps.setHeartbeatStatus(`Heartbeat: ${new Date().toLocaleTimeString()}`);
 }
 
-/** エラーメッセージを処理する */
 export function handleError(data: { text: string }, deps: HandlerDeps): void {
   deps.setError(data.text);
   deps.setSyncStatus("Connection error");

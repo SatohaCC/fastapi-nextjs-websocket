@@ -26,7 +26,6 @@ class ChatManager:
 
     def __init__(self) -> None:
         """ChatManager を初期化します。"""
-        # ユーザーをキー、そのユーザーの接続（複数可）のセットを値として保持
         self.connections: dict[Username, set[WebSocket]] = {}
 
     async def connect(self, username: Username, websocket: WebSocket) -> None:
@@ -107,7 +106,6 @@ class ChatManager:
         text = self._serialize(payload)
         ws_set = self.connections[username]
 
-        # 非同期送信タスクのリストを作成
         tasks = [self._send_safe(ws, text, username) for ws in ws_set]
         if tasks:
             await asyncio.gather(*tasks)

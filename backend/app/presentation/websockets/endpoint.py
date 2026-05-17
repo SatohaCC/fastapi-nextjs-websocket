@@ -95,7 +95,6 @@ async def websocket_endpoint(
     await ws_manager.connect(username, websocket)
 
     try:
-        # 履歴とギャップの送信
         await _send_initial_data(
             websocket=websocket,
             username=username,
@@ -117,7 +116,6 @@ async def websocket_endpoint(
         )
 
         if last_chat_id is None and last_request_id is None:
-            # 入室イベントの記録
             await connection_service.handle_user_join(username)
 
     except WebSocketDisconnect as e:
