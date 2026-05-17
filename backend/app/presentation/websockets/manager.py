@@ -1,6 +1,7 @@
 """WebSocket 接続の管理とリアルタイム配信を担うクラス。"""
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Any
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -15,6 +16,8 @@ from .schemas import (
 if TYPE_CHECKING:
     pass
 
+logger = logging.getLogger(__name__)
+
 
 class ChatManager:
     """WebSocket 接続の管理と、クライアントへのリアルタイム配信を担当するクラス。"""
@@ -28,17 +31,18 @@ class ChatManager:
         """新しい WebSocket 接続を受け入れ、管理リストに追加します。"""
         await websocket.accept()
         ws_id = id(websocket)
-        print(f"[connect] {username.value} (ws:{ws_id}) が入室完了")
+        logger.info("connect: user=%s ws=%d", username.value, ws_id)
 
         if username not in self.connections:
             self.connections[username] = set()
         self.connections[username].add(websocket)
 
         active_users = [u.value for u in self.connections.keys()]
-        print(
-            f"DEBUG: {username.value} connections: "
-            f"{len(self.connections[username])} | "
-            f"Total users: {active_users}"
+        logger.debug(
+            "active connections: user=%s count=%d total_users=%s",
+            username.value,
+            len(self.connections[username]),
+            active_users,
         )
 
     def disconnect(
@@ -66,9 +70,11 @@ class ChatManager:
         user_str = (
             actual_user.value if isinstance(actual_user, Username) else actual_user
         )
-        print(
-            f"[disconnect] {user_str} (ws:{ws_id}) が退室 | "
-            f"残りユーザー: {[u.value for u in self.connections.keys()]}"
+        logger.info(
+            "disconnect: user=%s ws=%d remaining_users=%s",
+            user_str,
+            ws_id,
+            [u.value for u in self.connections.keys()],
         )
 
     async def send_to_user(self, username: Username, payload: Any) -> None:
@@ -124,20 +130,21 @@ class ChatManager:
         self, ws: WebSocket, payload: dict, username: Username | None = None
     ) -> None:
         """内部用の安全な送信メソッド。"""
+        user_str = username.value if username else "unknown"
         try:
             await ws.send_json(payload)
         except WebSocketDisconnect as e:
             # Starlette は OSError も WebSocketDisconnect(code=1006) に変換する。
-            user_str = username.value if username else "unknown"
-            print(
-                f"[send_safe] disconnect for {user_str} "
-                f"(code={e.code} reason={e.reason!r})"
+            logger.info(
+                "send_safe disconnect: user=%s code=%s reason=%r",
+                user_str,
+                e.code,
+                e.reason,
             )
             self.disconnect(ws, username)
         except RuntimeError as e:
             # state 違反等 (例: 既に close 済みの ws へ send)。
-            user_str = username.value if username else "unknown"
-            print(f"[send_safe] runtime error for {user_str}: {e}")
+            logger.warning("send_safe runtime error: user=%s err=%s", user_str, e)
             self.disconnect(ws, username)
 
 
@@ -160,20 +167,21 @@ async def heartbeat(websocket: WebSocket, pong_event: asyncio.Event) -> None:
         try:
             await websocket.send_json({"type": "ping"})
         except WebSocketDisconnect as e:
-            print(
-                f"[heartbeat] ping failed, peer disconnected "
-                f"(code={e.code} reason={e.reason!r})"
+            logger.info(
+                "heartbeat ping failed, peer disconnected: code=%s reason=%r",
+                e.code,
+                e.reason,
             )
             _manager.disconnect(websocket)
             break
         except RuntimeError as e:
-            print(f"[heartbeat] ping failed, runtime error: {e}")
+            logger.warning("heartbeat ping failed, runtime error: %s", e)
             _manager.disconnect(websocket)
             break
         try:
             await asyncio.wait_for(pong_event.wait(), timeout=settings.PONG_TIMEOUT)
         except asyncio.TimeoutError:
-            print("[timeout] pong が返らなかったため切断")
+            logger.info("heartbeat timeout: closing connection")
             try:
                 await websocket.close(code=1001, reason="pong timeout")
             except RuntimeError:
