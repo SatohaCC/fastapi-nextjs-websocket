@@ -27,7 +27,6 @@ class FeedResponse(BaseModel):
     @classmethod
     def from_domain(cls, feed: DeliveryFeed) -> "FeedResponse":
         """DeliveryFeed エンティティからレスポンス DTO を生成します。"""
-        # create_server_message_from_feed を使って適切な DTO を生成し、dict に変換
         resp_dto = create_server_message_from_feed(feed)
         return cls(
             sequence_name=feed.sequence_name.value,
