@@ -1,15 +1,15 @@
-import { mergeById } from "@/features/websocket/utils/mergeById";
+import type { Dispatch, SetStateAction } from "react";
+import { mergeById } from "@/features/common/websocket/utils/mergeById";
 import type {
   DirectRequestServerMessage,
   DirectRequestUpdatedServerMessage,
 } from "@/types/ws";
-import type { HandlerDeps } from "./types";
 
 export function handleDirectRequestMessage(
   data: DirectRequestServerMessage,
-  deps: HandlerDeps,
+  setRequestMessages: Dispatch<SetStateAction<DirectRequestServerMessage[]>>,
 ): void {
-  deps.setRequestMessages((prev) => {
+  setRequestMessages((prev) => {
     if (prev.some((r) => r.id === data.id)) return prev;
     return mergeById(prev, [data]);
   });
@@ -17,9 +17,9 @@ export function handleDirectRequestMessage(
 
 export function handleDirectRequestUpdated(
   data: DirectRequestUpdatedServerMessage,
-  deps: HandlerDeps,
+  setRequestMessages: Dispatch<SetStateAction<DirectRequestServerMessage[]>>,
 ): void {
-  deps.setRequestMessages((prev) =>
+  setRequestMessages((prev) =>
     prev.map((r) =>
       r.id === data.id
         ? {
