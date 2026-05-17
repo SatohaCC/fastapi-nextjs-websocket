@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useUsers } from "@/features/auth/hooks/useUsers";
 import { WebSocketProvider } from "@/features/common/websocket/context/WebSocketContext";
 import { WorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
-import { useUsers } from "@/features/workspace/hooks/useUsers";
 import { Workspace } from "./Workspace";
 import { WorkspaceLoading } from "./WorkspaceLoading";
 
