@@ -126,7 +126,18 @@ class ChatManager:
         """内部用の安全な送信メソッド。"""
         try:
             await ws.send_json(payload)
-        except (WebSocketDisconnect, RuntimeError):
+        except WebSocketDisconnect as e:
+            # Starlette は OSError も WebSocketDisconnect(code=1006) に変換する。
+            user_str = username.value if username else "unknown"
+            print(
+                f"[send_safe] disconnect for {user_str} "
+                f"(code={e.code} reason={e.reason!r})"
+            )
+            self.disconnect(ws, username)
+        except RuntimeError as e:
+            # state 違反等 (例: 既に close 済みの ws へ send)。
+            user_str = username.value if username else "unknown"
+            print(f"[send_safe] runtime error for {user_str}: {e}")
             self.disconnect(ws, username)
 
 
@@ -148,7 +159,15 @@ async def heartbeat(websocket: WebSocket, pong_event: asyncio.Event) -> None:
         pong_event.clear()
         try:
             await websocket.send_json({"type": "ping"})
-        except (WebSocketDisconnect, RuntimeError):
+        except WebSocketDisconnect as e:
+            print(
+                f"[heartbeat] ping failed, peer disconnected "
+                f"(code={e.code} reason={e.reason!r})"
+            )
+            _manager.disconnect(websocket)
+            break
+        except RuntimeError as e:
+            print(f"[heartbeat] ping failed, runtime error: {e}")
             _manager.disconnect(websocket)
             break
         try:
