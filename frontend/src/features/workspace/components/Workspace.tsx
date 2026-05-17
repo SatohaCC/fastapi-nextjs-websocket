@@ -3,6 +3,7 @@
 import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
 import { DirectRequestPanelContainer } from "@/features/direct_request/components/DirectRequestPanelContainer";
 import { GlobalChatContainer } from "@/features/global_chat/components/GlobalChatContainer";
+import { WorkspaceFooter } from "@/features/workspace/components/WorkspaceFooter";
 import { WorkspaceHeader } from "@/features/workspace/components/WorkspaceHeader";
 import styles from "./Workspace.module.css";
 
@@ -28,11 +29,7 @@ export function Workspace({ token }: WorkspaceProps) {
         <DirectRequestPanelContainer token={token} />
       </main>
 
-      <footer className={styles.footer}>
-        <p className={styles.footerText}>
-          &copy; 2026 Satoha. All rights reserved.
-        </p>
-      </footer>
+      <WorkspaceFooter />
     </div>
   );
 }
