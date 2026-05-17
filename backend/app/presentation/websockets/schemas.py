@@ -1,4 +1,9 @@
-"""WebSocket で使用するメッセージスキーマの定義（クライアント↔サーバー）。"""
+"""WebSocket で使用するメッセージスキーマの定義（クライアント↔サーバー）。
+
+命名規則 (CONVENTIONS.md 第 1 節):
+    * ``*ClientMessage``: クライアント → サーバー (inbound)
+    * ``*ServerMessage``: サーバー → クライアント (outbound)
+"""
 
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
@@ -19,16 +24,16 @@ if TYPE_CHECKING:
     from ...domain.entities.message import Message
     from ...domain.entities.task import Task
 
-# --- Client -> Server Messages (Requests) ---
+# --- Client -> Server Messages ---
 
 
-class PongMessage(BaseModel):
+class PongClientMessage(BaseModel):
     """サーバーからの ping に対する応答メッセージ。"""
 
     type: Literal["pong"]
 
 
-class GlobalChatMessage(BaseModel):
+class GlobalChatClientMessage(BaseModel):
     """グローバルチャットメッセージ。"""
 
     type: Literal["global_chat"]
@@ -39,7 +44,7 @@ class GlobalChatMessage(BaseModel):
         return MessageText(self.text)
 
 
-class DirectRequestMessage(BaseModel):
+class DirectRequestClientMessage(BaseModel):
     """特定のユーザーへのダイレクトリクエスト送信。"""
 
     type: Literal["direct_request"]
@@ -51,7 +56,7 @@ class DirectRequestMessage(BaseModel):
         return Username(self.to), TaskText(self.text)
 
 
-class UpdateDirectRequestStatusMessage(BaseModel):
+class UpdateDirectRequestStatusClientMessage(BaseModel):
     """ダイレクトリクエストのステータス更新通知（承諾・拒否など）。"""
 
     type: Literal["update_status"]
@@ -70,29 +75,36 @@ class UpdateDirectRequestStatusMessage(BaseModel):
         return EntityId(self.task_id), TaskStatus(self.status)
 
 
-WebSocketMessage = Union[
-    PongMessage,
-    GlobalChatMessage,
-    DirectRequestMessage,
-    UpdateDirectRequestStatusMessage,
+ClientMessage = Union[
+    PongClientMessage,
+    GlobalChatClientMessage,
+    DirectRequestClientMessage,
+    UpdateDirectRequestStatusClientMessage,
 ]
 
 
-# --- Server -> Client Messages (Responses) ---
+# --- Server -> Client Messages ---
 
 
-class BaseResponse(BaseModel):
-    """サーバーからクライアントへ送信するレスポンスの基底クラス。"""
+class BaseServerMessage(BaseModel):
+    """サーバーからクライアントへ送信するメッセージの基底クラス。
+
+    Note:
+        REST API も一部このクラスを ``response_model`` として相乗りで使用している
+        (例: GET /api/direct_requests が ``DirectRequestServerMessage`` を返す)。
+        構造的には REST 専用 ``*Response`` の切り出しが望ましいが、
+        現段階では wire 互換性維持のため共有している。
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
     @classmethod
-    def from_domain(cls, entity: Any, is_history: bool = False) -> "BaseResponse":
+    def from_domain(cls, entity: Any, is_history: bool = False) -> "BaseServerMessage":
         """ドメインエンティティからレスポンスモデルを生成します。"""
         raise NotImplementedError
 
 
-class GlobalChatResponse(BaseResponse):
+class GlobalChatServerMessage(BaseServerMessage):
     """グローバルチャットメッセージのレスポンス。"""
 
     type: Literal["global_chat"] = "global_chat"
@@ -106,7 +118,7 @@ class GlobalChatResponse(BaseResponse):
     @classmethod
     def from_domain(
         cls, entity: Union["Message", "GlobalChatPayload"], is_history: bool = False
-    ) -> "GlobalChatResponse":
+    ) -> "GlobalChatServerMessage":
         """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
@@ -117,7 +129,7 @@ class GlobalChatResponse(BaseResponse):
         )
 
 
-class DirectRequestResponse(BaseResponse):
+class DirectRequestServerMessage(BaseServerMessage):
     """ダイレクトリクエストの詳細レスポンス。"""
 
     type: Literal["direct_request"] = "direct_request"
@@ -136,7 +148,7 @@ class DirectRequestResponse(BaseResponse):
         cls,
         entity: Union["Task", "DirectRequestPayload"],
         is_history: bool = False,
-    ) -> "DirectRequestResponse":
+    ) -> "DirectRequestServerMessage":
         """ドメインエンティティまたはペイロードからレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
@@ -150,7 +162,7 @@ class DirectRequestResponse(BaseResponse):
         )
 
 
-class DirectRequestUpdateResponse(BaseResponse):
+class DirectRequestUpdatedServerMessage(BaseServerMessage):
     """ダイレクトリクエストのステータスが更新された際の通知レスポンス。"""
 
     type: Literal["direct_request_updated"] = "direct_request_updated"
@@ -164,7 +176,7 @@ class DirectRequestUpdateResponse(BaseResponse):
     @classmethod
     def from_domain(
         cls, entity: "DirectRequestUpdatePayload", is_history: bool = False
-    ) -> "DirectRequestUpdateResponse":
+    ) -> "DirectRequestUpdatedServerMessage":
         """DirectRequestUpdatePayload からレスポンスモデルを生成します。"""
         return cls(
             id=entity.id.value,
@@ -175,7 +187,7 @@ class DirectRequestUpdateResponse(BaseResponse):
         )
 
 
-class JoinLeaveResponse(BaseResponse):
+class JoinLeaveServerMessage(BaseServerMessage):
     """ユーザーの入退室通知。"""
 
     type: Literal["join", "leave"]
@@ -184,7 +196,7 @@ class JoinLeaveResponse(BaseResponse):
     @classmethod
     def from_domain(
         cls, entity: "SystemEventPayload", is_history: bool = False
-    ) -> "JoinLeaveResponse":
+    ) -> "JoinLeaveServerMessage":
         """SystemEventPayload からレスポンスモデルを生成します。"""
         return cls(
             type=cast(Literal["join", "leave"], entity.type.value),
@@ -192,17 +204,17 @@ class JoinLeaveResponse(BaseResponse):
         )
 
 
-class ErrorResponse(BaseModel):
+class ErrorServerMessage(BaseModel):
     """エラー発生時のレスポンス。"""
 
     type: Literal["error"] = "error"
     text: str
 
 
-def create_response_from_feed(
+def create_server_message_from_feed(
     feed: "DeliveryFeed", is_history: bool = False
-) -> BaseResponse:
-    """DeliveryFeed から適切なレスポンス DTO を生成します。"""
+) -> BaseServerMessage:
+    """DeliveryFeed から適切な ServerMessage DTO を生成します。"""
     from ...application.outbox.payload import (
         DirectRequestPayload,
         DirectRequestUpdatePayload,
@@ -211,16 +223,18 @@ def create_response_from_feed(
     )
 
     payload = feed.payload
-    resp: BaseResponse
+    resp: BaseServerMessage
 
     if isinstance(payload, GlobalChatPayload):
-        resp = GlobalChatResponse.from_domain(payload, is_history=is_history)
+        resp = GlobalChatServerMessage.from_domain(payload, is_history=is_history)
     elif isinstance(payload, DirectRequestPayload):
-        resp = DirectRequestResponse.from_domain(payload, is_history=is_history)
+        resp = DirectRequestServerMessage.from_domain(payload, is_history=is_history)
     elif isinstance(payload, DirectRequestUpdatePayload):
-        resp = DirectRequestUpdateResponse.from_domain(payload, is_history=is_history)
+        resp = DirectRequestUpdatedServerMessage.from_domain(
+            payload, is_history=is_history
+        )
     elif isinstance(payload, SystemEventPayload):
-        resp = JoinLeaveResponse.from_domain(payload, is_history=is_history)
+        resp = JoinLeaveServerMessage.from_domain(payload, is_history=is_history)
     else:
         raise ValueError(f"Unsupported payload type: {type(payload)}")
 

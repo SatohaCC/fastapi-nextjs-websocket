@@ -26,7 +26,7 @@ export const handlers = [
 
   // ダイレクトリクエストのステータス更新 API
   http.patch(
-    `${API_BASE}/api/direct_requests/:taskId/status`,
+    `${API_BASE}/api/direct_requests/:task_id/status`,
     async ({ request }) => {
       const _data = await request.json();
       return new HttpResponse(null, { status: 200 });

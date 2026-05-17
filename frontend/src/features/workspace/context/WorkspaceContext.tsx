@@ -2,16 +2,16 @@
 
 import { createContext, useContext } from "react";
 import type {
-  DirectRequestMessage,
-  GlobalChatMessage,
+  DirectRequestServerMessage,
+  GlobalChatServerMessage,
   TaskStatus,
 } from "@/types/ws";
 
 interface WorkspaceContextValue {
   username: string;
   users: string[];
-  chatMessages: GlobalChatMessage[];
-  requestMessages: DirectRequestMessage[];
+  chatMessages: GlobalChatServerMessage[];
+  requestMessages: DirectRequestServerMessage[];
   isConnected: boolean;
   isOnline: boolean;
   error: string | null;

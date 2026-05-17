@@ -10,7 +10,7 @@ const ACCOUNTS = [
   { username: "charlie", password: "password3" },
 ];
 
-interface Props {
+export interface LoginFormProps {
   username: string;
   password: string;
   error: string | null;
@@ -28,7 +28,7 @@ export function LoginForm({
   onUsernameChange,
   onPasswordChange,
   onSubmit,
-}: Props) {
+}: LoginFormProps) {
   return (
     <div className={`fade-in ${styles.container}`}>
       <form onSubmit={onSubmit} className={styles.form}>

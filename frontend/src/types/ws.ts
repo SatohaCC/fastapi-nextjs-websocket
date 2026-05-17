@@ -1,13 +1,17 @@
+// 命名規則 (../../../CONVENTIONS.md 第 1 節):
+//   - *ServerMessage: サーバー → クライアント (受信)
+//   - *ClientMessage: クライアント → サーバー (送信)
+
 // Server -> Client Messages
 export type ServerMessage =
-  | GlobalChatMessage
-  | DirectRequestMessage
-  | DirectRequestUpdateMessage
-  | JoinLeaveMessage
-  | PingMessage
-  | ErrorMessage;
+  | GlobalChatServerMessage
+  | DirectRequestServerMessage
+  | DirectRequestUpdatedServerMessage
+  | JoinLeaveServerMessage
+  | PingServerMessage
+  | ErrorServerMessage;
 
-export interface GlobalChatMessage {
+export interface GlobalChatServerMessage {
   type: "global_chat";
   username: string;
   text: string;
@@ -20,7 +24,7 @@ export interface GlobalChatMessage {
 
 export type TaskStatus = "requested" | "processing" | "completed";
 
-export interface DirectRequestMessage {
+export interface DirectRequestServerMessage {
   type: "direct_request";
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
@@ -34,7 +38,7 @@ export interface DirectRequestMessage {
   is_history?: boolean;
 }
 
-export interface DirectRequestUpdateMessage {
+export interface DirectRequestUpdatedServerMessage {
   type: "direct_request_updated";
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
@@ -45,50 +49,52 @@ export interface DirectRequestUpdateMessage {
   updated_at: string;
 }
 
-export interface JoinLeaveMessage {
+export interface JoinLeaveServerMessage {
   type: "join" | "leave";
   username: string;
 }
 
-export interface PingMessage {
+export interface PingServerMessage {
   type: "ping";
 }
 
-export interface ErrorMessage {
+export interface ErrorServerMessage {
   type: "error";
   text: string;
 }
 
 // Client -> Server Messages
 export type ClientMessage =
-  | GlobalChatOut
-  | DirectRequestOut
-  | UpdateDirectRequestStatusOut
-  | PongOut;
+  | GlobalChatClientMessage
+  | DirectRequestClientMessage
+  | UpdateDirectRequestStatusClientMessage
+  | PongClientMessage;
 
-export interface GlobalChatOut {
+export interface GlobalChatClientMessage {
   type: "global_chat";
   text: string;
 }
 
-export interface DirectRequestOut {
+export interface DirectRequestClientMessage {
   type: "direct_request";
   to: string;
   text: string;
 }
 
-export interface UpdateDirectRequestStatusOut {
+export interface UpdateDirectRequestStatusClientMessage {
   type: "update_status";
   task_id: number;
   status: TaskStatus;
 }
 
-export interface PongOut {
+export interface PongClientMessage {
   type: "pong";
 }
 
 // Type Guards
-export function isGlobalChatMessage(data: unknown): data is GlobalChatMessage {
+export function isGlobalChatServerMessage(
+  data: unknown,
+): data is GlobalChatServerMessage {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
   return (
@@ -98,9 +104,9 @@ export function isGlobalChatMessage(data: unknown): data is GlobalChatMessage {
   );
 }
 
-export function isDirectRequestMessage(
+export function isDirectRequestServerMessage(
   data: unknown,
-): data is DirectRequestMessage {
+): data is DirectRequestServerMessage {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
   return (
@@ -110,9 +116,9 @@ export function isDirectRequestMessage(
   );
 }
 
-export function isDirectRequestUpdateMessage(
+export function isDirectRequestUpdatedServerMessage(
   data: unknown,
-): data is DirectRequestUpdateMessage {
+): data is DirectRequestUpdatedServerMessage {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
   return (

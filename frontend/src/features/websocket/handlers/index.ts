@@ -1,8 +1,8 @@
 import type {
-  DirectRequestMessage,
-  DirectRequestUpdateMessage,
-  ErrorMessage,
-  GlobalChatMessage,
+  DirectRequestServerMessage,
+  DirectRequestUpdatedServerMessage,
+  ErrorServerMessage,
+  GlobalChatServerMessage,
   ServerMessage,
 } from "@/types/ws";
 import {
@@ -37,19 +37,22 @@ export function dispatchMessage(
   // 各メッセージタイプに応じた処理
   switch (data.type) {
     case "global_chat":
-      handleGlobalChatMessage(data as GlobalChatMessage, deps);
+      handleGlobalChatMessage(data as GlobalChatServerMessage, deps);
       break;
     case "direct_request":
-      handleDirectRequestMessage(data as DirectRequestMessage, deps);
+      handleDirectRequestMessage(data as DirectRequestServerMessage, deps);
       break;
     case "direct_request_updated":
-      handleDirectRequestUpdated(data as DirectRequestUpdateMessage, deps);
+      handleDirectRequestUpdated(
+        data as DirectRequestUpdatedServerMessage,
+        deps,
+      );
       break;
     case "ping":
       handlePing(socket, deps);
       break;
     case "error":
-      handleError(data as ErrorMessage, deps);
+      handleError(data as ErrorServerMessage, deps);
       break;
     default:
       // 未知のメッセージタイプ

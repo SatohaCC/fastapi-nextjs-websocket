@@ -8,8 +8,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 from ...domain.primitives.primitives import Username
 from ...infrastructure.config import settings
 from .schemas import (
-    BaseResponse,
-    create_response_from_feed,
+    BaseServerMessage,
+    create_server_message_from_feed,
 )
 
 if TYPE_CHECKING:
@@ -79,9 +79,9 @@ class ChatManager:
         from ...application.outbox.delivery_feed import DeliveryFeed
 
         if isinstance(payload, DeliveryFeed):
-            dto = create_response_from_feed(payload)
+            dto = create_server_message_from_feed(payload)
             data = dto.model_dump(mode="json")
-        elif isinstance(payload, BaseResponse):
+        elif isinstance(payload, BaseServerMessage):
             data = payload.model_dump(mode="json")
         else:
             data = payload
@@ -105,9 +105,9 @@ class ChatManager:
         from ...application.outbox.delivery_feed import DeliveryFeed
 
         if isinstance(payload, DeliveryFeed):
-            dto = create_response_from_feed(payload)
+            dto = create_server_message_from_feed(payload)
             data = dto.model_dump(mode="json")
-        elif isinstance(payload, BaseResponse):
+        elif isinstance(payload, BaseServerMessage):
             data = payload.model_dump(mode="json")
         else:
             data = payload
