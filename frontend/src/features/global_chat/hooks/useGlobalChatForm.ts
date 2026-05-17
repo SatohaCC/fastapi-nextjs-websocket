@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { formatDateTime } from "@/utils/date";
 
-interface UseGlobalChatProps {
+interface UseGlobalChatFormProps {
   onSend: (text: string) => void;
 }
 
-export function useGlobalChat({ onSend }: UseGlobalChatProps) {
+export function useGlobalChatForm({ onSend }: UseGlobalChatFormProps) {
   const [text, setText] = useState("");
 
   const handleSend = (e: React.FormEvent) => {
@@ -15,14 +14,9 @@ export function useGlobalChat({ onSend }: UseGlobalChatProps) {
     setText("");
   };
 
-  const formatTime = (dateStr: string) => {
-    return formatDateTime(dateStr);
-  };
-
   return {
     text,
     setText,
     handleSend,
-    formatTime,
   };
 }

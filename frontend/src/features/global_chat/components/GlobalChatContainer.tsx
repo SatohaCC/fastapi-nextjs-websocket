@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
+import { useGlobalChatForm } from "@/features/global_chat/hooks/useGlobalChatForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import { formatDateTime } from "@/utils/date";
 import { GlobalChat } from "./GlobalChat";
 
 export function GlobalChatContainer() {
   const { chatMessages, sendChat, username } = useWorkspaceContext();
-  const { text, setText, handleSend, formatTime } = useGlobalChat({
+  const { text, setText, handleSend } = useGlobalChatForm({
     onSend: sendChat,
   });
 
@@ -30,7 +31,7 @@ export function GlobalChatContainer() {
       text={text}
       onTextChange={setText}
       onSend={handleSend}
-      formatTime={formatTime}
+      formatTime={formatDateTime}
     />
   );
 }
