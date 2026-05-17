@@ -1,6 +1,7 @@
 """WebSocket 接続の管理とリアルタイム配信を担うクラス。"""
 
 import asyncio
+import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -77,62 +78,61 @@ class ChatManager:
             [u.value for u in self.connections.keys()],
         )
 
-    async def send_to_user(self, username: Username, payload: Any) -> None:
-        """特定のユーザーにのみデータを送信します。
-        ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
+    @staticmethod
+    def _serialize(payload: Any) -> str:
+        """Payload を 1 回だけ JSON 文字列化する。
+
+        ``broadcast`` のように複数の WS へ同じ payload を送る場合に、
+        Pydantic ``model_dump_json`` を 1 回呼ぶだけで済むようにする。
+        Starlette の ``send_text`` はバイト化のみ行う。
         """
         # presentation → application の循環インポートを避けるため関数内でインポート
         from ...application.outbox.delivery_feed import DeliveryFeed
 
         if isinstance(payload, DeliveryFeed):
-            dto = create_server_message_from_feed(payload)
-            data = dto.model_dump(mode="json")
-        elif isinstance(payload, BaseServerMessage):
-            data = payload.model_dump(mode="json")
-        else:
-            data = payload
+            return create_server_message_from_feed(payload).model_dump_json()
+        if isinstance(payload, BaseServerMessage):
+            return payload.model_dump_json()
+        # dict などのフォールバック (Starlette と同じ separators / ensure_ascii)
+        return json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
 
+    async def send_to_user(self, username: Username, payload: Any) -> None:
+        """特定のユーザーにのみデータを送信します。
+        ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
+        """
         if username not in self.connections:
             return
 
+        text = self._serialize(payload)
         ws_set = self.connections[username]
 
         # 非同期送信タスクのリストを作成
-        tasks = []
-        for ws in ws_set:
-            tasks.append(self._send_safe(ws, data, username))
-
+        tasks = [self._send_safe(ws, text, username) for ws in ws_set]
         if tasks:
             await asyncio.gather(*tasks)
 
     async def broadcast(self, payload: Any) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
-        # presentation → application の循環インポートを避けるため関数内でインポート
-        from ...application.outbox.delivery_feed import DeliveryFeed
+        text = self._serialize(payload)
 
-        if isinstance(payload, DeliveryFeed):
-            dto = create_server_message_from_feed(payload)
-            data = dto.model_dump(mode="json")
-        elif isinstance(payload, BaseServerMessage):
-            data = payload.model_dump(mode="json")
-        else:
-            data = payload
-
-        tasks = []
-        for user, ws_set in list(self.connections.items()):
-            for ws in ws_set:
-                tasks.append(self._send_safe(ws, data, user))
-
+        tasks = [
+            self._send_safe(ws, text, user)
+            for user, ws_set in list(self.connections.items())
+            for ws in ws_set
+        ]
         if tasks:
             await asyncio.gather(*tasks)
 
     async def _send_safe(
-        self, ws: WebSocket, payload: dict, username: Username | None = None
+        self, ws: WebSocket, text: str, username: Username | None = None
     ) -> None:
-        """内部用の安全な送信メソッド。"""
+        """内部用の安全な送信メソッド。
+
+        ``text`` は事前にシリアライズ済みの JSON 文字列であることを前提とする。
+        """
         user_str = username.value if username else "unknown"
         try:
-            await ws.send_json(payload)
+            await ws.send_text(text)
         except WebSocketDisconnect as e:
             # Starlette は OSError も WebSocketDisconnect(code=1006) に変換する。
             logger.info(
