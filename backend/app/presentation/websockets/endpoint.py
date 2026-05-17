@@ -1,6 +1,7 @@
 """WebSocket エンドポイントの定義とメッセージハンドリング。"""
 
 import asyncio
+import logging
 from collections.abc import Callable, Coroutine
 from typing import Annotated, Any
 
@@ -40,6 +41,8 @@ from .schemas import (
     PongClientMessage,
     UpdateDirectRequestStatusClientMessage,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["websockets"])
 
@@ -88,7 +91,7 @@ async def websocket_endpoint(
     last_request_id: Annotated[int | None, Query()] = None,
 ) -> None:
     """WebSocket メインハンドラ"""
-    print(f"DEBUG: WebSocket authenticated as: {username.value}")
+    logger.debug("WebSocket authenticated as: %s", username.value)
     await ws_manager.connect(username, websocket)
 
     try:
@@ -120,17 +123,16 @@ async def websocket_endpoint(
     except WebSocketDisconnect as e:
         # 初期化中の切断はよくあることなので、静かに終了する。
         # ただし切断 code / reason は診断のために記録する。
-        print(
-            f"[disconnect] {username.value} during init "
-            f"(code={e.code} reason={e.reason!r})"
+        logger.info(
+            "disconnect during init: user=%s code=%s reason=%r",
+            username.value,
+            e.code,
+            e.reason,
         )
         ws_manager.disconnect(websocket, username)
         return
-    except Exception as e:
-        print(f"[error] WebSocket initialization failed for {username.value}: {e}")
-        import traceback
-
-        traceback.print_exc()
+    except Exception:
+        logger.exception("WebSocket initialization failed for %s", username.value)
         ws_manager.disconnect(websocket, username)
         try:
             # 1011 = Internal Error。reason は debugging 用にクライアントへ届く。
