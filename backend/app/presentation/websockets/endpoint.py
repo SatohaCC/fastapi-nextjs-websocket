@@ -142,10 +142,38 @@ async def websocket_endpoint(
         return
 
     pong_event = asyncio.Event()
-    task = asyncio.create_task(heartbeat(websocket, pong_event))
+    # heartbeat とメッセージループを TaskGroup で並列実行する。
+    # 片方が抜けたら TaskGroup が残りを cancel し、最後に finally で cleanup する。
+    try:
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(heartbeat(websocket, pong_event))
+            tg.create_task(
+                _client_message_loop(
+                    websocket=websocket,
+                    username=username,
+                    pong_event=pong_event,
+                    global_chat_service=global_chat_service,
+                    direct_request_service=direct_request_service,
+                )
+            )
+    finally:
+        ws_manager.disconnect(websocket, username)
+        await connection_service.handle_user_leave(username)
 
-    # iter_json() は WebSocketDisconnect を内部で吸収するので、
-    # 正常切断時はループが普通に終了する。RuntimeError は state 違反の保険。
+
+async def _client_message_loop(
+    *,
+    websocket: WebSocket,
+    username: Username,
+    pong_event: asyncio.Event,
+    global_chat_service: GlobalChatService,
+    direct_request_service: DirectRequestService,
+) -> None:
+    """クライアントからの inbound メッセージをディスパッチする。
+
+    ``iter_json()`` は WebSocketDisconnect を内部で吸収するので、
+    正常切断時はループが普通に終了する。RuntimeError は state 違反の保険。
+    """
     try:
         async for data in websocket.iter_json():
             try:
@@ -183,7 +211,3 @@ async def websocket_endpoint(
                 )
     except RuntimeError:
         pass
-    finally:
-        task.cancel()
-        ws_manager.disconnect(websocket, username)
-        await connection_service.handle_user_leave(username)
