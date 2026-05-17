@@ -1,16 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { useDirectRequestPanel } from "@/features/direct_request/hooks/useDirectRequestPanel";
+import { useDirectRequestForm } from "@/features/direct_request/hooks/useDirectRequestForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import { formatDateTime } from "@/utils/date";
 import { DirectRequestPanel } from "./DirectRequestPanel";
 
 export function DirectRequestPanelContainer() {
   const { users, requestMessages, sendRequest, updateStatus, username } =
     useWorkspaceContext();
 
-  const { targetUser, setTargetUser, text, setText, handleSend, formatDate } =
-    useDirectRequestPanel({ onSend: sendRequest });
+  const { targetUser, setTargetUser, text, setText, handleSend } =
+    useDirectRequestForm({ onSend: sendRequest });
 
   const otherUsers = users.filter((u) => u !== username);
 
@@ -40,7 +41,7 @@ export function DirectRequestPanelContainer() {
       onTextChange={setText}
       onSend={handleSend}
       onUpdateStatus={updateStatus}
-      formatDate={formatDate}
+      formatDate={formatDateTime}
     />
   );
 }
