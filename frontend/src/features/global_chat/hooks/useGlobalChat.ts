@@ -17,6 +17,17 @@ export interface UseGlobalChatResult {
   sendChat: (text: string) => Promise<void>;
 }
 
+/**
+ * グローバルチャット機能を提供するカスタムフック。
+ *
+ * 以下の処理を管理します：
+ * - リアルタイムのメッセージ受信およびギャップ（ロスト）検知
+ * - 接続成功時（初期接続および再接続時）の即時履歴データ同期
+ * - 30秒間隔の定期バックグラウンド同期
+ * - メッセージの送信処理とエラーハンドリング
+ *
+ * @param token 認証トークン
+ */
 export function useGlobalChat(token: string | null): UseGlobalChatResult {
   const {
     setSyncStatus,
@@ -46,6 +57,13 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
     [lastChatId, fetchChatMissing, setSyncStatus, setChatMessages],
   );
   useWsSubscribe<GlobalChatServerMessage>("global_chat", handler);
+
+  // 接続成功時または再接続時に即時同期をトリガー
+  useEffect(() => {
+    if (isConnected && isOnline) {
+      fetchChatMissing();
+    }
+  }, [isConnected, isOnline, fetchChatMissing]);
 
   useEffect(() => {
     const interval = setInterval(() => {

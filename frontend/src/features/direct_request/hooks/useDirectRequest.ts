@@ -25,6 +25,17 @@ export interface UseDirectRequestResult {
   updateStatus: (taskId: number, status: TaskStatus) => Promise<void>;
 }
 
+/**
+ * ダイレクトリクエスト機能を提供するカスタムフック。
+ *
+ * 以下の処理を管理します：
+ * - リアルタイムの依頼受信、ステータス変更の通知、およびギャップ検知
+ * - 接続成功時（初期接続および再接続時）の即時履歴データ同期
+ * - 30秒間隔の定期バックグラウンド同期
+ * - リクエストの送信、ステータスの更新、およびエラーハンドリング
+ *
+ * @param token 認証トークン
+ */
 export function useDirectRequest(token: string | null): UseDirectRequestResult {
   const {
     setSyncStatus,
@@ -77,6 +88,13 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
     "direct_request_updated",
     updatedHandler,
   );
+
+  // 接続成功時または再接続時に即時同期をトリガー
+  useEffect(() => {
+    if (isConnected && isOnline) {
+      fetchRequestMissing();
+    }
+  }, [isConnected, isOnline, fetchRequestMissing]);
 
   useEffect(() => {
     const interval = setInterval(() => {
