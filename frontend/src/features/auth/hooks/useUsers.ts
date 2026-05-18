@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchUsers } from "@/features/workspace/api";
+import { fetchUsers } from "@/features/auth/api";
 
 export function useUsers(token: string | null) {
   const [users, setUsers] = useState<string[]>([]);
