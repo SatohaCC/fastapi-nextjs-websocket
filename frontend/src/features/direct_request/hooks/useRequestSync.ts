@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { mergeById } from "@/features/common/websocket/utils/mergeById";
 import type { DirectRequestServerMessage } from "@/types/ws";
 import { fetchRequestFeeds } from "../api";
@@ -12,8 +12,11 @@ export function useRequestSync(
   lastRequestId: RefObject<number | null>,
   setSyncStatus: (value: string) => void,
 ) {
+  const isSyncingRef = useRef(false);
+
   const fetchRequestMissing = useCallback(async () => {
-    if (!token) return;
+    if (!token || isSyncingRef.current) return;
+    isSyncingRef.current = true;
     try {
       const feeds = await fetchRequestFeeds(token, lastRequestId.current);
       for (const feed of feeds) {
@@ -49,6 +52,8 @@ export function useRequestSync(
       setSyncStatus(`最終同期: ${new Date().toLocaleTimeString()}`);
     } catch {
       setSyncStatus("リクエスト同期失敗");
+    } finally {
+      isSyncingRef.current = false;
     }
   }, [token, setRequestMessages, lastRequestId, setSyncStatus]);
 

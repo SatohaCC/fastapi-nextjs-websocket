@@ -92,12 +92,13 @@ export function WebSocketProvider({ token, children }: WebSocketProviderProps) {
   });
 
   useEffect(() => {
-    setSyncStatus("待機中...");
     if (token) {
+      setSyncStatus("待機中...");
       disconnect();
       connect();
     } else {
       disconnect();
+      setSyncStatus("未同期");
     }
   }, [token, connect, disconnect]);
 
