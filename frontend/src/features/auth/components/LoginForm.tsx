@@ -30,8 +30,8 @@ export function LoginForm({
   onSubmit,
 }: LoginFormProps) {
   return (
-    <div className={`fade-in ${styles.container}`}>
-      <form onSubmit={onSubmit} className={styles.form}>
+    <div className={styles.container}>
+      <form onSubmit={onSubmit} className={`fade-in ${styles.form}`}>
         <div className={styles.header}>
           <h1 className={styles.logo}>WebSocket お試しアプリ</h1>
           <p className={styles.subtitle}>
