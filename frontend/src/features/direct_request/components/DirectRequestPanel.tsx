@@ -9,7 +9,7 @@ import styles from "./DirectRequestPanel.module.css";
 
 export interface DirectRequestPanelProps {
   otherUsers: string[];
-  requests: DirectRequestServerMessage[];
+  requests: (DirectRequestServerMessage & { isPending?: boolean })[];
   currentUser: string;
   targetUser: string;
   text: string;
@@ -84,14 +84,13 @@ export function DirectRequestPanel({
                 }
                 placeholder="依頼内容を入力してください"
                 className={styles.inputTask}
-                readOnly={isSending}
               />
             </div>
             <Button
               type="submit"
               variant="primary"
               className={styles.submitButton}
-              disabled={!targetUser || !text.trim() || isSending}
+              disabled={!targetUser || !text.trim()}
             >
               リクエストを送信
             </Button>
@@ -110,7 +109,9 @@ export function DirectRequestPanel({
           return (
             <article
               key={m.id}
-              className={`tweet-card ${styles.requestItem}`}
+              className={`tweet-card ${styles.requestItem} ${
+                m.isPending ? styles.requestPending : ""
+              }`}
               aria-label={
                 isFromMe ? `${m.recipient} への依頼` : `${m.sender} からの依頼`
               }
