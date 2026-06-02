@@ -43,17 +43,22 @@ export function DirectRequestPanel({
         </>
       }
       contentClassName={styles.requestList}
+      contentRole="region"
+      contentAriaLabel="ダイレクトリクエスト一覧"
       form={
         <form onSubmit={onSend} className={styles.requestForm}>
           <div className={styles.formGrid}>
             <div className={styles.inputGroup}>
+              <label htmlFor="direct-request-recipient" className="sr-only">
+                依頼先を選択
+              </label>
               <Select
+                id="direct-request-recipient"
                 value={targetUser}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   onTargetUserChange(e.target.value)
                 }
                 className={styles.selectRecipient}
-                aria-label="Select recipient"
               >
                 <option value="" disabled>
                   依頼先を選択
@@ -64,7 +69,11 @@ export function DirectRequestPanel({
                   </option>
                 ))}
               </Select>
+              <label htmlFor="direct-request-text" className="sr-only">
+                依頼内容を入力
+              </label>
               <Input
+                id="direct-request-text"
                 type="text"
                 value={text}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -72,7 +81,6 @@ export function DirectRequestPanel({
                 }
                 placeholder="依頼内容を入力してください"
                 className={styles.inputTask}
-                aria-label="依頼内容"
               />
             </div>
             <Button
@@ -96,7 +104,13 @@ export function DirectRequestPanel({
             m.recipient === currentUser && m.status !== "completed";
 
           return (
-            <div key={m.id} className={`tweet-card ${styles.requestItem}`}>
+            <article
+              key={m.id}
+              className={`tweet-card ${styles.requestItem}`}
+              aria-label={
+                isFromMe ? `${m.recipient} への依頼` : `${m.sender} からの依頼`
+              }
+            >
               <div className={styles.itemHeader}>
                 <div className={styles.metaInfo}>
                   <div className={styles.senderName}>
@@ -105,9 +119,9 @@ export function DirectRequestPanel({
                       : `${m.sender} からの依頼`}
                   </div>
                   <div className={styles.separator}>·</div>
-                  <div className={styles.timestamp}>
+                  <time dateTime={m.created_at} className={styles.timestamp}>
                     {formatDate(m.created_at)}
-                  </div>
+                  </time>
                 </div>
                 <Badge variant={m.status}>
                   {m.status === "requested" && "未着手"}
@@ -126,6 +140,7 @@ export function DirectRequestPanel({
                       onClick={() => onUpdateStatus(m.id, "processing")}
                       variant="secondary"
                       className={styles.actionButton}
+                      aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
                     >
                       承諾
                     </Button>
@@ -135,6 +150,7 @@ export function DirectRequestPanel({
                     onClick={() => onUpdateStatus(m.id, "completed")}
                     variant="primary"
                     className={`${styles.actionButton} ${styles.completeButton}`}
+                    aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
                   >
                     完了
                   </Button>
@@ -143,10 +159,13 @@ export function DirectRequestPanel({
 
               {m.status === "completed" && (
                 <div className={styles.resolvedNote}>
-                  ✓ 解決済み: {formatDate(m.updated_at)}
+                  ✓ 解決済み:{" "}
+                  <time dateTime={m.updated_at}>
+                    {formatDate(m.updated_at)}
+                  </time>
                 </div>
               )}
-            </div>
+            </article>
           );
         })
       )}
