@@ -34,9 +34,16 @@ export function GlobalChat({
         </>
       }
       contentClassName={styles.messagesArea}
+      contentRole="log"
+      contentAriaLabel="グローバルチャットのメッセージ履歴"
+      contentAriaLive="polite"
       form={
         <form onSubmit={onSend} className={styles.inputForm}>
+          <label htmlFor="global-chat-input" className="sr-only">
+            メッセージを入力
+          </label>
           <Input
+            id="global-chat-input"
             type="text"
             value={text}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -60,11 +67,14 @@ export function GlobalChat({
       {messages.map((m) => {
         const isMe = m.username === currentUser;
         return (
-          <div
+          <article
             key={m.id}
             className={`${styles.messageWrapper} ${
               isMe ? styles.messageWrapperMe : styles.messageWrapperOther
             }`}
+            aria-label={
+              isMe ? "あなたからのメッセージ" : `${m.username} からのメッセージ`
+            }
           >
             {!isMe && <span className={styles.senderName}>{m.username}</span>}
             <div
@@ -74,14 +84,15 @@ export function GlobalChat({
             >
               {m.text}
             </div>
-            <span
+            <time
+              dateTime={m.created_at}
               className={`${styles.timestamp} ${
                 isMe ? styles.timestampMe : styles.timestampOther
               }`}
             >
               {formatTime(m.created_at)}
-            </span>
-          </div>
+            </time>
+          </article>
         );
       })}
       <div ref={bottomRef} />

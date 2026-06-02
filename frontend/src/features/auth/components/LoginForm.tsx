@@ -46,6 +46,7 @@ export function LoginForm({
               key={a.username}
               type="button"
               className={`${styles.accountItem} ${username === a.username ? styles.accountItemActive : ""}`}
+              aria-pressed={username === a.username}
               onClick={() => {
                 onUsernameChange(a.username);
                 onPasswordChange(a.password);
@@ -57,9 +58,16 @@ export function LoginForm({
           ))}
         </div>
 
-        {error && <div className={styles.errorBox}>{error}</div>}
+        {error && (
+          <div className={styles.errorBox} role="alert" aria-live="assertive">
+            {error}
+          </div>
+        )}
 
         <div className={styles.fieldGroup}>
+          <label htmlFor="username" className="sr-only">
+            ユーザー名
+          </label>
           <Input
             id="username"
             type="text"
@@ -70,11 +78,13 @@ export function LoginForm({
             required
             placeholder="ユーザー名"
             className={styles.input}
-            aria-label="ユーザー名"
           />
         </div>
 
         <div className={styles.fieldGroup}>
+          <label htmlFor="password" className="sr-only">
+            パスワード
+          </label>
           <Input
             id="password"
             type="password"
@@ -83,7 +93,6 @@ export function LoginForm({
             required
             placeholder="パスワード"
             className={styles.input}
-            aria-label="パスワード"
           />
         </div>
 

@@ -8,6 +8,9 @@ interface PanelLayoutProps {
   children: ReactNode;
   contentClassName?: string;
   className?: string;
+  contentRole?: "log" | "region" | "navigation" | "search" | "main" | "form";
+  contentAriaLabel?: string;
+  contentAriaLive?: "polite" | "assertive" | "off";
 }
 
 export function PanelLayout({
@@ -16,13 +19,48 @@ export function PanelLayout({
   children,
   contentClassName = "",
   className = "",
+  contentRole,
+  contentAriaLabel,
+  contentAriaLive,
 }: PanelLayoutProps) {
+  let contentElement: ReactNode;
+
+  if (contentRole === "log") {
+    contentElement = (
+      <div
+        className={`${styles.content} ${contentClassName}`.trim()}
+        role="log"
+        aria-label={contentAriaLabel}
+        aria-live={contentAriaLive}
+      >
+        {children}
+      </div>
+    );
+  } else if (contentRole === "region") {
+    contentElement = (
+      <section
+        className={`${styles.content} ${contentClassName}`.trim()}
+        aria-label={contentAriaLabel}
+        aria-live={contentAriaLive}
+      >
+        {children}
+      </section>
+    );
+  } else {
+    contentElement = (
+      <div
+        className={`${styles.content} ${contentClassName}`.trim()}
+        aria-live={contentAriaLive}
+      >
+        {children}
+      </div>
+    );
+  }
+
   return (
     <Card className={`fade-in ${styles.container} ${className}`.trim()}>
       <CardHeader>{header}</CardHeader>
-      <div className={`${styles.content} ${contentClassName}`.trim()}>
-        {children}
-      </div>
+      {contentElement}
       <div className={styles.formWrapper}>{form}</div>
     </Card>
   );

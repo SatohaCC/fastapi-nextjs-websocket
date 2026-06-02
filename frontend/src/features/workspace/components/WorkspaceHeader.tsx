@@ -15,8 +15,9 @@ export function WorkspaceHeader() {
     <header className={styles.header}>
       <div className={styles.brandGroup}>
         <div className={styles.logo}>WebSocket test</div>
-        <div
+        <output
           className={styles.statusIndicator}
+          aria-live="polite"
           style={{
             background: isActuallyConnected
               ? "rgba(0, 186, 124, 0.1)"
@@ -56,12 +57,16 @@ export function WorkspaceHeader() {
                 ? "オフライン"
                 : "接続中..."}
           </span>
-        </div>
-        <div className={styles.systemInfo}>
+        </output>
+        <output
+          className={styles.systemInfo}
+          aria-live="polite"
+          aria-label={`システム情報: 心拍ステータス ${heartbeatStatus}、同期ステータス ${syncStatus}`}
+        >
           <span>{heartbeatStatus}</span>
           <span style={{ opacity: 0.3 }}>&bull;</span>
           <span>{syncStatus}</span>
-        </div>
+        </output>
       </div>
 
       <div className={styles.userGroup}>

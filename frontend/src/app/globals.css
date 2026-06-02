@@ -7,14 +7,14 @@
   --panel-bg: #000000;
   --panel-border: #2f3336;
   --text-primary: #e7e9ea;
-  --text-secondary: #71767b;
+  --text-secondary: #8e959c;
 
   /* Status Colors */
   --status-requested: #ffd400;
   --status-processing: #1d9bf0;
   --status-completed: #00ba7c;
   --warning: #ffd400;
-  --error: #f4212e;
+  --error: #ff6b7a;
 
   --font-main:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
@@ -252,7 +252,7 @@ select:focus,
 .input-base:focus,
 .select-base:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
 a {
@@ -270,4 +270,17 @@ a:hover {
 
 .tweet-card:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
