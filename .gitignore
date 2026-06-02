@@ -36,3 +36,5 @@ backend/.git/
 .agents/
 
 starlette/
+
+SercretDocs/
