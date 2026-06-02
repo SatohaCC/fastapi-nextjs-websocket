@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
 import { useGlobalChatForm } from "@/features/global_chat/hooks/useGlobalChatForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { formatDateTime } from "@/utils/date";
 import { GlobalChat } from "./GlobalChat";
 
@@ -29,6 +30,8 @@ export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
     [chatMessages],
   );
 
+  const bottomRef = useScrollToBottom(sortedMessages.length);
+
   return (
     <GlobalChat
       messages={sortedMessages}
@@ -37,6 +40,7 @@ export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
       onTextChange={setText}
       onSend={handleSend}
       formatTime={formatDateTime}
+      bottomRef={bottomRef}
     />
   );
 }

@@ -1,15 +1,3 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .title {
   font-size: 17px;
   font-weight: 800;
@@ -21,11 +9,9 @@
 }
 
 .messagesArea {
-  flex: 1;
-  overflow-y: auto;
   padding: 20px;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -88,7 +74,6 @@
   padding: 16px 20px;
   display: flex;
   gap: 12px;
-  border-top: 1px solid var(--panel-border);
   align-items: center;
 }
 
