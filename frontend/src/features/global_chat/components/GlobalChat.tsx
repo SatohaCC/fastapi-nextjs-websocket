@@ -14,6 +14,7 @@ export interface GlobalChatProps {
   onSend: (e: React.FormEvent) => void;
   formatTime: (dateStr: string) => string;
   bottomRef: React.RefObject<HTMLDivElement | null>;
+  isSending?: boolean;
 }
 
 export function GlobalChat({
@@ -24,6 +25,7 @@ export function GlobalChat({
   onSend,
   formatTime,
   bottomRef,
+  isSending = false,
 }: GlobalChatProps) {
   return (
     <PanelLayout
@@ -52,12 +54,13 @@ export function GlobalChat({
             placeholder="Start a new message"
             className={styles.textInput}
             autoComplete="off"
+            readOnly={isSending}
           />
           <Button
             type="submit"
             variant="primary"
             className={styles.sendButton}
-            disabled={!text.trim()}
+            disabled={!text.trim() || isSending}
           >
             Send
           </Button>

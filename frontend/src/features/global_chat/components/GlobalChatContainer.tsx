@@ -15,7 +15,7 @@ interface GlobalChatContainerProps {
 export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
   const { username } = useWorkspaceContext();
   const { chatMessages, sendChat } = useGlobalChat(token);
-  const { text, setText, handleSend } = useGlobalChatForm({
+  const { text, setText, handleSend, isSending } = useGlobalChatForm({
     onSend: sendChat,
   });
 
@@ -41,6 +41,7 @@ export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
       onSend={handleSend}
       formatTime={formatDateTime}
       bottomRef={bottomRef}
+      isSending={isSending}
     />
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
 import { checkSeqGap } from "@/features/common/websocket/handlers/seqGap";
 import { useWsSubscribe } from "@/features/common/websocket/hooks/useWsSubscribe";
+import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { SYNC_INTERVAL_MS } from "@/lib/config";
 import type {
   DirectRequestServerMessage,
@@ -43,6 +44,7 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
     isConnected,
     isOnline,
   } = useWebSocketContext();
+  const { username } = useWorkspaceContext();
   const { requestMessages, setRequestMessages, lastRequestId } =
     useDirectRequestState();
   const { fetchRequestMissing } = useRequestSync(
@@ -50,6 +52,10 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
     setRequestMessages,
     lastRequestId,
     setSyncStatus,
+  );
+
+  const pendingResolversRef = useRef<{ text: string; resolve: () => void }[]>(
+    [],
   );
 
   useEffect(
@@ -67,8 +73,23 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
         setSyncStatus,
       );
       handleDirectRequestMessage(data, setRequestMessages);
+
+      if (data.sender === username) {
+        const resolvers = pendingResolversRef.current;
+        const index = resolvers.findIndex((r) => r.text === data.text);
+        if (index !== -1) {
+          resolvers[index].resolve();
+          resolvers.splice(index, 1);
+        }
+      }
     },
-    [lastRequestId, fetchRequestMissing, setSyncStatus, setRequestMessages],
+    [
+      lastRequestId,
+      fetchRequestMissing,
+      setSyncStatus,
+      setRequestMessages,
+      username,
+    ],
   );
   useWsSubscribe<DirectRequestServerMessage>("direct_request", requestHandler);
 
@@ -117,11 +138,38 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
       if (!token) return;
       try {
         await apiSendRequest(token, { to, text });
-      } catch {
+
+        // オフラインまたは切断時はWebSocketメッセージは届かないため、即時解決して終わる
+        if (!isConnected || !isOnline) {
+          return;
+        }
+
+        // オンライン時はWebSocketからのメッセージ受信を待つ
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            const idx = pendingResolversRef.current.findIndex(
+              (r) => r.resolve === resolve,
+            );
+            if (idx !== -1) {
+              pendingResolversRef.current.splice(idx, 1);
+            }
+            resolve();
+          }, 5000);
+
+          pendingResolversRef.current.push({
+            text,
+            resolve: () => {
+              clearTimeout(timeout);
+              resolve();
+            },
+          });
+        });
+      } catch (err) {
         setError("リクエスト送信に失敗しました");
+        throw err;
       }
     },
-    [token, setError],
+    [token, setError, isConnected, isOnline],
   );
 
   const updateStatus = useCallback(
@@ -129,8 +177,9 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
       if (!token) return;
       try {
         await updateRequestStatus(token, taskId, status);
-      } catch {
+      } catch (err) {
         setError("ステータス更新に失敗しました");
+        throw err;
       }
     },
     [token, setError],

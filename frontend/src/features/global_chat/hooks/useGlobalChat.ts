@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
 import { checkSeqGap } from "@/features/common/websocket/handlers/seqGap";
 import { useWsSubscribe } from "@/features/common/websocket/hooks/useWsSubscribe";
+import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { SYNC_INTERVAL_MS } from "@/lib/config";
 import type { GlobalChatServerMessage } from "@/types/ws";
 import { sendMessage } from "../api";
@@ -35,12 +36,17 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
     isConnected,
     isOnline,
   } = useWebSocketContext();
+  const { username } = useWorkspaceContext();
   const { chatMessages, setChatMessages, lastChatId } = useGlobalChatState();
   const { fetchChatMissing } = useChatSync(
     token,
     setChatMessages,
     lastChatId,
     setSyncStatus,
+  );
+
+  const pendingResolversRef = useRef<{ text: string; resolve: () => void }[]>(
+    [],
   );
 
   useEffect(
@@ -58,8 +64,17 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
         setSyncStatus,
       );
       handleGlobalChatMessage(data, setChatMessages);
+
+      if (data.username === username) {
+        const resolvers = pendingResolversRef.current;
+        const index = resolvers.findIndex((r) => r.text === data.text);
+        if (index !== -1) {
+          resolvers[index].resolve();
+          resolvers.splice(index, 1);
+        }
+      }
     },
-    [lastChatId, fetchChatMissing, setSyncStatus, setChatMessages],
+    [lastChatId, fetchChatMissing, setSyncStatus, setChatMessages, username],
   );
   useWsSubscribe<GlobalChatServerMessage>("global_chat", handler);
 
@@ -90,11 +105,38 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
       if (!token) return;
       try {
         await sendMessage(token, text);
-      } catch {
+
+        // オフラインまたは切断時はWebSocketメッセージは届かないため、即時解決して終わる
+        if (!isConnected || !isOnline) {
+          return;
+        }
+
+        // オンライン時はWebSocketからのメッセージ受信を待つ
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            const idx = pendingResolversRef.current.findIndex(
+              (r) => r.resolve === resolve,
+            );
+            if (idx !== -1) {
+              pendingResolversRef.current.splice(idx, 1);
+            }
+            resolve();
+          }, 5000);
+
+          pendingResolversRef.current.push({
+            text,
+            resolve: () => {
+              clearTimeout(timeout);
+              resolve();
+            },
+          });
+        });
+      } catch (err) {
         setError("メッセージ送信に失敗しました");
+        throw err;
       }
     },
-    [token, setError],
+    [token, setError, isConnected, isOnline],
   );
 
   return { chatMessages, sendChat };
