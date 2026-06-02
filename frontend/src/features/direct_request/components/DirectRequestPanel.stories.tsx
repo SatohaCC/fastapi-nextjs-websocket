@@ -38,6 +38,7 @@ const mockRequests: DirectRequestServerMessage[] = [
     status: "requested",
     created_at: new Date(Date.now() - 3600000).toISOString(),
     updated_at: new Date(Date.now() - 3600000).toISOString(),
+    is_history: false,
   },
   {
     type: "direct_request",
@@ -49,6 +50,7 @@ const mockRequests: DirectRequestServerMessage[] = [
     status: "processing",
     created_at: new Date(Date.now() - 7200000).toISOString(),
     updated_at: new Date(Date.now() - 1800000).toISOString(),
+    is_history: false,
   },
   {
     type: "direct_request",
@@ -60,6 +62,7 @@ const mockRequests: DirectRequestServerMessage[] = [
     status: "completed",
     created_at: new Date(Date.now() - 86400000).toISOString(),
     updated_at: new Date(Date.now() - 43200000).toISOString(),
+    is_history: false,
   },
 ];
 

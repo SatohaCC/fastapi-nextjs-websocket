@@ -1,9 +1,10 @@
 "use client";
 
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { useCallback, useRef } from "react";
+import { useFeedSync } from "@/features/common/websocket/hooks/useFeedSync";
 import { mergeById } from "@/features/common/websocket/utils/mergeById";
 import type { GlobalChatServerMessage } from "@/types/ws";
+import type { ChatFeedItem } from "../api";
 import { fetchChatFeeds } from "../api";
 
 export function useChatSync(
@@ -12,14 +13,13 @@ export function useChatSync(
   lastChatId: RefObject<number | null>,
   setSyncStatus: (value: string) => void,
 ) {
-  const isSyncingRef = useRef(false);
-
-  const fetchChatMissing = useCallback(async () => {
-    if (!token || isSyncingRef.current) return;
-    isSyncingRef.current = true;
-    try {
-      const feeds = await fetchChatFeeds(token, lastChatId.current);
-      for (const feed of feeds) {
+  const { fetchMissing: fetchChatMissing } = useFeedSync<ChatFeedItem>(
+    token,
+    lastChatId,
+    setSyncStatus,
+    {
+      fetchFeeds: fetchChatFeeds,
+      onFeed: (feed) => {
         setChatMessages((prev) =>
           mergeById(prev, [
             {
@@ -29,17 +29,10 @@ export function useChatSync(
             },
           ]),
         );
-        if (feed.sequence_id > (lastChatId.current ?? -1)) {
-          lastChatId.current = feed.sequence_id;
-        }
-      }
-      setSyncStatus(`最終同期: ${new Date().toLocaleTimeString()}`);
-    } catch {
-      setSyncStatus("チャット同期失敗");
-    } finally {
-      isSyncingRef.current = false;
-    }
-  }, [token, setChatMessages, lastChatId, setSyncStatus]);
+      },
+      syncErrorMessage: "チャット同期失敗",
+    },
+  );
 
   return { fetchChatMissing };
 }

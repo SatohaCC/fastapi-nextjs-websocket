@@ -17,9 +17,8 @@ export interface GlobalChatServerMessage {
   text: string;
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
-  sequence_name?: string;
   created_at: string;
-  is_history?: boolean;
+  is_history: boolean;
 }
 
 export type TaskStatus = "requested" | "processing" | "completed";
@@ -28,21 +27,19 @@ export interface DirectRequestServerMessage {
   type: "direct_request";
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
-  sequence_name?: string;
   sender: string;
   recipient: string;
   text: string;
   status: TaskStatus;
   created_at: string;
   updated_at: string;
-  is_history?: boolean;
+  is_history: boolean;
 }
 
 export interface DirectRequestUpdatedServerMessage {
   type: "direct_request_updated";
   id: number;
   seq: number | null; // delivery_feeds.id (欠番なし連番)
-  sequence_name?: string;
   status: TaskStatus;
   sender: string;
   recipient: string;

@@ -28,6 +28,7 @@ const mockMessages: GlobalChatServerMessage[] = [
     username: "alice",
     text: "Hello everyone!",
     created_at: new Date().toISOString(),
+    is_history: false,
   },
   {
     type: "global_chat",
@@ -36,6 +37,7 @@ const mockMessages: GlobalChatServerMessage[] = [
     username: "bob",
     text: "Hi Alice, how are you?",
     created_at: new Date().toISOString(),
+    is_history: false,
   },
   {
     type: "global_chat",
@@ -44,6 +46,7 @@ const mockMessages: GlobalChatServerMessage[] = [
     username: "alice",
     text: "I'm doing great! Just testing this WebSocket app.",
     created_at: new Date().toISOString(),
+    is_history: false,
   },
 ];
 

@@ -5,3 +5,5 @@ export const API_BASE =
 export const WS_BASE =
   (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_WS_URL : null) ||
   "ws://localhost:8000";
+
+export const SYNC_INTERVAL_MS = 30_000;

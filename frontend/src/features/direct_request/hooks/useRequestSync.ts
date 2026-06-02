@@ -1,9 +1,10 @@
 "use client";
 
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { useCallback, useRef } from "react";
+import { useFeedSync } from "@/features/common/websocket/hooks/useFeedSync";
 import { mergeById } from "@/features/common/websocket/utils/mergeById";
 import type { DirectRequestServerMessage } from "@/types/ws";
+import type { RequestFeedItem } from "../api";
 import { fetchRequestFeeds } from "../api";
 
 export function useRequestSync(
@@ -12,25 +13,14 @@ export function useRequestSync(
   lastRequestId: RefObject<number | null>,
   setSyncStatus: (value: string) => void,
 ) {
-  const isSyncingRef = useRef(false);
-
-  const fetchRequestMissing = useCallback(async () => {
-    if (!token || isSyncingRef.current) return;
-    isSyncingRef.current = true;
-    try {
-      const feeds = await fetchRequestFeeds(token, lastRequestId.current);
-      for (const feed of feeds) {
-        if (feed.event_type === "direct_request") {
-          setRequestMessages((prev) =>
-            mergeById(prev, [
-              {
-                ...feed.payload,
-                seq: feed.sequence_id,
-                is_history: true,
-              },
-            ]),
-          );
-        } else if (feed.event_type === "direct_request_updated") {
+  const { fetchMissing: fetchRequestMissing } = useFeedSync<RequestFeedItem>(
+    token,
+    lastRequestId,
+    setSyncStatus,
+    {
+      fetchFeeds: fetchRequestFeeds,
+      onFeed: (feed) => {
+        if (feed.event_type === "direct_request_updated") {
           const payload = feed.payload;
           setRequestMessages((prev) =>
             prev.map((r) =>
@@ -44,18 +34,21 @@ export function useRequestSync(
                 : r,
             ),
           );
+        } else {
+          setRequestMessages((prev) =>
+            mergeById(prev, [
+              {
+                ...feed.payload,
+                seq: feed.sequence_id,
+                is_history: true,
+              },
+            ]),
+          );
         }
-        if (feed.sequence_id > (lastRequestId.current ?? -1)) {
-          lastRequestId.current = feed.sequence_id;
-        }
-      }
-      setSyncStatus(`最終同期: ${new Date().toLocaleTimeString()}`);
-    } catch {
-      setSyncStatus("リクエスト同期失敗");
-    } finally {
-      isSyncingRef.current = false;
-    }
-  }, [token, setRequestMessages, lastRequestId, setSyncStatus]);
+      },
+      syncErrorMessage: "リクエスト同期失敗",
+    },
+  );
 
   return { fetchRequestMissing };
 }
