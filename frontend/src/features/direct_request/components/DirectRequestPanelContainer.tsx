@@ -19,7 +19,7 @@ export function DirectRequestPanelContainer({
   const { requestMessages, sendRequest, updateStatus } =
     useDirectRequest(token);
 
-  const { targetUser, setTargetUser, text, setText, handleSend } =
+  const { targetUser, setTargetUser, text, setText, handleSend, isSending } =
     useDirectRequestForm({ onSend: sendRequest });
 
   const otherUsers = users.filter((u) => u !== username);
@@ -44,6 +44,7 @@ export function DirectRequestPanelContainer({
       onUpdateStatus={updateStatus}
       formatDate={formatDateTime}
       bottomRef={bottomRef}
+      isSending={isSending}
     />
   );
 }

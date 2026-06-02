@@ -19,6 +19,7 @@ export interface DirectRequestPanelProps {
   onUpdateStatus: (id: number, status: TaskStatus) => void;
   formatDate: (dateStr: string) => string;
   bottomRef: React.RefObject<HTMLDivElement | null>;
+  isSending?: boolean;
 }
 
 export function DirectRequestPanel({
@@ -33,6 +34,7 @@ export function DirectRequestPanel({
   onUpdateStatus,
   formatDate,
   bottomRef,
+  isSending = false,
 }: DirectRequestPanelProps) {
   return (
     <PanelLayout
@@ -59,6 +61,7 @@ export function DirectRequestPanel({
                   onTargetUserChange(e.target.value)
                 }
                 className={styles.selectRecipient}
+                disabled={isSending}
               >
                 <option value="" disabled>
                   依頼先を選択
@@ -81,13 +84,14 @@ export function DirectRequestPanel({
                 }
                 placeholder="依頼内容を入力してください"
                 className={styles.inputTask}
+                readOnly={isSending}
               />
             </div>
             <Button
               type="submit"
               variant="primary"
               className={styles.submitButton}
-              disabled={!targetUser || !text.trim()}
+              disabled={!targetUser || !text.trim() || isSending}
             >
               リクエストを送信
             </Button>
