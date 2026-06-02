@@ -2,15 +2,14 @@
 
 import { useCallback, useEffect } from "react";
 import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
+import { checkSeqGap } from "@/features/common/websocket/handlers/seqGap";
 import { useWsSubscribe } from "@/features/common/websocket/hooks/useWsSubscribe";
+import { SYNC_INTERVAL_MS } from "@/lib/config";
 import type { GlobalChatServerMessage } from "@/types/ws";
 import { sendMessage } from "../api";
-import { checkChatSeqGap } from "../handlers/chatSeqGap";
 import { handleGlobalChatMessage } from "../handlers/globalChatHandler";
 import { useChatSync } from "./useChatSync";
 import { useGlobalChatState } from "./useGlobalChatState";
-
-const SYNC_INTERVAL_MS = 30000;
 
 export interface UseGlobalChatResult {
   chatMessages: GlobalChatServerMessage[];
@@ -51,7 +50,13 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
 
   const handler = useCallback(
     (data: GlobalChatServerMessage) => {
-      checkChatSeqGap(data, lastChatId, fetchChatMissing, setSyncStatus);
+      checkSeqGap(
+        data,
+        "global_chat",
+        lastChatId,
+        fetchChatMissing,
+        setSyncStatus,
+      );
       handleGlobalChatMessage(data, setChatMessages);
     },
     [lastChatId, fetchChatMissing, setSyncStatus, setChatMessages],

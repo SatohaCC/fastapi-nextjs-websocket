@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect } from "react";
 import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
+import { checkSeqGap } from "@/features/common/websocket/handlers/seqGap";
 import { useWsSubscribe } from "@/features/common/websocket/hooks/useWsSubscribe";
+import { SYNC_INTERVAL_MS } from "@/lib/config";
 import type {
   DirectRequestServerMessage,
   DirectRequestUpdatedServerMessage,
@@ -13,11 +15,8 @@ import {
   handleDirectRequestMessage,
   handleDirectRequestUpdated,
 } from "../handlers/directRequestHandler";
-import { checkRequestSeqGap } from "../handlers/requestSeqGap";
 import { useDirectRequestState } from "./useDirectRequestState";
 import { useRequestSync } from "./useRequestSync";
-
-const SYNC_INTERVAL_MS = 30000;
 
 export interface UseDirectRequestResult {
   requestMessages: DirectRequestServerMessage[];
@@ -60,8 +59,9 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
 
   const requestHandler = useCallback(
     (data: DirectRequestServerMessage) => {
-      checkRequestSeqGap(
+      checkSeqGap(
         data,
+        "direct_request",
         lastRequestId,
         fetchRequestMissing,
         setSyncStatus,
@@ -74,8 +74,9 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
 
   const updatedHandler = useCallback(
     (data: DirectRequestUpdatedServerMessage) => {
-      checkRequestSeqGap(
+      checkSeqGap(
         data,
+        "direct_request",
         lastRequestId,
         fetchRequestMissing,
         setSyncStatus,
