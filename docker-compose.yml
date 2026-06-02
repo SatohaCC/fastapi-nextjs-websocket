@@ -23,6 +23,7 @@ services:
       REDIS_URL: redis://redis:6379
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:3000}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-do-not-use-in-production}
+      PYTHONUNBUFFERED: "1"
     ports:
       - "8000:8000"
     depends_on:

@@ -1,5 +1,8 @@
 FROM python:3.13-slim
 
+# Disable stdout/stderr buffering
+ENV PYTHONUNBUFFERED=1
+
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
