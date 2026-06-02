@@ -23,13 +23,18 @@
   flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 24px;
+  /* header / content / form の3行を subgrid で両パネルに揃える */
+  grid-template-rows: auto 1fr auto;
+  column-gap: 24px;
+  row-gap: 0;
   min-height: 0;
 }
 
 @media (max-width: 1024px) {
   .main {
     grid-template-columns: 1fr;
+    grid-template-rows: unset;
+    gap: 24px;
     overflow-y: auto;
   }
 

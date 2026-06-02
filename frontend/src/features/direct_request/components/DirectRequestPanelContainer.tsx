@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useDirectRequest } from "@/features/direct_request/hooks/useDirectRequest";
 import { useDirectRequestForm } from "@/features/direct_request/hooks/useDirectRequestForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { formatDateTime } from "@/utils/date";
 import { DirectRequestPanel } from "./DirectRequestPanel";
 
@@ -24,17 +25,11 @@ export function DirectRequestPanelContainer({
   const otherUsers = users.filter((u) => u !== username);
 
   const displayRequests = useMemo(
-    () =>
-      [...requestMessages]
-        .sort((a, b) => {
-          const aSeq = a.seq ?? 0;
-          const bSeq = b.seq ?? 0;
-          if (aSeq !== bSeq) return aSeq - bSeq;
-          return (a.id ?? 0) - (b.id ?? 0);
-        })
-        .reverse(),
+    () => [...requestMessages].sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
     [requestMessages],
   );
+
+  const bottomRef = useScrollToBottom(displayRequests.length);
 
   return (
     <DirectRequestPanel
@@ -48,6 +43,7 @@ export function DirectRequestPanelContainer({
       onSend={handleSend}
       onUpdateStatus={updateStatus}
       formatDate={formatDateTime}
+      bottomRef={bottomRef}
     />
   );
 }

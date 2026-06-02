@@ -1,0 +1,31 @@
+/* desktop: subgrid で header / content / form の行を親グリッドに揃える */
+.container {
+  grid-row: span 3;
+  display: grid;
+  grid-template-rows: subgrid;
+}
+
+.content {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.formWrapper {
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* mobile: 縦積みになるため通常の flex に戻す */
+@media (max-width: 1024px) {
+  .container {
+    grid-row: unset;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    flex: 1;
+  }
+}
