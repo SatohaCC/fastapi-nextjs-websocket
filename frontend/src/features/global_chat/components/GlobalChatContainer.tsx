@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useOptimistic } from "react";
 import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
 import { useGlobalChatForm } from "@/features/global_chat/hooks/useGlobalChatForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
+import type { GlobalChatServerMessage } from "@/types/ws";
 import { formatDateTime } from "@/utils/date";
 import { GlobalChat } from "./GlobalChat";
 
@@ -15,9 +16,6 @@ interface GlobalChatContainerProps {
 export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
   const { username } = useWorkspaceContext();
   const { chatMessages, sendChat } = useGlobalChat(token);
-  const { text, setText, handleSend, isSending } = useGlobalChatForm({
-    onSend: sendChat,
-  });
 
   const sortedMessages = useMemo(
     () =>
@@ -30,18 +28,28 @@ export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
     [chatMessages],
   );
 
-  const bottomRef = useScrollToBottom(sortedMessages.length);
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic<
+    (GlobalChatServerMessage & { isPending?: boolean })[],
+    GlobalChatServerMessage & { isPending?: boolean }
+  >(sortedMessages, (state, newMessage) => [...state, newMessage]);
+
+  const { text, setText, handleSend } = useGlobalChatForm({
+    onSend: sendChat,
+    addOptimisticMessage,
+    currentUser: username,
+  });
+
+  const bottomRef = useScrollToBottom(optimisticMessages.length);
 
   return (
     <GlobalChat
-      messages={sortedMessages}
+      messages={optimisticMessages}
       currentUser={username}
       text={text}
       onTextChange={setText}
       onSend={handleSend}
       formatTime={formatDateTime}
       bottomRef={bottomRef}
-      isSending={isSending}
     />
   );
 }

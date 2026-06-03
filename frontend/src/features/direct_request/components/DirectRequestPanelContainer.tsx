@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useOptimistic } from "react";
 import { useDirectRequest } from "@/features/direct_request/hooks/useDirectRequest";
 import { useDirectRequestForm } from "@/features/direct_request/hooks/useDirectRequestForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
+import type { DirectRequestServerMessage } from "@/types/ws";
 import { formatDateTime } from "@/utils/date";
 import { DirectRequestPanel } from "./DirectRequestPanel";
 
@@ -19,9 +20,6 @@ export function DirectRequestPanelContainer({
   const { requestMessages, sendRequest, updateStatus } =
     useDirectRequest(token);
 
-  const { targetUser, setTargetUser, text, setText, handleSend, isSending } =
-    useDirectRequestForm({ onSend: sendRequest });
-
   const otherUsers = users.filter((u) => u !== username);
 
   const displayRequests = useMemo(
@@ -29,12 +27,24 @@ export function DirectRequestPanelContainer({
     [requestMessages],
   );
 
-  const bottomRef = useScrollToBottom(displayRequests.length);
+  const [optimisticRequests, addOptimisticRequest] = useOptimistic<
+    (DirectRequestServerMessage & { isPending?: boolean })[],
+    DirectRequestServerMessage & { isPending?: boolean }
+  >(displayRequests, (state, newRequest) => [...state, newRequest]);
+
+  const { targetUser, setTargetUser, text, setText, handleSend, isSending } =
+    useDirectRequestForm({
+      onSend: sendRequest,
+      addOptimisticRequest,
+      currentUser: username,
+    });
+
+  const bottomRef = useScrollToBottom(optimisticRequests.length);
 
   return (
     <DirectRequestPanel
       otherUsers={otherUsers}
-      requests={displayRequests}
+      requests={optimisticRequests}
       currentUser={username}
       targetUser={targetUser}
       text={text}
