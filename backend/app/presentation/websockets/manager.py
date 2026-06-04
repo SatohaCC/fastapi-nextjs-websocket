@@ -101,10 +101,19 @@ class ChatManager:
         ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
         """
         if username not in self.connections:
+            logger.debug(
+                "send_to_user: user %s is not connected. Skipping.",
+                username.value,
+            )
             return
 
         text = self._serialize(payload)
         ws_set = self.connections[username]
+        logger.debug(
+            "send_to_user: user %s has %d connections. Sending...",
+            username.value,
+            len(ws_set),
+        )
 
         tasks = [self._send_safe(ws, text, username) for ws in ws_set]
         if tasks:
@@ -113,6 +122,11 @@ class ChatManager:
     async def broadcast(self, payload: Any) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
         text = self._serialize(payload)
+        active_users = [u.value for u in self.connections.keys()]
+        logger.debug(
+            "broadcast: current active users: %s",
+            active_users,
+        )
 
         tasks = [
             self._send_safe(ws, text, user)
@@ -120,6 +134,10 @@ class ChatManager:
             for ws in ws_set
         ]
         if tasks:
+            logger.debug(
+                "broadcasting to %d active sockets...",
+                len(tasks),
+            )
             await asyncio.gather(*tasks)
 
     async def _send_safe(
@@ -139,7 +157,15 @@ class ChatManager:
             self.disconnect(ws, username)
             return
         try:
+            logger.debug(
+                "send_safe: sending message to user %s",
+                user_str,
+            )
             await ws.send_text(text)
+            logger.debug(
+                "send_safe: successfully sent to user %s",
+                user_str,
+            )
         except WebSocketDisconnect as e:
             # Starlette は OSError も WebSocketDisconnect(code=1006) に変換する。
             logger.info(

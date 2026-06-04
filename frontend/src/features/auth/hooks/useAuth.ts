@@ -1,43 +1,70 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { getMe, logout } from "../api";
 
 export interface UseAuthResult {
-  token: string | null;
+  isAuthenticated: boolean;
   username: string | null;
   isSessionLoaded: boolean;
-  setSession: (token: string, username: string) => void;
-  clearSession: () => void;
+  setSession: (username: string) => void;
+  clearSession: () => Promise<void>;
 }
 
 export function useAuth(): UseAuthResult {
-  const [token, setToken] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isSessionLoaded, setIsSessionLoaded] = useState(false);
 
   useEffect(() => {
-    const t = sessionStorage.getItem("token");
-    const u = sessionStorage.getItem("username");
-    if (t && u) {
-      setToken(t);
-      setUsername(u);
+    // UIのちらつきを防ぐために、sessionStorageからキャッシュされたユーザー名を読み込みます
+    const cachedUser = sessionStorage.getItem("username");
+    if (cachedUser) {
+      setUsername(cachedUser);
     }
-    setIsSessionLoaded(true);
+
+    getMe()
+      .then((user) => {
+        if (user) {
+          setUsername(user.username);
+          sessionStorage.setItem("username", user.username);
+        } else {
+          setUsername(null);
+          sessionStorage.removeItem("username");
+        }
+      })
+      .catch(() => {
+        setUsername(null);
+        sessionStorage.removeItem("username");
+      })
+      .finally(() => {
+        setIsSessionLoaded(true);
+      });
   }, []);
 
-  const setSession = useCallback((newToken: string, newUsername: string) => {
-    sessionStorage.setItem("token", newToken);
-    sessionStorage.setItem("username", newUsername);
-    setToken(newToken);
+  const setSession = useCallback((newUsername: string) => {
     setUsername(newUsername);
+    sessionStorage.setItem("username", newUsername);
   }, []);
 
-  const clearSession = useCallback(() => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
-    setToken(null);
-    setUsername(null);
+  const clearSession = useCallback(async () => {
+    try {
+      await logout();
+      setUsername(null);
+      sessionStorage.removeItem("username");
+    } catch (err) {
+      // biome-ignore lint/suspicious/noConsole: Error tracking
+      console.error("[logout] Error:", err);
+      alert(
+        "ログアウトに失敗しました。ネットワーク接続を確認し、もう一度お試しください。",
+      );
+    }
   }, []);
 
-  return { token, username, isSessionLoaded, setSession, clearSession };
+  return {
+    isAuthenticated: !!username,
+    username,
+    isSessionLoaded,
+    setSession,
+    clearSession,
+  };
 }

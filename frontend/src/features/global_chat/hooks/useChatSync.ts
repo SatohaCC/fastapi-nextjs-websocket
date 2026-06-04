@@ -8,17 +8,17 @@ import type { ChatFeedItem } from "../api";
 import { fetchChatFeeds } from "../api";
 
 export function useChatSync(
-  token: string | null,
+  isAuthenticated: boolean,
   setChatMessages: Dispatch<SetStateAction<GlobalChatServerMessage[]>>,
   lastChatId: RefObject<number | null>,
   setSyncStatus: (value: string) => void,
 ) {
   const { fetchMissing: fetchChatMissing } = useFeedSync<ChatFeedItem>(
-    token,
+    isAuthenticated,
     lastChatId,
     setSyncStatus,
     {
-      fetchFeeds: fetchChatFeeds,
+      fetchFeeds: (afterId) => fetchChatFeeds(afterId),
       onFeed: (feed) => {
         setChatMessages((prev) =>
           mergeById(prev, [

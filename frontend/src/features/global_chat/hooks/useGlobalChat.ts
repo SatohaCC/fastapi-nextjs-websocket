@@ -26,9 +26,9 @@ export interface UseGlobalChatResult {
  * - 30秒間隔の定期バックグラウンド同期
  * - メッセージの送信処理とエラーハンドリング
  *
- * @param token 認証トークン
+ * @param isAuthenticated 認証状態フラグ
  */
-export function useGlobalChat(token: string | null): UseGlobalChatResult {
+export function useGlobalChat(isAuthenticated: boolean): UseGlobalChatResult {
   const {
     setSyncStatus,
     setError,
@@ -39,7 +39,7 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
   const { username } = useWorkspaceContext();
   const { chatMessages, setChatMessages, lastChatId } = useGlobalChatState();
   const { fetchChatMissing } = useChatSync(
-    token,
+    isAuthenticated,
     setChatMessages,
     lastChatId,
     setSyncStatus,
@@ -94,49 +94,52 @@ export function useGlobalChat(token: string | null): UseGlobalChatResult {
     return () => clearInterval(interval);
   }, [isConnected, isOnline, fetchChatMissing, lastChatId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: token 変更時に履歴と seq をリセットするために依存に含める
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isAuthenticated 変更時に履歴と seq をリセットするために依存に含める
   useEffect(() => {
     setChatMessages([]);
     lastChatId.current = null;
-  }, [token, setChatMessages, lastChatId]);
+  }, [isAuthenticated, setChatMessages, lastChatId]);
 
   const sendChat = useCallback(
     async (text: string) => {
-      if (!token) return;
+      if (!isAuthenticated) return;
       try {
-        await sendMessage(token, text);
+        let promise: Promise<void> | null = null;
+        if (isConnected && isOnline) {
+          promise = new Promise<void>((promiseResolve) => {
+            let resolverObj: { text: string; resolve: () => void };
 
-        // オフラインまたは切断時はWebSocketメッセージは届かないため、即時解決して終わる
-        if (!isConnected || !isOnline) {
-          return;
+            const timeout = setTimeout(() => {
+              const idx = pendingResolversRef.current.indexOf(resolverObj);
+              if (idx !== -1) {
+                pendingResolversRef.current.splice(idx, 1);
+              }
+              promiseResolve();
+            }, 5000);
+
+            resolverObj = {
+              text,
+              resolve: () => {
+                clearTimeout(timeout);
+                promiseResolve();
+              },
+            };
+
+            pendingResolversRef.current.push(resolverObj);
+          });
         }
 
-        // オンライン時はWebSocketからのメッセージ受信を待つ
-        await new Promise<void>((resolve) => {
-          const timeout = setTimeout(() => {
-            const idx = pendingResolversRef.current.findIndex(
-              (r) => r.resolve === resolve,
-            );
-            if (idx !== -1) {
-              pendingResolversRef.current.splice(idx, 1);
-            }
-            resolve();
-          }, 5000);
+        await sendMessage(text);
 
-          pendingResolversRef.current.push({
-            text,
-            resolve: () => {
-              clearTimeout(timeout);
-              resolve();
-            },
-          });
-        });
+        if (promise) {
+          await promise;
+        }
       } catch (err) {
         setError("メッセージ送信に失敗しました");
         throw err;
       }
     },
-    [token, setError, isConnected, isOnline],
+    [isAuthenticated, setError, isConnected, isOnline],
   );
 
   return { chatMessages, sendChat };

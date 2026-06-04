@@ -32,10 +32,9 @@ export const LoginFlow: Story = {
     // ログイン実行
     await userEvent.click(submitButton);
 
-    // MSW のレスポンスと sessionStorage の更新を待機
+    // MSW のレスポンスと sessionStorage の更新を待機（トークンはCookieに保存されるため、usernameのみ検証）
     await waitFor(() => {
-      expect(sessionStorage.getItem("token")).toBe("mock-token");
+      expect(sessionStorage.getItem("username")).toBe("testuser");
     });
-    expect(sessionStorage.getItem("username")).toBe("testuser");
   },
 };

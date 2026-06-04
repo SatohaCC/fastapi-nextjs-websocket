@@ -34,9 +34,11 @@ export interface UseDirectRequestResult {
  * - 30秒間隔の定期バックグラウンド同期
  * - リクエストの送信、ステータスの更新、およびエラーハンドリング
  *
- * @param token 認証トークン
+ * @param isAuthenticated 認証状態フラグ
  */
-export function useDirectRequest(token: string | null): UseDirectRequestResult {
+export function useDirectRequest(
+  isAuthenticated: boolean,
+): UseDirectRequestResult {
   const {
     setSyncStatus,
     setError,
@@ -48,7 +50,7 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
   const { requestMessages, setRequestMessages, lastRequestId } =
     useDirectRequestState();
   const { fetchRequestMissing } = useRequestSync(
-    token,
+    isAuthenticated,
     setRequestMessages,
     lastRequestId,
     setSyncStatus,
@@ -127,62 +129,65 @@ export function useDirectRequest(token: string | null): UseDirectRequestResult {
     return () => clearInterval(interval);
   }, [isConnected, isOnline, fetchRequestMissing, lastRequestId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: token 変更時に履歴と seq をリセットするために依存に含める
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isAuthenticated 変更時に履歴と seq をリセットするために依存に含める
   useEffect(() => {
     setRequestMessages([]);
     lastRequestId.current = null;
-  }, [token, setRequestMessages, lastRequestId]);
+  }, [isAuthenticated, setRequestMessages, lastRequestId]);
 
   const sendRequest = useCallback(
     async (to: string, text: string) => {
-      if (!token) return;
+      if (!isAuthenticated) return;
       try {
-        await apiSendRequest(token, { to, text });
+        let promise: Promise<void> | null = null;
+        if (isConnected && isOnline) {
+          promise = new Promise<void>((promiseResolve) => {
+            let resolverObj: { text: string; resolve: () => void };
 
-        // オフラインまたは切断時はWebSocketメッセージは届かないため、即時解決して終わる
-        if (!isConnected || !isOnline) {
-          return;
+            const timeout = setTimeout(() => {
+              const idx = pendingResolversRef.current.indexOf(resolverObj);
+              if (idx !== -1) {
+                pendingResolversRef.current.splice(idx, 1);
+              }
+              promiseResolve();
+            }, 5000);
+
+            resolverObj = {
+              text,
+              resolve: () => {
+                clearTimeout(timeout);
+                promiseResolve();
+              },
+            };
+
+            pendingResolversRef.current.push(resolverObj);
+          });
         }
 
-        // オンライン時はWebSocketからのメッセージ受信を待つ
-        await new Promise<void>((resolve) => {
-          const timeout = setTimeout(() => {
-            const idx = pendingResolversRef.current.findIndex(
-              (r) => r.resolve === resolve,
-            );
-            if (idx !== -1) {
-              pendingResolversRef.current.splice(idx, 1);
-            }
-            resolve();
-          }, 5000);
+        await apiSendRequest({ to, text });
 
-          pendingResolversRef.current.push({
-            text,
-            resolve: () => {
-              clearTimeout(timeout);
-              resolve();
-            },
-          });
-        });
+        if (promise) {
+          await promise;
+        }
       } catch (err) {
         setError("リクエスト送信に失敗しました");
         throw err;
       }
     },
-    [token, setError, isConnected, isOnline],
+    [isAuthenticated, setError, isConnected, isOnline],
   );
 
   const updateStatus = useCallback(
     async (taskId: number, status: TaskStatus) => {
-      if (!token) return;
+      if (!isAuthenticated) return;
       try {
-        await updateRequestStatus(token, taskId, status);
+        await updateRequestStatus(taskId, status);
       } catch (err) {
         setError("ステータス更新に失敗しました");
         throw err;
       }
     },
-    [token, setError],
+    [isAuthenticated, setError],
   );
 
   return { requestMessages, sendRequest, updateStatus };

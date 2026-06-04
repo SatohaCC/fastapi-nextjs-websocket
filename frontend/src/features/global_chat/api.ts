@@ -1,11 +1,9 @@
-import { API_BASE } from "@/lib/config";
 import type { GlobalChatServerMessage } from "@/types/ws";
 
-export async function sendMessage(token: string, text: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/global_chat/messages`, {
+export async function sendMessage(text: string): Promise<void> {
+  const res = await fetch("/api/proxy/global_chat/messages", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ text }),
@@ -22,7 +20,6 @@ export interface ChatFeedItem {
 }
 
 export async function fetchChatFeeds(
-  token: string,
   afterChatId: number | null,
 ): Promise<ChatFeedItem[]> {
   try {
@@ -30,10 +27,7 @@ export async function fetchChatFeeds(
     params.set("after_chat_id", (afterChatId ?? 0).toString());
 
     const res = await fetch(
-      `${API_BASE}/api/feeds/global_chat?${params.toString()}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      `/api/proxy/feeds/global_chat?${params.toString()}`,
     );
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));

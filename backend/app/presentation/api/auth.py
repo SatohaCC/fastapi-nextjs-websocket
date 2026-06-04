@@ -5,9 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from ...application.interfaces.auth import TicketStore
 from ...application.services.auth_service import AuthService
 from ...domain.primitives.primitives import AuthToken, Password, Username
-from ..dependencies import get_auth_service, get_authenticated_user
+from ..dependencies import get_auth_service, get_authenticated_user, get_ticket_store
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -76,3 +77,19 @@ async def list_users(
 ) -> list[str]:
     """システムに登録されているユーザー一覧を取得します。"""
     return [u.value for u in auth_service.get_all_usernames()]
+
+
+class WsTicketResponse(BaseModel):
+    """WebSocket チケットレスポンス用のスキーマ"""
+
+    ticket: str
+
+
+@router.post("/ws-ticket")
+async def ws_ticket(
+    username: Annotated[Username, Depends(get_authenticated_user)],
+    ticket_store: Annotated[TicketStore, Depends(get_ticket_store)],
+) -> WsTicketResponse:
+    """WebSocket 接続用のワンタイムチケットを発行します。"""
+    ticket = await ticket_store.create_ticket(username)
+    return WsTicketResponse(ticket=ticket)

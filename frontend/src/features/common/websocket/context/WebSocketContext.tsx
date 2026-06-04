@@ -29,11 +29,14 @@ export interface WebSocketContextValue {
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);
 
 interface WebSocketProviderProps {
-  token: string | null;
+  isAuthenticated: boolean;
   children: React.ReactNode;
 }
 
-export function WebSocketProvider({ token, children }: WebSocketProviderProps) {
+export function WebSocketProvider({
+  isAuthenticated,
+  children,
+}: WebSocketProviderProps) {
   const subscribersRef = useRef(new Map<string, Set<WsHandler>>());
   const seqProvidersRef = useRef(new Map<string, SeqProvider>());
   const [syncStatus, setSyncStatus] = useState<string>("未同期");
@@ -77,7 +80,7 @@ export function WebSocketProvider({ token, children }: WebSocketProviderProps) {
     resetPingTimeout,
     retryMsRef,
   } = useConnection({
-    token,
+    isAuthenticated,
     seqProvidersRef,
     onMessage: (event, socket) => {
       dispatch(event, socket, {
@@ -92,7 +95,7 @@ export function WebSocketProvider({ token, children }: WebSocketProviderProps) {
   });
 
   useEffect(() => {
-    if (token) {
+    if (isAuthenticated) {
       setSyncStatus("待機中...");
       disconnect();
       connect();
@@ -100,7 +103,7 @@ export function WebSocketProvider({ token, children }: WebSocketProviderProps) {
       disconnect();
       setSyncStatus("未同期");
     }
-  }, [token, connect, disconnect]);
+  }, [isAuthenticated, connect, disconnect]);
 
   useEffect(() => {
     const handleOnline = () => {

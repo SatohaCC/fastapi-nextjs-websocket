@@ -8,17 +8,17 @@ import type { RequestFeedItem } from "../api";
 import { fetchRequestFeeds } from "../api";
 
 export function useRequestSync(
-  token: string | null,
+  isAuthenticated: boolean,
   setRequestMessages: Dispatch<SetStateAction<DirectRequestServerMessage[]>>,
   lastRequestId: RefObject<number | null>,
   setSyncStatus: (value: string) => void,
 ) {
   const { fetchMissing: fetchRequestMissing } = useFeedSync<RequestFeedItem>(
-    token,
+    isAuthenticated,
     lastRequestId,
     setSyncStatus,
     {
-      fetchFeeds: fetchRequestFeeds,
+      fetchFeeds: (afterId) => fetchRequestFeeds(afterId),
       onFeed: (feed) => {
         if (feed.event_type === "direct_request_updated") {
           const payload = feed.payload;

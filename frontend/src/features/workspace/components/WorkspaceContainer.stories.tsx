@@ -18,7 +18,6 @@ type Story = StoryObj<typeof WorkspaceContainer>;
 
 export const IntegrationTest: Story = {
   beforeEach: () => {
-    sessionStorage.setItem("token", "test-token");
     sessionStorage.setItem("username", "alice");
   },
   play: async ({ canvasElement }) => {
@@ -37,6 +36,10 @@ export const IntegrationTest: Story = {
 
     const sendButton = canvas.getByRole("button", { name: /Send/i });
     await userEvent.click(sendButton);
+
+    // 送信されたメッセージが表示されたか確認
+    const sentMsg = await canvas.findByText("Hello from test!");
+    expect(sentMsg).toBeInTheDocument();
 
     // WebSocket からのメッセージ受信をシミュレート
     // useWebSocket 内の connect() が呼ばれて WebSocketMock インスタンスが作成されているはず

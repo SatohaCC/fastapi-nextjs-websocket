@@ -19,3 +19,15 @@ class TokenProvider(Protocol):
     def verify_token(self, token: AuthToken) -> Username | None:
         """トークンを検証し、有効な場合はユーザー名を返します。"""
         ...
+
+
+class TicketStore(Protocol):
+    """WebSocketのワンタイムチケットを管理するインターフェース。"""
+
+    async def create_ticket(self, username: Username) -> str:
+        """指定されたユーザーに対する一時的な接続チケットを生成・保存します。"""
+        ...
+
+    async def consume_ticket(self, ticket: str) -> Username | None:
+        """チケットを検証し、有効な場合は対応するユーザー名を返し、チケットを即時削除します。"""
+        ...
