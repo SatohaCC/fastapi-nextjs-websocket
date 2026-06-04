@@ -57,18 +57,6 @@
 		]
 	},
 	"hooks": {
-		"PostToolUse": [
-			{
-				"matcher": "Write|Edit",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "cd frontend && node_modules/.bin/biome check --write src/ 2>/dev/null || true",
-						"statusMessage": "Biome: lint & format..."
-					}
-				]
-			}
-		],
 		"Stop": [
 			{
 				"matcher": "",
