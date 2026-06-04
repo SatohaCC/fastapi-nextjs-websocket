@@ -64,3 +64,12 @@ class Password(DomainPrimitive[str]):
             raise DomainValidationError("Password cannot be empty")
         if len(self.value) < 4:
             raise DomainValidationError("Password is too short")
+
+
+class RefreshToken(DomainPrimitive[str]):
+    """リフレッシュトークンを表すドメインプリミティブ。"""
+
+    def validate(self):
+        """バリデーションルールを適用します。"""
+        if not self.value or not self.value.strip():
+            raise DomainValidationError("RefreshToken cannot be empty")

@@ -88,10 +88,7 @@ export function useConnection({
           `接続失敗。${delay / 1000}秒後に再試行します...`,
         );
         reconnectTimerRef.current = setTimeout(() => {
-          connectWs().catch((err) => {
-            // biome-ignore lint/suspicious/noConsole: Error tracking in reconnect
-            console.error("[reconnectTimerRef] connectWs failed:", err);
-          });
+          connectWs().catch(() => {});
         }, delay);
       }
       return;
@@ -138,13 +135,7 @@ export function useConnection({
           `切断されました。${delay / 1000}秒後に再試行します...`,
         );
         reconnectTimerRef.current = setTimeout(() => {
-          connectWs().catch((err) => {
-            // biome-ignore lint/suspicious/noConsole: Error tracking in reconnect
-            console.error(
-              "[reconnectTimerRef] connectWs close reconnect failed:",
-              err,
-            );
-          });
+          connectWs().catch(() => {});
         }, delay);
       }
     };
@@ -158,10 +149,7 @@ export function useConnection({
     if (!currentAuthRef.current) return;
     isManualRef.current = false;
     retryMsRef.current = INITIAL_RETRY_MS;
-    connectWs().catch((err) => {
-      // biome-ignore lint/suspicious/noConsole: Error tracking in initial connection
-      console.error("[connectWs] Initial connection failed:", err);
-    });
+    connectWs().catch(() => {});
   }, [connectWs]);
 
   const disconnect = useCallback(() => {

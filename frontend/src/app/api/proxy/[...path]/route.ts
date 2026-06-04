@@ -1,7 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/config";
-import { decryptSession } from "@/lib/server/session";
+import {
+  applyRefreshedCookies,
+  attemptTokenRefresh,
+  decryptSession,
+  REFRESH_COOKIE,
+  SESSION_COOKIE,
+} from "@/lib/server/session";
 
 async function handleProxy(
   request: Request,
@@ -11,7 +17,7 @@ async function handleProxy(
     const { path } = await params;
     const destPath = path.join("/");
     const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("bff_session");
+    const sessionCookie = cookieStore.get(SESSION_COOKIE);
 
     if (!sessionCookie) {
       return NextResponse.json({ detail: "未ログイン" }, { status: 401 });
@@ -29,12 +35,13 @@ async function handleProxy(
     const url = new URL(request.url);
     const destinationUrl = `${API_BASE}/api/${destPath}${url.search}`;
 
-    const headers = new Headers();
-    headers.set("Authorization", `Bearer ${token}`);
-    const contentType = request.headers.get("content-type");
-    if (contentType) {
-      headers.set("content-type", contentType);
-    }
+    const buildHeaders = (accessToken: string): Headers => {
+      const h = new Headers();
+      h.set("Authorization", `Bearer ${accessToken}`);
+      const contentType = request.headers.get("content-type");
+      if (contentType) h.set("content-type", contentType);
+      return h;
+    };
 
     const body = ["GET", "HEAD"].includes(request.method)
       ? undefined
@@ -42,9 +49,36 @@ async function handleProxy(
 
     const res = await fetch(destinationUrl, {
       method: request.method,
-      headers,
+      headers: buildHeaders(token),
       body,
     });
+
+    if (res.status === 401) {
+      const refreshed = await attemptTokenRefresh(
+        cookieStore.get(REFRESH_COOKIE)?.value,
+      );
+      if (!refreshed) {
+        return NextResponse.json(
+          { detail: "再ログインが必要です" },
+          { status: 401 },
+        );
+      }
+
+      const retryRes = await fetch(destinationUrl, {
+        method: request.method,
+        headers: buildHeaders(refreshed.accessToken),
+        body,
+      });
+
+      const retryData = await retryRes
+        .json()
+        .catch(() => ({ detail: "Proxy error" }));
+      const response = NextResponse.json(retryData, {
+        status: retryRes.status,
+      });
+      applyRefreshedCookies(response, refreshed);
+      return response;
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

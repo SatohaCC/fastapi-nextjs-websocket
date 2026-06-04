@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from app.domain.primitives.primitives import AuthToken, Password, Username
+from app.domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
 
 
 class TokenProvider(Protocol):
@@ -12,12 +12,16 @@ class TokenProvider(Protocol):
         """ユーザー名とパスワードを検証します。"""
         ...
 
-    def create_token(self, username: Username) -> AuthToken:
-        """ユーザー名に基づきアクセス・トークンを生成します。"""
+    def create_token(self, username: Username) -> tuple[AuthToken, RefreshToken]:
+        """ユーザー名に基づきアクセストークンとリフレッシュトークンのペアを生成します。"""
         ...
 
     def verify_token(self, token: AuthToken) -> Username | None:
-        """トークンを検証し、有効な場合はユーザー名を返します。"""
+        """アクセストークンを検証し、有効な場合はユーザー名を返します。"""
+        ...
+
+    def verify_refresh_token(self, token: RefreshToken) -> Username | None:
+        """リフレッシュトークンを検証し、有効な場合はユーザー名を返します。"""
         ...
 
 

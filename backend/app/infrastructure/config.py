@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     # JWT 認証設定
     SECRET_KEY: str = "dev-secret-key-do-not-use-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # 簡易ユーザーマスター（デモ用）
     # key: username, value: password
