@@ -7,11 +7,7 @@ import { WorkspaceFooter } from "@/features/workspace/components/WorkspaceFooter
 import { WorkspaceHeader } from "@/features/workspace/components/WorkspaceHeader";
 import styles from "./Workspace.module.css";
 
-interface WorkspaceProps {
-  token: string | null;
-}
-
-export function Workspace({ token }: WorkspaceProps) {
+export function Workspace() {
   const { error } = useWebSocketContext();
 
   return (
@@ -25,8 +21,8 @@ export function Workspace({ token }: WorkspaceProps) {
       )}
 
       <main className={styles.main}>
-        <GlobalChatContainer token={token} />
-        <DirectRequestPanelContainer token={token} />
+        <GlobalChatContainer />
+        <DirectRequestPanelContainer />
       </main>
 
       <WorkspaceFooter />

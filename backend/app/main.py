@@ -136,6 +136,7 @@ async def domain_exception_handler(request: Request, exc: DomainException):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.ALLOWED_ORIGIN],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

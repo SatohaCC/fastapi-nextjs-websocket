@@ -1,17 +1,15 @@
-import { API_BASE } from "@/lib/config";
 import type {
   DirectRequestServerMessage,
   DirectRequestUpdatedServerMessage,
 } from "@/types/ws";
 
-export async function sendRequest(
-  token: string,
-  data: { to: string; text: string },
-): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/direct_requests`, {
+export async function sendRequest(data: {
+  to: string;
+  text: string;
+}): Promise<void> {
+  const res = await fetch("/api/proxy/direct_requests", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
@@ -20,14 +18,12 @@ export async function sendRequest(
 }
 
 export async function updateRequestStatus(
-  token: string,
   taskId: number,
   status: string,
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/direct_requests/${taskId}/status`, {
+  const res = await fetch(`/api/proxy/direct_requests/${taskId}/status`, {
     method: "PATCH",
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ status }),
@@ -52,7 +48,6 @@ export type RequestFeedItem =
     };
 
 export async function fetchRequestFeeds(
-  token: string,
   afterRequestId: number | null,
 ): Promise<RequestFeedItem[]> {
   try {
@@ -60,10 +55,7 @@ export async function fetchRequestFeeds(
     params.set("after_request_id", (afterRequestId ?? 0).toString());
 
     const res = await fetch(
-      `${API_BASE}/api/feeds/direct_requests?${params.toString()}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      `/api/proxy/feeds/direct_requests?${params.toString()}`,
     );
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));

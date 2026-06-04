@@ -6,15 +6,16 @@ from fastapi import Depends, HTTPException, Query, WebSocket, WebSocketException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..application.interfaces.auth import TicketStore
 from ..application.services.auth_service import AuthService
 from ..application.services.connection_service import ConnectionService
 from ..application.services.direct_request_service import DirectRequestService
 from ..application.services.feed_query_service import FeedQueryService
 from ..application.services.global_chat_service import GlobalChatService
 from ..application.uow import UnitOfWork
-from ..domain.exceptions import DomainValidationError
 from ..domain.primitives.primitives import AuthToken, Username
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
+from ..infrastructure.auth.redis_ticket_store import RedisTicketStore
 from ..infrastructure.config import settings
 from ..infrastructure.persistence.sa_message_repository import (
     SqlAlchemyMessageRepository,
@@ -50,6 +51,11 @@ def get_chat_manager() -> ChatManager:
 
 
 # --- Application Services ---
+
+
+def get_ticket_store() -> TicketStore:
+    """TicketStore の取得"""
+    return RedisTicketStore(settings.REDIS_URL)
 
 
 def get_auth_service() -> AuthService:
@@ -106,26 +112,20 @@ async def get_authenticated_user(
 
 async def get_ws_authenticated_user(
     websocket: WebSocket,
-    auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    token: Annotated[str, Query(...)],
+    ticket_store: Annotated[TicketStore, Depends(get_ticket_store)],
+    ticket: Annotated[str, Query(...)],
 ) -> Username:
-    """WebSocket 用の認証依存関係"""
+    """WebSocket 用の認証依存関係。ワンタイム・チケットの検証を行います。"""
     # 1. Origin の検証
     origin = websocket.headers.get("origin", "")
     if origin != settings.ALLOWED_ORIGIN:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
-    # 2. トークンの検証
-    try:
-        auth_token = AuthToken(token)
-    except DomainValidationError:
-        raise WebSocketException(
-            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token format"
-        )
-    username = auth_service.get_user_from_token(auth_token)
+    # 2. チケットの検証
+    username = await ticket_store.consume_ticket(ticket)
     if not username:
         raise WebSocketException(
-            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired token"
+            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired ticket"
         )
 
     return username

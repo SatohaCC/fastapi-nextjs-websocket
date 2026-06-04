@@ -1,34 +1,43 @@
 import { HttpResponse, http } from "msw";
-import { API_BASE } from "@/lib/config";
 
 export const handlers = [
-  http.post(`${API_BASE}/api/auth/token`, () => {
-    return HttpResponse.json({ access_token: "mock-token" });
+  http.post("/api/auth/login", () => {
+    return HttpResponse.json({ username: "testuser" });
   }),
 
-  http.get(`${API_BASE}/api/auth/users`, () => {
+  http.post("/api/auth/logout", () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.get("/api/auth/me", () => {
+    const username =
+      (typeof sessionStorage !== "undefined" &&
+        sessionStorage.getItem("username")) ||
+      "alice";
+    return HttpResponse.json({ username });
+  }),
+
+  http.get("/api/auth/ws-ticket", () => {
+    return HttpResponse.json({ ticket: "mock-ticket-1234" });
+  }),
+
+  http.get("/api/proxy/auth/users", () => {
     return HttpResponse.json(["alice", "bob", "charlie"]);
   }),
 
-  http.post(`${API_BASE}/api/global_chat/messages`, async ({ request }) => {
-    const _data = await request.json();
+  http.post("/api/proxy/global_chat/messages", async () => {
     return new HttpResponse(null, { status: 200 });
   }),
 
-  http.post(`${API_BASE}/api/direct_requests`, async ({ request }) => {
-    const _data = await request.json();
+  http.post("/api/proxy/direct_requests", async () => {
     return new HttpResponse(null, { status: 200 });
   }),
 
-  http.patch(
-    `${API_BASE}/api/direct_requests/:task_id/status`,
-    async ({ request }) => {
-      const _data = await request.json();
-      return new HttpResponse(null, { status: 200 });
-    },
-  ),
+  http.patch("/api/proxy/direct_requests/:task_id/status", async () => {
+    return new HttpResponse(null, { status: 200 });
+  }),
 
-  http.get(`${API_BASE}/api/feeds/global_chat`, ({ request }) => {
+  http.get("/api/proxy/feeds/global_chat", ({ request }) => {
     const url = new URL(request.url);
     const afterChatId = url.searchParams.get("after_chat_id");
 
@@ -43,7 +52,7 @@ export const handlers = [
     ]);
   }),
 
-  http.get(`${API_BASE}/api/feeds/direct_requests`, ({ request }) => {
+  http.get("/api/proxy/feeds/direct_requests", ({ request }) => {
     const url = new URL(request.url);
     const afterRequestId = url.searchParams.get("after_request_id");
 

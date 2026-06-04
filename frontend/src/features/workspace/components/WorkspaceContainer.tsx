@@ -11,14 +11,19 @@ import { WorkspaceLoading } from "./WorkspaceLoading";
 
 export function WorkspaceContainer() {
   const router = useRouter();
-  const { token, username, isSessionLoaded, clearSession } = useAuth();
-  const { users, loading: usersLoading, error: usersError } = useUsers(token);
+  const { isAuthenticated, username, isSessionLoaded, clearSession } =
+    useAuth();
+  const {
+    users,
+    loading: usersLoading,
+    error: usersError,
+  } = useUsers(isAuthenticated);
 
   useEffect(() => {
-    if (isSessionLoaded && (!token || !username)) {
+    if (isSessionLoaded && (!isAuthenticated || !username)) {
       router.replace("/");
     }
-  }, [isSessionLoaded, token, username, router]);
+  }, [isSessionLoaded, isAuthenticated, username, router]);
 
   if (usersError) {
     throw new Error(usersError);
@@ -34,11 +39,11 @@ export function WorkspaceContainer() {
   }
 
   return (
-    <WebSocketProvider token={token}>
+    <WebSocketProvider isAuthenticated={isAuthenticated}>
       <WorkspaceContext.Provider
         value={{ username, users, onLogout: handleLogout }}
       >
-        <Workspace token={token} />
+        <Workspace />
       </WorkspaceContext.Provider>
     </WebSocketProvider>
   );

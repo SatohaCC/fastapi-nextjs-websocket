@@ -9,14 +9,14 @@ const MAX_RETRY_MS = 30000;
 export type SeqProvider = () => number | null;
 
 interface UseConnectionProps {
-  token: string | null;
+  isAuthenticated: boolean;
   seqProvidersRef: RefObject<Map<string, SeqProvider>>;
   onMessage: (event: MessageEvent, socket: WebSocket) => void;
   onStatusChange?: (status: string) => void;
 }
 
 export function useConnection({
-  token,
+  isAuthenticated,
   seqProvidersRef,
   onMessage,
   onStatusChange,
@@ -32,8 +32,8 @@ export function useConnection({
   const pingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isManualRef = useRef(false);
 
-  const currentTokenRef = useRef<string | null>(token);
-  currentTokenRef.current = token;
+  const currentAuthRef = useRef<boolean>(isAuthenticated);
+  currentAuthRef.current = isAuthenticated;
 
   const onMessageRef = useRef(onMessage);
   const onStatusChangeRef = useRef(onStatusChange);
@@ -61,9 +61,32 @@ export function useConnection({
     [clearPingTimeout],
   );
 
-  const connectWs = useCallback(() => {
-    const activeToken = currentTokenRef.current;
-    if (!activeToken) return;
+  const connectWs = useCallback(async () => {
+    const activeAuth = currentAuthRef.current;
+    if (!activeAuth) return;
+
+    // 1. BFFからワンタイムチケットを取得
+    let ticket: string;
+    try {
+      const res = await fetch("/api/auth/ws-ticket");
+      if (!res.ok) {
+        onStatusChangeRef.current?.("認証チケットの取得に失敗しました");
+        throw new Error("Failed to get ticket");
+      }
+      const data = await res.json();
+      ticket = data.ticket;
+    } catch (_err) {
+      setError("WebSocket 認証チケットの取得に失敗しました");
+      if (!isManualRef.current) {
+        const delay = retryMsRef.current;
+        retryMsRef.current = Math.min(delay * 2, MAX_RETRY_MS);
+        onStatusChangeRef.current?.(
+          `接続失敗。${delay / 1000}秒後に再試行します...`,
+        );
+        reconnectTimerRef.current = setTimeout(connectWs, delay);
+      }
+      return;
+    }
 
     if (wsRef.current) {
       wsRef.current.onclose = null;
@@ -72,7 +95,7 @@ export function useConnection({
     }
 
     const url = new URL(`${WS_BASE}/ws`);
-    url.searchParams.set("token", activeToken);
+    url.searchParams.set("ticket", ticket);
     const providers = seqProvidersRef.current;
     if (providers) {
       for (const [paramName, get] of providers.entries()) {
@@ -115,7 +138,7 @@ export function useConnection({
   }, [resetPingTimeout, clearPingTimeout, seqProvidersRef]);
 
   const connect = useCallback(() => {
-    if (!currentTokenRef.current) return;
+    if (!currentAuthRef.current) return;
     isManualRef.current = false;
     retryMsRef.current = INITIAL_RETRY_MS;
     connectWs();

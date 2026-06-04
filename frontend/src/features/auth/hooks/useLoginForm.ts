@@ -19,8 +19,8 @@ export function useLoginForm() {
     setError(null);
 
     try {
-      const token = await login(username, password);
-      setSession(token, username);
+      const loggedInUsername = await login(username, password);
+      setSession(loggedInUsername);
       router.push("/workspace");
     } catch (err: unknown) {
       setError(

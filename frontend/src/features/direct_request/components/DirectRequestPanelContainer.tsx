@@ -9,18 +9,15 @@ import type { DirectRequestServerMessage } from "@/types/ws";
 import { formatDateTime } from "@/utils/date";
 import { DirectRequestPanel } from "./DirectRequestPanel";
 
-interface DirectRequestPanelContainerProps {
-  token: string | null;
-}
-
-export function DirectRequestPanelContainer({
-  token,
-}: DirectRequestPanelContainerProps) {
+export function DirectRequestPanelContainer() {
   const { users, username } = useWorkspaceContext();
-  const { requestMessages, sendRequest, updateStatus } =
-    useDirectRequest(token);
+  // ワークスペース内は常に認証済みであるため true を渡します
+  const { requestMessages, sendRequest, updateStatus } = useDirectRequest(true);
 
-  const otherUsers = users.filter((u) => u !== username);
+  const otherUsers = useMemo(
+    () => users.filter((u) => u !== username),
+    [users, username],
+  );
 
   const displayRequests = useMemo(
     () => [...requestMessages].sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),

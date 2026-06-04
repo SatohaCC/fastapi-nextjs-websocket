@@ -3,19 +3,19 @@
 import { useEffect, useState } from "react";
 import { fetchUsers } from "@/features/auth/api";
 
-export function useUsers(token: string | null) {
+export function useUsers(isAuthenticated: boolean) {
   const [users, setUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) {
+    if (!isAuthenticated) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    fetchUsers(token)
+    fetchUsers()
       .then(setUsers)
       .catch((err) => {
         // biome-ignore lint/suspicious/noConsole: API error logging
@@ -23,7 +23,7 @@ export function useUsers(token: string | null) {
         setError("Failed to load user list");
       })
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [isAuthenticated]);
 
   return { users, loading, error };
 }

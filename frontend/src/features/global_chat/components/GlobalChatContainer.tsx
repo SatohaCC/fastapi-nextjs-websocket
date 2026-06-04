@@ -9,13 +9,10 @@ import type { GlobalChatServerMessage } from "@/types/ws";
 import { formatDateTime } from "@/utils/date";
 import { GlobalChat } from "./GlobalChat";
 
-interface GlobalChatContainerProps {
-  token: string | null;
-}
-
-export function GlobalChatContainer({ token }: GlobalChatContainerProps) {
+export function GlobalChatContainer() {
   const { username } = useWorkspaceContext();
-  const { chatMessages, sendChat } = useGlobalChat(token);
+  // ワークスペース内は常に認証済みであるため true を渡します
+  const { chatMessages, sendChat } = useGlobalChat(true);
 
   const sortedMessages = useMemo(
     () =>
