@@ -14,7 +14,9 @@ class RedisEventPublisher:
 
     def __init__(self) -> None:
         """Redis クライアントを初期化します。"""
-        self._redis: aioredis.Redis = aioredis.from_url(settings.REDIS_URL)
+        self._redis: aioredis.Redis = aioredis.from_url(
+            settings.REDIS_URL, socket_keepalive=True, health_check_interval=30
+        )
 
     async def publish(self, event: dict) -> None:
         """イベントを JSON 形式で Redis へパブリッシュします。

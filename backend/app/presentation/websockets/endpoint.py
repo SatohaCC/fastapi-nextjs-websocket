@@ -154,6 +154,8 @@ async def websocket_endpoint(
                     direct_request_service=direct_request_service,
                 )
             )
+    except* WebSocketDisconnect as eg:
+        raise eg.exceptions[0]
     finally:
         ws_manager.disconnect(websocket, username)
         await connection_service.handle_user_leave(username)
@@ -209,3 +211,4 @@ async def _client_message_loop(
                 )
     except RuntimeError:
         pass
+    raise WebSocketDisconnect(code=1000, reason="Client loop finished")

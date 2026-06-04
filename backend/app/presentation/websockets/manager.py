@@ -101,10 +101,20 @@ class ChatManager:
         ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
         """
         if username not in self.connections:
+            print(
+                f"[CHAT_MANAGER] send_to_user: user {username.value} "
+                "is not connected. Skipping.",
+                flush=True,
+            )
             return
 
         text = self._serialize(payload)
         ws_set = self.connections[username]
+        print(
+            f"[CHAT_MANAGER] send_to_user: user {username.value} "
+            f"has {len(ws_set)} connections. Sending...",
+            flush=True,
+        )
 
         tasks = [self._send_safe(ws, text, username) for ws in ws_set]
         if tasks:
@@ -113,6 +123,11 @@ class ChatManager:
     async def broadcast(self, payload: Any) -> None:
         """現在接続しているすべてのクライアントにデータを一斉送信します。"""
         text = self._serialize(payload)
+        active_users = [u.value for u in self.connections.keys()]
+        print(
+            f"[CHAT_MANAGER] broadcast: current active users: {active_users}",
+            flush=True,
+        )
 
         tasks = [
             self._send_safe(ws, text, user)
@@ -120,6 +135,10 @@ class ChatManager:
             for ws in ws_set
         ]
         if tasks:
+            print(
+                f"[CHAT_MANAGER] broadcasting to {len(tasks)} active sockets...",
+                flush=True,
+            )
             await asyncio.gather(*tasks)
 
     async def _send_safe(
@@ -131,17 +150,35 @@ class ChatManager:
         """
         user_str = username.value if username else "unknown"
         # 既に close 済みの socket への送信を未然に skip し、例外ノイズを減らす。
-        # 例外ベースの cleanup は維持しているため、これは最適化目的のみ。
+        # 例外ベース of cleanup は維持しているため、これは最適化目的のみ。
         if ws.application_state != WebSocketState.CONNECTED:
+            print(
+                f"[CHAT_MANAGER] _send_safe skip: user {user_str} "
+                f"state is {ws.application_state}",
+                flush=True,
+            )
             logger.debug(
                 "send_safe skip: user=%s state=%s", user_str, ws.application_state
             )
             self.disconnect(ws, username)
             return
         try:
+            print(
+                f"[CHAT_MANAGER] _send_safe: sending message to user {user_str}",
+                flush=True,
+            )
             await ws.send_text(text)
+            print(
+                f"[CHAT_MANAGER] _send_safe: successfully sent to user {user_str}",
+                flush=True,
+            )
         except WebSocketDisconnect as e:
             # Starlette は OSError も WebSocketDisconnect(code=1006) に変換する。
+            print(
+                f"[CHAT_MANAGER] _send_safe disconnect: user {user_str} "
+                f"closed. code={e.code}, reason={e.reason}",
+                flush=True,
+            )
             logger.info(
                 "send_safe disconnect: user=%s code=%s reason=%r",
                 user_str,
@@ -151,6 +188,10 @@ class ChatManager:
             self.disconnect(ws, username)
         except RuntimeError as e:
             # state 違反等 (例: 既に close 済みの ws へ send)。
+            print(
+                f"[CHAT_MANAGER] _send_safe runtime error: user {user_str} err={e}",
+                flush=True,
+            )
             logger.warning("send_safe runtime error: user=%s err=%s", user_str, e)
             self.disconnect(ws, username)
 

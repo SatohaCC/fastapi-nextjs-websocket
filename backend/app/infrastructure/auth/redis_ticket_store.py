@@ -17,7 +17,9 @@ class RedisTicketStore(TicketStore):
         Args:
             redis_url: 接続先 Redis の URL。
         """
-        self._redis: aioredis.Redis = aioredis.from_url(redis_url)
+        self._redis: aioredis.Redis = aioredis.from_url(
+            redis_url, socket_keepalive=True, health_check_interval=30
+        )
 
     async def create_ticket(self, username: Username) -> str:
         """指定されたユーザーに対する一時的な接続チケットを生成・保存します（有効期限10秒）。
