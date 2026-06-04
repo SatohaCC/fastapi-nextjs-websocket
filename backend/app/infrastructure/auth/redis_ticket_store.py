@@ -43,10 +43,9 @@ class RedisTicketStore(TicketStore):
         Returns:
             有効な場合は Username、それ以外は None。
         """
-        val = await self._redis.get(ticket)
+        val = await self._redis.getdel(ticket)
         if val is None:
             return None
 
-        await self._redis.delete(ticket)
         val_str = val.decode("utf-8") if isinstance(val, bytes) else str(val)
         return Username(val_str)

@@ -13,8 +13,7 @@ async def test_redis_ticket_store_lifecycle() -> None:
     """チケットの生成と検証（ワンタイム消費）のテスト。"""
     mock_redis = MagicMock()
     mock_redis.set = AsyncMock()
-    mock_redis.get = AsyncMock(return_value=b"alice")
-    mock_redis.delete = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value=b"alice")
 
     with patch("redis.asyncio.from_url", return_value=mock_redis):
         store = RedisTicketStore("redis://localhost:6379")
@@ -33,15 +32,12 @@ async def test_redis_ticket_store_lifecycle() -> None:
         # 2. チケットの消費（成功）
         consumed_username = await store.consume_ticket(ticket)
         assert consumed_username == username
-        mock_redis.get.assert_called_once_with(ticket)
-        mock_redis.delete.assert_called_once_with(ticket)
+        mock_redis.getdel.assert_called_once_with(ticket)
 
         # 3. チケットの消費（存在しない場合）
-        mock_redis.get.reset_mock()
-        mock_redis.get.return_value = None
-        mock_redis.delete.reset_mock()
+        mock_redis.getdel.reset_mock()
+        mock_redis.getdel.return_value = None
 
         not_found_username = await store.consume_ticket("invalid_ticket")
         assert not_found_username is None
-        mock_redis.get.assert_called_once_with("invalid_ticket")
-        mock_redis.delete.assert_not_called()
+        mock_redis.getdel.assert_called_once_with("invalid_ticket")

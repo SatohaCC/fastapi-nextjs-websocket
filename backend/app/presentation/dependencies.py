@@ -53,9 +53,15 @@ def get_chat_manager() -> ChatManager:
 # --- Application Services ---
 
 
+_ticket_store: TicketStore | None = None
+
+
 def get_ticket_store() -> TicketStore:
     """TicketStore の取得"""
-    return RedisTicketStore(settings.REDIS_URL)
+    global _ticket_store
+    if _ticket_store is None:
+        _ticket_store = RedisTicketStore(settings.REDIS_URL)
+    return _ticket_store
 
 
 def get_auth_service() -> AuthService:
