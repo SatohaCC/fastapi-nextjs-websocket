@@ -104,31 +104,36 @@ export function useGlobalChat(isAuthenticated: boolean): UseGlobalChatResult {
     async (text: string) => {
       if (!isAuthenticated) return;
       try {
-        await sendMessage(text);
+        let promise: Promise<void> | null = null;
+        if (isConnected && isOnline) {
+          promise = new Promise<void>((promiseResolve) => {
+            let resolverObj: { text: string; resolve: () => void };
 
-        if (!isConnected || !isOnline) {
-          return;
+            const timeout = setTimeout(() => {
+              const idx = pendingResolversRef.current.indexOf(resolverObj);
+              if (idx !== -1) {
+                pendingResolversRef.current.splice(idx, 1);
+              }
+              promiseResolve();
+            }, 5000);
+
+            resolverObj = {
+              text,
+              resolve: () => {
+                clearTimeout(timeout);
+                promiseResolve();
+              },
+            };
+
+            pendingResolversRef.current.push(resolverObj);
+          });
         }
 
-        await new Promise<void>((resolve) => {
-          const timeout = setTimeout(() => {
-            const idx = pendingResolversRef.current.findIndex(
-              (r) => r.resolve === resolve,
-            );
-            if (idx !== -1) {
-              pendingResolversRef.current.splice(idx, 1);
-            }
-            resolve();
-          }, 5000);
+        await sendMessage(text);
 
-          pendingResolversRef.current.push({
-            text,
-            resolve: () => {
-              clearTimeout(timeout);
-              resolve();
-            },
-          });
-        });
+        if (promise) {
+          await promise;
+        }
       } catch (err) {
         setError("メッセージ送信に失敗しました");
         throw err;
