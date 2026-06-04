@@ -76,7 +76,11 @@ export function useConnection({
       const data = await res.json();
       ticket = data.ticket;
     } catch (_err) {
-      setError("WebSocket 認証チケットの取得に失敗しました");
+      if (typeof window !== "undefined" && !navigator.onLine) {
+        setError("ネットワーク接続がありません。接続を確認してください");
+      } else {
+        setError("WebSocket 認証チケットの取得に失敗しました");
+      }
       if (!isManualRef.current) {
         const delay = retryMsRef.current;
         retryMsRef.current = Math.min(delay * 2, MAX_RETRY_MS);
@@ -85,6 +89,7 @@ export function useConnection({
         );
         reconnectTimerRef.current = setTimeout(() => {
           connectWs().catch((err) => {
+            // biome-ignore lint/suspicious/noConsole: Error tracking in reconnect
             console.error("[reconnectTimerRef] connectWs failed:", err);
           });
         }, delay);
@@ -134,6 +139,7 @@ export function useConnection({
         );
         reconnectTimerRef.current = setTimeout(() => {
           connectWs().catch((err) => {
+            // biome-ignore lint/suspicious/noConsole: Error tracking in reconnect
             console.error(
               "[reconnectTimerRef] connectWs close reconnect failed:",
               err,
@@ -153,6 +159,7 @@ export function useConnection({
     isManualRef.current = false;
     retryMsRef.current = INITIAL_RETRY_MS;
     connectWs().catch((err) => {
+      // biome-ignore lint/suspicious/noConsole: Error tracking in initial connection
       console.error("[connectWs] Initial connection failed:", err);
     });
   }, [connectWs]);
