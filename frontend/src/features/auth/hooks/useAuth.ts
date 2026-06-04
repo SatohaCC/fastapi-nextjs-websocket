@@ -8,7 +8,7 @@ export interface UseAuthResult {
   username: string | null;
   isSessionLoaded: boolean;
   setSession: (username: string) => void;
-  clearSession: () => void;
+  clearSession: () => Promise<void>;
 }
 
 export function useAuth(): UseAuthResult {
