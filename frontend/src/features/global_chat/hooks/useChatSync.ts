@@ -18,7 +18,7 @@ export function useChatSync(
     lastChatId,
     setSyncStatus,
     {
-      fetchFeeds: (afterId) => fetchChatFeeds(afterId), // wait, in useFeedSync we will modify signature of fetchFeeds to not require token!
+      fetchFeeds: (afterId) => fetchChatFeeds(afterId),
       onFeed: (feed) => {
         setChatMessages((prev) =>
           mergeById(prev, [

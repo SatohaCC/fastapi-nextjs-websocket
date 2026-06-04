@@ -46,13 +46,18 @@ export function useAuth(): UseAuthResult {
     sessionStorage.setItem("username", newUsername);
   }, []);
 
-  const clearSession = useCallback(() => {
-    setUsername(null);
-    sessionStorage.removeItem("username");
-    logout().catch((err) => {
+  const clearSession = useCallback(async () => {
+    try {
+      await logout();
+      setUsername(null);
+      sessionStorage.removeItem("username");
+    } catch (err) {
       // biome-ignore lint/suspicious/noConsole: Error tracking
       console.error("[logout] Error:", err);
-    });
+      alert(
+        "ログアウトに失敗しました。ネットワーク接続を確認し、もう一度お試しください。",
+      );
+    }
   }, []);
 
   return {

@@ -44,17 +44,13 @@ export async function decryptSession(
 
     const [ivHex, encryptedHex, authTagHex] = parts;
     const iv = Buffer.from(ivHex, "hex");
-    const encrypted = Buffer.from(encryptedHex, "hex");
     const authTag = Buffer.from(authTagHex, "hex");
 
     const key = getSecretKey();
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
-    // Node.js crypto typings compatibility
-    let decrypted = decipher
-      .update(encrypted as unknown as Buffer)
-      .toString("utf8");
+    let decrypted = decipher.update(encryptedHex, "hex", "utf8");
     decrypted += decipher.final("utf8");
 
     return decrypted;

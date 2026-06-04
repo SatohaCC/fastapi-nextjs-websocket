@@ -83,7 +83,11 @@ export function useConnection({
         onStatusChangeRef.current?.(
           `接続失敗。${delay / 1000}秒後に再試行します...`,
         );
-        reconnectTimerRef.current = setTimeout(connectWs, delay);
+        reconnectTimerRef.current = setTimeout(() => {
+          connectWs().catch((err) => {
+            console.error("[reconnectTimerRef] connectWs failed:", err);
+          });
+        }, delay);
       }
       return;
     }
@@ -128,7 +132,14 @@ export function useConnection({
         onStatusChangeRef.current?.(
           `切断されました。${delay / 1000}秒後に再試行します...`,
         );
-        reconnectTimerRef.current = setTimeout(connectWs, delay);
+        reconnectTimerRef.current = setTimeout(() => {
+          connectWs().catch((err) => {
+            console.error(
+              "[reconnectTimerRef] connectWs close reconnect failed:",
+              err,
+            );
+          });
+        }, delay);
       }
     };
 
@@ -141,7 +152,9 @@ export function useConnection({
     if (!currentAuthRef.current) return;
     isManualRef.current = false;
     retryMsRef.current = INITIAL_RETRY_MS;
-    connectWs();
+    connectWs().catch((err) => {
+      console.error("[connectWs] Initial connection failed:", err);
+    });
   }, [connectWs]);
 
   const disconnect = useCallback(() => {

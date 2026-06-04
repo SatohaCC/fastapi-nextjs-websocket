@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/Button/Button";
-import { Card, CardHeader } from "@/components/ui/Card/Card";
-import { Input } from "@/components/ui/Input/Input";
-import type { GlobalChatServerMessage } from "@/types/ws";
+import {Button} from "@/components/ui/Button/Button";
+import {Card, CardHeader} from "@/components/ui/Card/Card";
+import {Input} from "@/components/ui/Input/Input";
+import type {GlobalChatServerMessage} from "@/types/ws";
 import styles from "./GlobalChat.module.css";
 
 export interface GlobalChatProps {

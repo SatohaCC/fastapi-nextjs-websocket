@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 
 import redis.asyncio as aioredis
 from redis.exceptions import RedisError
@@ -11,6 +12,8 @@ from ...application.interfaces.connection_manager import ConnectionManager
 from ...application.outbox.routing import FeedRouter
 from ..config import settings
 from ..serialization import dict_to_feed
+
+logger = logging.getLogger(__name__)
 
 
 async def redis_subscriber(
@@ -23,10 +26,9 @@ async def redis_subscriber(
         connection_manager: 配信を担当するサービス。
         feed_router: イベントタイプに基づいて配信戦略を解決するルーター。
     """
-    print(
-        f"[REDIS_SUB] Starting redis_subscriber task for channel "
-        f"{settings.REDIS_CHANNEL}...",
-        flush=True,
+    logger.info(
+        "Starting redis_subscriber task for channel %s...",
+        settings.REDIS_CHANNEL,
     )
 
     while True:
@@ -41,44 +43,43 @@ async def redis_subscriber(
             )
             pubsub = client.pubsub()
             await pubsub.subscribe(settings.REDIS_CHANNEL)
-            print(
-                f"[REDIS_SUB] Subscribed to Redis channel {settings.REDIS_CHANNEL}",
-                flush=True,
+            logger.info(
+                "Subscribed to Redis channel %s",
+                settings.REDIS_CHANNEL,
             )
 
             async for raw in pubsub.listen():
                 if raw["type"] != "message":
                     continue
 
-                print(
-                    f"[REDIS_SUB] Received raw message from Redis: {raw['data']}",
-                    flush=True,
+                logger.debug(
+                    "Received raw message from Redis: %s",
+                    raw["data"],
                 )
                 data = json.loads(raw["data"])
                 feed = dict_to_feed(data)
-                print(
-                    f"[REDIS_SUB] Routing feed {feed.sequence_id} "
-                    f"(event: {feed.event_type}) to feed_router",
-                    flush=True,
+                logger.debug(
+                    "Routing feed %s (event: %s) to feed_router",
+                    feed.sequence_id,
+                    feed.event_type,
                 )
                 await feed_router.route(feed, connection_manager)
 
         except (RedisTimeoutError, asyncio.TimeoutError) as e:
-            print(
-                f"[REDIS_SUB] Timeout reading from Redis: {e}. Reconnecting...",
-                flush=True,
+            logger.warning(
+                "Timeout reading from Redis: %s. Reconnecting...",
+                e,
             )
         except RedisError as e:
-            print(
-                f"[REDIS_SUB] Redis error in subscriber: {e}. Reconnecting in 2s...",
-                flush=True,
+            logger.error(
+                "Redis error in subscriber: %s. Reconnecting in 2s...",
+                e,
             )
             await asyncio.sleep(2.0)
         except Exception as e:
-            print(
-                f"[REDIS_SUB] Unexpected exception in subscriber: {e}. "
-                f"Reconnecting in 2s...",
-                flush=True,
+            logger.exception(
+                "Unexpected exception in subscriber: %s. Reconnecting in 2s...",
+                e,
             )
             await asyncio.sleep(2.0)
         finally:

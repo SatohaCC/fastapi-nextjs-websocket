@@ -26,10 +26,10 @@ async def _listener_task(pg_url: str, wakeup_event: asyncio.Event) -> None:
     """
 
     def _on_notify(conn: object, pid: int, channel: str, payload: str) -> None:
-        print(
-            f"[RELAY_WORKER] NOTIFY received on channel {channel} "
-            f"with payload {payload}",
-            flush=True,
+        logger.debug(
+            "NOTIFY received on channel %s with payload %s",
+            channel,
+            payload,
         )
         wakeup_event.set()
 
@@ -38,11 +38,6 @@ async def _listener_task(pg_url: str, wakeup_event: asyncio.Event) -> None:
         try:
             conn = await asyncpg.connect(pg_url)
             await conn.add_listener("new_delivery_feed", _on_notify)
-            print(
-                "[RELAY_WORKER] Started listening for "
-                "'new_delivery_feed' notifications",
-                flush=True,
-            )
             logger.info("Started listening for 'new_delivery_feed' notifications")
             while not conn.is_closed():
                 await asyncio.sleep(1.0)
@@ -51,8 +46,7 @@ async def _listener_task(pg_url: str, wakeup_event: asyncio.Event) -> None:
                 await conn.close()
             raise
         except Exception as e:
-            print(f"[RELAY_WORKER] Listener connection dropped: {e}", flush=True)
-            logger.warning(f"Listener connection dropped: {e}")
+            logger.warning("Listener connection dropped: %s", e)
             await asyncio.sleep(5.0)
 
 
@@ -74,19 +68,18 @@ async def _relay_loop(
         async with uow_factory() as uow:
             feeds = await uow.outbox.get_pending(limit=500)
             if feeds:
-                print(
-                    f"[RELAY_WORKER] Found {len(feeds)} pending feeds. Processing...",
-                    flush=True,
+                logger.debug(
+                    "Found %d pending feeds. Processing...",
+                    len(feeds),
                 )
                 try:
                     # pipeline で全件を 1 回の RTT にまとめて送信し、順序を保証する
                     async with redis.pipeline() as pipe:
                         for feed in feeds:
-                            print(
-                                f"[RELAY_WORKER] Publishing feed "
-                                f"{feed.sequence_id} (event: {feed.event_type}) "
-                                "to Redis",
-                                flush=True,
+                            logger.debug(
+                                "Publishing feed %s (event: %s) to Redis",
+                                feed.sequence_id,
+                                feed.event_type,
                             )
                             pipe.publish(
                                 settings.REDIS_CHANNEL,
@@ -101,31 +94,29 @@ async def _relay_loop(
                     ]
                     await uow.outbox.mark_processed(feed_keys)
                     await uow.commit()
-                    print(
-                        f"[RELAY_WORKER] Marked {len(feeds)} feeds as processed.",
-                        flush=True,
+                    logger.debug(
+                        "Marked %d feeds as processed.",
+                        len(feeds),
                     )
 
                     # まだ未処理のフィードがある可能性があるため即座に再ループ
                     continue
                 except Exception as e:
-                    print(
-                        f"[RELAY_WORKER] Exception in relay loop processing: {e}",
-                        flush=True,
+                    logger.exception(
+                        "Exception in relay loop processing, will retry: %s",
+                        e,
                     )
-                    logger.exception("Relay worker failed to publish feeds; will retry")
                     await uow.rollback()
 
         # フィードが空、またはエラー発生時は通知か timeout まで待機
         try:
-            print(
-                "[RELAY_WORKER] Waiting for wakeup notification or timeout...",
-                flush=True,
+            logger.debug(
+                "Waiting for wakeup notification or timeout...",
             )
             await asyncio.wait_for(wakeup_event.wait(), timeout=10.0)
-            print("[RELAY_WORKER] Woke up by notification!", flush=True)
+            logger.debug("Woke up by notification!")
         except asyncio.TimeoutError:
-            print("[RELAY_WORKER] Woke up by timeout (10s)", flush=True)
+            logger.debug("Woke up by timeout (10s)")
             pass
 
 
@@ -140,7 +131,7 @@ async def relay_worker(uow_factory: UowFactory, redis_url: str) -> None:
     while True:
         redis = None
         try:
-            print("[RELAY_WORKER] Starting relay_worker tasks...", flush=True)
+            logger.info("Starting relay_worker tasks...")
             redis = aioredis.from_url(
                 redis_url,
                 socket_timeout=None,
@@ -152,12 +143,12 @@ async def relay_worker(uow_factory: UowFactory, redis_url: str) -> None:
                 tg.create_task(_listener_task(pg_url, wakeup_event))
                 tg.create_task(_relay_loop(uow_factory, redis, wakeup_event))
         except asyncio.CancelledError:
-            print("[RELAY_WORKER] relay_worker task cancelled.", flush=True)
+            logger.info("relay_worker task cancelled.")
             raise
         except Exception as e:
-            print(
-                f"[RELAY_WORKER] Exception in relay_worker: {e}. Restarting in 5s...",
-                flush=True,
+            logger.exception(
+                "Exception in relay_worker: %s. Restarting in 5s...",
+                e,
             )
             await asyncio.sleep(5.0)
         finally:
