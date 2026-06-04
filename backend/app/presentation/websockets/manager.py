@@ -149,7 +149,7 @@ class ChatManager:
         """
         user_str = username.value if username else "unknown"
         # 既に close 済みの socket への送信を未然に skip し、例外ノイズを減らす。
-        # 例外ベース の cleanup は維持しているため、これは最適化目的のみ。
+        # 例外ベースの cleanup は維持しているため、これは最適化目的のみ。
         if ws.application_state != WebSocketState.CONNECTED:
             logger.debug(
                 "send_safe skip: user=%s state=%s", user_str, ws.application_state

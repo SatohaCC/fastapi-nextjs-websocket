@@ -38,7 +38,7 @@ async function handleProxy(
 
     const body = ["GET", "HEAD"].includes(request.method)
       ? undefined
-      : await request.arrayBuffer(); // Use arrayBuffer instead of blob to see if it is faster
+      : await request.arrayBuffer();
 
     const res = await fetch(destinationUrl, {
       method: request.method,
