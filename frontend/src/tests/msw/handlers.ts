@@ -5,6 +5,14 @@ export const handlers = [
     return HttpResponse.json({ username: "testuser" });
   }),
 
+  http.post("/api/auth/refresh", () => {
+    return HttpResponse.json({
+      access_token: "mock-new-access-token",
+      refresh_token: "mock-new-refresh-token",
+      token_type: "bearer",
+    });
+  }),
+
   http.post("/api/auth/logout", () => {
     return HttpResponse.json({ success: true });
   }),

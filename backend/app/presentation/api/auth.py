@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from ...application.interfaces.auth import TicketStore
 from ...application.services.auth_service import AuthService
-from ...domain.primitives.primitives import AuthToken, Password, Username
+from ...domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
 from ..dependencies import get_auth_service, get_authenticated_user, get_ticket_store
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -28,12 +28,16 @@ class LoginResponse(BaseModel):
     """ログインレスポンス用のスキーマ"""
 
     access_token: str
+    refresh_token: str
     token_type: str
 
     @classmethod
-    def from_domain(cls, token: AuthToken) -> "LoginResponse":
-        """AuthToken ドメインプリミティブからレスポンス DTO を生成します。"""
-        return cls(access_token=token.value, token_type="bearer")
+    def from_domain(cls, token_pair: tuple[AuthToken, RefreshToken]) -> "LoginResponse":
+        """トークンペアからレスポンス DTO を生成します。"""
+        access, refresh = token_pair
+        return cls(
+            access_token=access.value, refresh_token=refresh.value, token_type="bearer"
+        )
 
 
 class MeResponse(BaseModel):
@@ -51,15 +55,36 @@ class MeResponse(BaseModel):
 async def login(
     body: LoginRequest, auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> LoginResponse:
-    """認証を行い、アクセストークンを発行します。"""
+    """認証を行い、アクセストークンとリフレッシュトークンを発行します。"""
     username, password = body.to_domain()
-    token = auth_service.login(username, password)
-    if not token:
+    token_pair = auth_service.login(username, password)
+    if not token_pair:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="ユーザー名またはパスワードが正しくありません",
         )
-    return LoginResponse.from_domain(token)
+    return LoginResponse.from_domain(token_pair)
+
+
+class RefreshRequest(BaseModel):
+    """リフレッシュリクエスト用のスキーマ"""
+
+    refresh_token: str
+
+
+@router.post("/refresh")
+async def refresh(
+    body: RefreshRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> LoginResponse:
+    """リフレッシュトークンを使って新しいトークンペアを発行します。"""
+    token_pair = auth_service.refresh(RefreshToken(body.refresh_token))
+    if not token_pair:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="リフレッシュトークンが無効または期限切れです",
+        )
+    return LoginResponse.from_domain(token_pair)
 
 
 @router.get("/me")

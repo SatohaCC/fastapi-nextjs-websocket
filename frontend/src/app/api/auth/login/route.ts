@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/config";
-import { encryptSession } from "@/lib/server/session";
+import {
+  encryptSession,
+  REFRESH_COOKIE,
+  REFRESH_COOKIE_OPTIONS,
+  SESSION_COOKIE,
+  SESSION_COOKIE_OPTIONS,
+} from "@/lib/server/session";
 
 export async function POST(request: Request) {
   try {
@@ -23,17 +29,22 @@ export async function POST(request: Request) {
     }
 
     const data = await res.json();
-    const encryptedCookie = await encryptSession(data.access_token);
+    const [encryptedAccess, encryptedRefresh] = await Promise.all([
+      encryptSession(data.access_token),
+      encryptSession(data.refresh_token),
+    ]);
 
     const response = NextResponse.json({ username });
-
-    response.cookies.set("bff_session", encryptedCookie, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
-    });
+    response.cookies.set(
+      SESSION_COOKIE,
+      encryptedAccess,
+      SESSION_COOKIE_OPTIONS,
+    );
+    response.cookies.set(
+      REFRESH_COOKIE,
+      encryptedRefresh,
+      REFRESH_COOKIE_OPTIONS,
+    );
 
     return response;
   } catch (error) {
