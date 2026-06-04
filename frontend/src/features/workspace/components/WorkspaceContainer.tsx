@@ -12,13 +12,17 @@ import { WorkspaceLoading } from "./WorkspaceLoading";
 export function WorkspaceContainer() {
   const router = useRouter();
   const { token, username, isSessionLoaded, clearSession } = useAuth();
-  const { users, loading: usersLoading } = useUsers(token);
+  const { users, loading: usersLoading, error: usersError } = useUsers(token);
 
   useEffect(() => {
     if (isSessionLoaded && (!token || !username)) {
       router.replace("/");
     }
   }, [isSessionLoaded, token, username, router]);
+
+  if (usersError) {
+    throw new Error(usersError);
+  }
 
   const handleLogout = () => {
     clearSession();

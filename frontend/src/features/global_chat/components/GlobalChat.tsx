@@ -29,7 +29,9 @@ export function GlobalChat({
     <Card className={`fade-in ${styles.panel}`}>
       <CardHeader>
         <h2 className={styles.title}>Global Chat</h2>
-        <p className={styles.subtitle}>参加者全員とリアルタイムで会話できます。</p>
+        <p className={styles.subtitle}>
+          参加者全員とリアルタイムで会話できます。
+        </p>
       </CardHeader>
       <div
         className={styles.messagesArea}
@@ -46,7 +48,9 @@ export function GlobalChat({
                 isMe ? styles.messageWrapperMe : styles.messageWrapperOther
               } ${m.isPending ? styles.messagePending : ""}`}
               aria-label={
-                isMe ? "あなたからのメッセージ" : `${m.username} からのメッセージ`
+                isMe
+                  ? "あなたからのメッセージ"
+                  : `${m.username} からのメッセージ`
               }
             >
               {!isMe && <span className={styles.senderName}>{m.username}</span>}
