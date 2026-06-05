@@ -1,5 +1,7 @@
 """アプリケーションで使用するドメインプリミティブの定義。"""
 
+import uuid
+
 from ..exceptions import DomainValidationError
 from .base import DomainPrimitive
 
@@ -11,6 +13,15 @@ class EntityId(DomainPrimitive[int]):
         """バリデーションルールを適用します。"""
         if self.value < 0:
             raise DomainValidationError("EntityId must be non-negative")
+
+
+class UserId(DomainPrimitive[uuid.UUID]):
+    """ユーザーの一意識別子（UUIDv7）を表すドメインプリミティブ。"""
+
+    def validate(self):
+        """バリデーションルールを適用します。"""
+        if self.value.version != 7:
+            raise DomainValidationError("UserId must be a UUID v7")
 
 
 class Username(DomainPrimitive[str]):

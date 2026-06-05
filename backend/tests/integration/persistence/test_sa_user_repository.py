@@ -4,10 +4,19 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.user import User
-from app.domain.primitives.primitives import Username
+from app.domain.primitives.primitives import UserId, Username
+from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.persistence.sa_user_repository import (
     SqlAlchemyUserRepository,
 )
+
+
+@pytest.mark.asyncio
+async def test_get_by_id_returns_none_if_not_found(db_session: AsyncSession):
+    """存在しない ID を取得しようとした場合に None が返ることを確認します。"""
+    repo = SqlAlchemyUserRepository(db_session)
+    user = await repo.get_by_id(UserId(generate_uuid7()))
+    assert user is None
 
 
 @pytest.mark.asyncio
@@ -20,23 +29,33 @@ async def test_get_by_username_returns_none_if_not_found(db_session: AsyncSessio
 
 @pytest.mark.asyncio
 async def test_save_and_get_user(db_session: AsyncSession):
-    """ユーザー情報を保存し、取得できることを確認します。"""
+    """ユーザー情報を保存し、ID およびユーザー名で取得できることを確認します。"""
     repo = SqlAlchemyUserRepository(db_session)
+    user_id = UserId(generate_uuid7())
     username = Username("dave")
     hashed_password = "hashed_dave_password_123"
 
-    user = User(username=username, hashed_password=hashed_password)
+    user = User(id=user_id, username=username, hashed_password=hashed_password)
 
     # 保存
     saved = await repo.save(user)
+    assert saved.id == user_id
     assert saved.username == username
     assert saved.hashed_password == hashed_password
 
-    # 取得
-    retrieved = await repo.get_by_username(username)
-    assert retrieved is not None
-    assert retrieved.username == username
-    assert retrieved.hashed_password == hashed_password
+    # IDで取得
+    retrieved_by_id = await repo.get_by_id(user_id)
+    assert retrieved_by_id is not None
+    assert retrieved_by_id.id == user_id
+    assert retrieved_by_id.username == username
+    assert retrieved_by_id.hashed_password == hashed_password
+
+    # ユーザー名で取得
+    retrieved_by_name = await repo.get_by_username(username)
+    assert retrieved_by_name is not None
+    assert retrieved_by_name.id == user_id
+    assert retrieved_by_name.username == username
+    assert retrieved_by_name.hashed_password == hashed_password
 
 
 @pytest.mark.asyncio
@@ -50,10 +69,18 @@ async def test_get_all_returns_all_users(db_session: AsyncSession):
 
     # 新規ユーザー追加
     await repo.save(
-        User(username=Username("eve"), hashed_password="hashed_eve_password")
+        User(
+            id=UserId(generate_uuid7()),
+            username=Username("eve"),
+            hashed_password="hashed_eve_password",
+        )
     )
     await repo.save(
-        User(username=Username("frank"), hashed_password="hashed_frank_password")
+        User(
+            id=UserId(generate_uuid7()),
+            username=Username("frank"),
+            hashed_password="hashed_frank_password",
+        )
     )
 
     all_users = await repo.get_all()

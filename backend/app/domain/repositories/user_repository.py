@@ -3,11 +3,18 @@
 from typing import Protocol
 
 from app.domain.entities.user import User
-from app.domain.primitives.primitives import Username
+from app.domain.primitives.primitives import UserId, Username
 
 
 class UserRepository(Protocol):
     """ユーザーの参照・永続化を行うリポジトリのインターフェース。"""
+
+    async def get_by_id(self, user_id: UserId) -> User | None:
+        """指定された ID に対応するユーザーを取得します。
+
+        存在しない場合は None を返します。
+        """
+        ...
 
     async def get_by_username(self, username: Username) -> User | None:
         """指定されたユーザー名に対応するユーザーを取得します。

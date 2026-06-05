@@ -6,8 +6,15 @@ import pytest
 
 from app.application.services.auth_service import AuthService
 from app.domain.entities.user import User
-from app.domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
+from app.domain.primitives.primitives import (
+    AuthToken,
+    Password,
+    RefreshToken,
+    UserId,
+    Username,
+)
 from app.infrastructure.auth.password_hasher import PasswordHasher
+from app.infrastructure.auth.uuid7 import generate_uuid7
 
 
 @pytest.fixture
@@ -28,11 +35,12 @@ class TestAuthServiceLogin:
 
     async def test_login_success(self, mock_uow, mock_jwt):
         """パスワードが一致する場合、ログイン成功しトークンペアが返ることを確認。"""
+        user_id = UserId(generate_uuid7())
         username = Username("alice")
         password = Password("password1")
         hashed_password = PasswordHasher.hash_password(password.value)
 
-        mock_user = User(username=username, hashed_password=hashed_password)
+        mock_user = User(id=user_id, username=username, hashed_password=hashed_password)
         mock_uow.users.get_by_username.return_value = mock_user
 
         service = AuthService(mock_uow, mock_jwt)
@@ -56,10 +64,15 @@ class TestAuthServiceLogin:
 
     async def test_login_failure_incorrect_password(self, mock_uow, mock_jwt):
         """パスワードが不一致の場合、ログイン失敗（None が返る）を確認。"""
+        user_id = UserId(generate_uuid7())
         username = Username("alice")
         correct_password_hashed = PasswordHasher.hash_password("correct_password")
 
-        mock_user = User(username=username, hashed_password=correct_password_hashed)
+        mock_user = User(
+            id=user_id,
+            username=username,
+            hashed_password=correct_password_hashed,
+        )
         mock_uow.users.get_by_username.return_value = mock_user
 
         service = AuthService(mock_uow, mock_jwt)
@@ -75,8 +88,16 @@ class TestAuthServiceGetAllUsernames:
     async def test_returns_all_usernames(self, mock_uow, mock_jwt):
         """登録されているすべてのユーザー名が返ることを確認。"""
         users = [
-            User(username=Username("alice"), hashed_password="hashed_1"),
-            User(username=Username("bob"), hashed_password="hashed_2"),
+            User(
+                id=UserId(generate_uuid7()),
+                username=Username("alice"),
+                hashed_password="hashed_1",
+            ),
+            User(
+                id=UserId(generate_uuid7()),
+                username=Username("bob"),
+                hashed_password="hashed_2",
+            ),
         ]
         mock_uow.users.get_all.return_value = users
 

@@ -1,8 +1,9 @@
 """SQLAlchemy の ORM モデル定義（DB テーブルのマッピング）。"""
 
+import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, DateTime, Index, Integer, String, Text
+from sqlalchemy import UUID, BigInteger, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -97,7 +98,8 @@ class UserORM(Base):
 
     __tablename__ = "users"
 
-    username: Mapped[str] = mapped_column(String(50), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(100), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
