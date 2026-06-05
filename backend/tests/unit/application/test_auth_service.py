@@ -110,3 +110,84 @@ class TestAuthServiceGetAllUsernames:
         assert Username("alice") in result
         assert Username("bob") in result
         mock_uow.users.get_all.assert_called_once()
+
+
+@pytest.mark.asyncio
+class TestAuthServiceRefresh:
+    """AuthService.refresh のテスト。"""
+
+    async def test_refresh_success(self, mock_uow, mock_jwt):
+        """有効なリフレッシュトークンの場合、古いトークンが削除され、新しいトークンペアが返ることを確認。"""
+        refresh_token = RefreshToken("mock_refresh_token")
+
+        # モックDBトークンの用意
+        mock_db_token = MagicMock()
+        mock_db_token.user_id = UserId(generate_uuid7())
+        # 現在より未来の有効期限
+        from datetime import datetime, timedelta, timezone
+
+        mock_db_token.expires_at = datetime.now(timezone.utc) + timedelta(days=1)
+
+        mock_uow.refresh_tokens.get_by_hash.return_value = mock_db_token
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.refresh(refresh_token)
+
+        assert result is not None
+        assert result[0].value == "mock_access_token"
+        assert result[1].value == "mock_refresh_token"
+
+        mock_uow.refresh_tokens.get_by_hash.assert_called_once()
+        mock_uow.refresh_tokens.delete_by_hash.assert_called_once()
+        mock_uow.refresh_tokens.save.assert_called_once()
+        mock_uow.commit.assert_called_once()
+
+    async def test_refresh_failure_token_not_found_in_db(self, mock_uow, mock_jwt):
+        """DBにトークンがない場合、リフレッシュ失敗(Noneが返る)を確認。"""
+        refresh_token = RefreshToken("mock_refresh_token")
+        mock_uow.refresh_tokens.get_by_hash.return_value = None
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.refresh(refresh_token)
+
+        assert result is None
+        mock_uow.refresh_tokens.delete_by_hash.assert_not_called()
+        mock_uow.refresh_tokens.save.assert_not_called()
+
+    async def test_refresh_failure_token_expired(self, mock_uow, mock_jwt):
+        """DB上のトークンが期限切れの場合、古いトークンを削除しリフレッシュが失敗（None）することを確認。"""
+        refresh_token = RefreshToken("mock_refresh_token")
+
+        mock_db_token = MagicMock()
+        mock_db_token.user_id = UserId(generate_uuid7())
+        # 過去の有効期限
+        from datetime import datetime, timedelta, timezone
+
+        mock_db_token.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+
+        mock_uow.refresh_tokens.get_by_hash.return_value = mock_db_token
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.refresh(refresh_token)
+
+        assert result is None
+        mock_uow.refresh_tokens.delete_by_hash.assert_called_once()
+        mock_uow.refresh_tokens.save.assert_not_called()
+        mock_uow.commit.assert_called_once()
+
+
+@pytest.mark.asyncio
+class TestAuthServiceLogout:
+    """AuthService.logout のテスト。"""
+
+    async def test_logout_success(self, mock_uow, mock_jwt):
+        """ログアウト処理が呼び出された際、DBからトークンが削除され、Trueが返ることを確認。"""
+        refresh_token = RefreshToken("mock_refresh_token")
+        mock_uow.refresh_tokens.delete_by_hash.return_value = True
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.logout(refresh_token)
+
+        assert result is True
+        mock_uow.refresh_tokens.delete_by_hash.assert_called_once()
+        mock_uow.commit.assert_called_once()

@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from ...application.interfaces.auth import TicketStore
@@ -53,11 +53,17 @@ class MeResponse(BaseModel):
 
 @router.post("/token")
 async def login(
-    body: LoginRequest, auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: Request,
+    body: LoginRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> LoginResponse:
     """認証を行い、アクセストークンとリフレッシュトークンを発行します。"""
     username, password = body.to_domain()
-    token_pair = await auth_service.login(username, password)
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent")
+    token_pair = await auth_service.login(
+        username, password, ip_address=ip, user_agent=ua
+    )
     if not token_pair:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,17 +80,38 @@ class RefreshRequest(BaseModel):
 
 @router.post("/refresh")
 async def refresh(
+    request: Request,
     body: RefreshRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> LoginResponse:
     """リフレッシュトークンを使って新しいトークンペアを発行します。"""
-    token_pair = auth_service.refresh(RefreshToken(body.refresh_token))
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent")
+    token_pair = await auth_service.refresh(
+        RefreshToken(body.refresh_token), ip_address=ip, user_agent=ua
+    )
     if not token_pair:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="リフレッシュトークンが無効または期限切れです",
         )
     return LoginResponse.from_domain(token_pair)
+
+
+class LogoutRequest(BaseModel):
+    """ログアウトリクエスト用のスキーマ"""
+
+    refresh_token: str
+
+
+@router.post("/logout")
+async def logout(
+    body: LogoutRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    """リフレッシュトークンを無効化（DBから物理削除）し、ログアウト処理を行います。"""
+    await auth_service.logout(RefreshToken(body.refresh_token))
+    return {"success": True}
 
 
 @router.get("/me")

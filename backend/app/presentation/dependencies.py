@@ -25,6 +25,9 @@ from ..infrastructure.persistence.sa_message_repository import (
 from ..infrastructure.persistence.sa_outbox_repository import (
     SqlAlchemyDeliveryFeedRepository,
 )
+from ..infrastructure.persistence.sa_refresh_token_repository import (
+    SqlAlchemyRefreshTokenRepository,
+)
 from ..infrastructure.persistence.sa_task_repository import (
     SqlAlchemyTaskRepository,
 )
@@ -52,6 +55,7 @@ def get_uow(db: Annotated[AsyncSession, Depends(get_db)]) -> UnitOfWork:
         SqlAlchemyDeliveryFeedRepository(db),
         SqlAlchemyUserSettingsRepository(db),
         SqlAlchemyUserRepository(db),
+        SqlAlchemyRefreshTokenRepository(db),
     )
 
 
