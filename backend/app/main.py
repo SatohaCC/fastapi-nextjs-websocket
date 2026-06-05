@@ -6,6 +6,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+# SQLAdmin のインポート
+from sqladmin import Admin
 from sqlalchemy import text
 
 from .application.outbox.routing import FeedRouter
@@ -28,6 +31,8 @@ from .infrastructure.messaging.relay_worker import relay_worker
 from .infrastructure.persistence.sa_uow import make_standalone_uow
 from .infrastructure.persistence.seeding import seed_users
 from .infrastructure.persistence.session import AsyncSessionLocal, engine
+from .presentation.admin.auth import admin_auth
+from .presentation.admin.views import all_views
 from .presentation.api.auth import router as auth_router
 from .presentation.api.direct_requests import router as direct_requests_router
 from .presentation.api.feeds import router as feeds_router
@@ -88,6 +93,11 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+# SQLAdmin のマウント
+admin = Admin(app, engine, authentication_backend=admin_auth)
+for view in all_views:
+    admin.add_view(view)
 
 
 @app.exception_handler(EntityNotFoundException)

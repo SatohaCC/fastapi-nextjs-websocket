@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # SQLAdmin 設定
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "admin-password"
+    ADMIN_SECRET_KEY: str = "dev-admin-secret-key"
+
     # 簡易ユーザーマスター（デモ用）
     # key: username, value: password
     USERS: dict[Username, Password] = {
