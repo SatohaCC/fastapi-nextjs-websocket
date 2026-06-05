@@ -74,3 +74,19 @@ class DeliveryFeedORM(Base):
             "ix_delivery_feeds_status_seq", "status", "sequence_name", "sequence_id"
         ),  # ポーリング最適化
     )
+
+
+class UserSettingsORM(Base):
+    """ユーザーごとの通知設定を管理するORMモデル"""
+
+    __tablename__ = "user_settings"
+
+    username: Mapped[str] = mapped_column(String(50), primary_key=True)
+    global_chat: Mapped[bool] = mapped_column(default=True)
+    direct_request: Mapped[bool] = mapped_column(default=True)
+    direct_request_updated: Mapped[bool] = mapped_column(default=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
