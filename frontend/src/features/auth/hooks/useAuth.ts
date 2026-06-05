@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { resetSettings } from "@/lib/notificationSettings";
 import { getMe, logout } from "../api";
 
 export interface UseAuthResult {
@@ -49,6 +50,7 @@ export function useAuth(): UseAuthResult {
   const clearSession = useCallback(async () => {
     try {
       await logout();
+      resetSettings();
       setUsername(null);
       sessionStorage.removeItem("username");
     } catch (err) {
