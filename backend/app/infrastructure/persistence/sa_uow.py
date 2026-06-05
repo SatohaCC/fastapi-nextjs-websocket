@@ -9,10 +9,12 @@ from ...application.outbox.repository import DeliveryFeedRepository
 from ...application.uow import UnitOfWork
 from ...domain.repositories.message_repository import MessageRepository
 from ...domain.repositories.task_repository import TaskRepository
+from ...domain.repositories.user_repository import UserRepository
 from ...domain.repositories.user_settings_repository import UserSettingsRepository
 from .sa_message_repository import SqlAlchemyMessageRepository
 from .sa_outbox_repository import SqlAlchemyDeliveryFeedRepository
 from .sa_task_repository import SqlAlchemyTaskRepository
+from .sa_user_repository import SqlAlchemyUserRepository
 from .sa_user_settings_repository import SqlAlchemyUserSettingsRepository
 
 
@@ -26,6 +28,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         messages: MessageRepository,
         outbox: DeliveryFeedRepository,
         user_settings: UserSettingsRepository,
+        users: UserRepository,
     ):
         """UnitOfWork を初期化します。"""
         self._session = session
@@ -33,6 +36,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.messages = messages
         self.outbox = outbox
         self.user_settings = user_settings
+        self.users = users
 
     async def commit(self) -> None:
         """セッションの変更を確定させます。"""
@@ -69,4 +73,5 @@ async def make_standalone_uow(
             SqlAlchemyMessageRepository(session),
             SqlAlchemyDeliveryFeedRepository(session),
             SqlAlchemyUserSettingsRepository(session),
+            SqlAlchemyUserRepository(session),
         )

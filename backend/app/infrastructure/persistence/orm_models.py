@@ -90,3 +90,15 @@ class UserSettingsORM(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+class UserORM(Base):
+    """ユーザー認証情報を管理するORMモデル"""
+
+    __tablename__ = "users"
+
+    username: Mapped[str] = mapped_column(String(50), primary_key=True)
+    hashed_password: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )

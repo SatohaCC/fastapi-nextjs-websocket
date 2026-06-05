@@ -2,6 +2,7 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,6 +54,23 @@ async def lifespan(_: FastAPI):
                 "ON CONFLICT (name) DO NOTHING"
             )
         )
+        # ユーザー初期レコードのシード（空の場合のみ）
+        result = await conn.execute(text("SELECT COUNT(*) FROM users"))
+        if result.scalar() == 0:
+            from app.infrastructure.auth.password_hasher import PasswordHasher
+
+            for username, password in settings.USERS.items():
+                hashed = PasswordHasher.hash_password(password.value)
+                await conn.execute(
+                    text(
+                        "INSERT INTO users (username, hashed_password, created_at) "
+                        "VALUES (:username, :hashed_password, :created_at)"
+                    ).bindparams(
+                        username=username.value,
+                        hashed_password=hashed,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                )
     print("Database tables initialized.")
 
     # ルーティング戦略の組み立て
