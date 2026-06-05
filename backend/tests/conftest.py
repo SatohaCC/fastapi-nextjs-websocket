@@ -29,6 +29,9 @@ from app.infrastructure.persistence.sa_task_repository import (
     SqlAlchemyTaskRepository,
 )
 from app.infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
+from app.infrastructure.persistence.sa_user_settings_repository import (
+    SqlAlchemyUserSettingsRepository,
+)
 
 
 @pytest.fixture
@@ -40,6 +43,7 @@ def mock_uow():
     uow.messages = AsyncMock()
     uow.tasks = AsyncMock()
     uow.outbox = AsyncMock()
+    uow.user_settings = AsyncMock()
     return uow
 
 
@@ -152,4 +156,5 @@ async def db_uow(db_session: AsyncSession) -> SqlAlchemyUnitOfWork:
         SqlAlchemyTaskRepository(db_session),
         SqlAlchemyMessageRepository(db_session),
         SqlAlchemyDeliveryFeedRepository(db_session),
+        SqlAlchemyUserSettingsRepository(db_session),
     )

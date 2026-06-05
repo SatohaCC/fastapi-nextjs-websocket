@@ -12,6 +12,7 @@ from ..application.services.connection_service import ConnectionService
 from ..application.services.direct_request_service import DirectRequestService
 from ..application.services.feed_query_service import FeedQueryService
 from ..application.services.global_chat_service import GlobalChatService
+from ..application.services.user_settings_service import UserSettingsService
 from ..application.uow import UnitOfWork
 from ..domain.primitives.primitives import AuthToken, Username
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
@@ -27,6 +28,9 @@ from ..infrastructure.persistence.sa_task_repository import (
     SqlAlchemyTaskRepository,
 )
 from ..infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
+from ..infrastructure.persistence.sa_user_settings_repository import (
+    SqlAlchemyUserSettingsRepository,
+)
 from ..infrastructure.persistence.session import get_db
 from .websockets.manager import ChatManager, get_manager
 
@@ -42,6 +46,7 @@ def get_uow(db: Annotated[AsyncSession, Depends(get_db)]) -> UnitOfWork:
         SqlAlchemyTaskRepository(db),
         SqlAlchemyMessageRepository(db),
         SqlAlchemyDeliveryFeedRepository(db),
+        SqlAlchemyUserSettingsRepository(db),
     )
 
 
@@ -95,6 +100,13 @@ def get_feed_query_service(
 ) -> FeedQueryService:
     """FeedQueryService の取得"""
     return FeedQueryService(uow)
+
+
+def get_user_settings_service(
+    uow: Annotated[UnitOfWork, Depends(get_uow)],
+) -> UserSettingsService:
+    """UserSettingsService の取得"""
+    return UserSettingsService(uow)
 
 
 # --- Authentication Dependencies ---

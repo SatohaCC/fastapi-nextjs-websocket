@@ -1,5 +1,3 @@
-const STORAGE_KEY = "ws-chat:notification-settings";
-
 export interface NotificationSettings {
   globalChat: boolean;
   directRequest: boolean;
@@ -12,34 +10,30 @@ export const DEFAULT_SETTINGS: NotificationSettings = {
   directRequestUpdated: true,
 };
 
-const DEFAULT = DEFAULT_SETTINGS;
-
 type Listener = (settings: NotificationSettings) => void;
 
-function loadFromStorage(): NotificationSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT };
-    return { ...DEFAULT, ...JSON.parse(raw) };
-  } catch {
-    return { ...DEFAULT };
-  }
-}
-
-function saveToStorage(s: NotificationSettings): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-  } catch {
-    // ignore (SSR / private browsing)
-  }
-}
-
-let current: NotificationSettings = loadFromStorage();
+let isInitialized = false;
+const modifiedKeys = new Set<keyof NotificationSettings>();
+let current: NotificationSettings = { ...DEFAULT_SETTINGS };
 const listeners = new Set<Listener>();
 
 function notify(): void {
   const snapshot = { ...current };
   for (const fn of listeners) fn(snapshot);
+}
+
+export function initSettings(s: NotificationSettings): void {
+  if (isInitialized) return;
+
+  // サーバーの設定を適用するが、初期化完了前にユーザーが手動操作した設定は維持する
+  const nextSettings = { ...s };
+  for (const key of modifiedKeys) {
+    nextSettings[key] = current[key];
+  }
+
+  current = nextSettings;
+  isInitialized = true;
+  notify();
 }
 
 export function getSettings(): NotificationSettings {
@@ -51,7 +45,7 @@ export function updateSetting<K extends keyof NotificationSettings>(
   value: boolean,
 ): void {
   current = { ...current, [key]: value };
-  saveToStorage(current);
+  modifiedKeys.add(key);
   notify();
 }
 

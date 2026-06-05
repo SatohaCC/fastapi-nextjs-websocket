@@ -33,6 +33,18 @@ export const handlers = [
     return HttpResponse.json(["alice", "bob", "charlie"]);
   }),
 
+  http.get("/api/proxy/user_settings", () => {
+    return HttpResponse.json({
+      global_chat: true,
+      direct_request: true,
+      direct_request_updated: true,
+    });
+  }),
+
+  http.put("/api/proxy/user_settings", async () => {
+    return new HttpResponse(null, { status: 200 });
+  }),
+
   http.post("/api/proxy/global_chat/messages", async () => {
     return new HttpResponse(null, { status: 200 });
   }),

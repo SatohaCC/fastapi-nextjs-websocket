@@ -32,6 +32,7 @@ from .presentation.api.auth import router as auth_router
 from .presentation.api.direct_requests import router as direct_requests_router
 from .presentation.api.feeds import router as feeds_router
 from .presentation.api.global_chat import router as global_chat_router
+from .presentation.api.user_settings import router as user_settings_router
 from .presentation.websockets.endpoint import router as ws_router
 from .presentation.websockets.manager import get_manager
 
@@ -145,4 +146,5 @@ app.include_router(auth_router)
 app.include_router(feeds_router)
 app.include_router(global_chat_router)
 app.include_router(direct_requests_router)
+app.include_router(user_settings_router)
 app.include_router(ws_router)
