@@ -18,7 +18,11 @@ COPY pyproject.toml ./
 RUN uv pip compile pyproject.toml -o requirements.txt \
     && uv pip install --system --no-cache -r requirements.txt
 
-# Copy source code
+# Copy source code and migration files
 COPY app/ ./app/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["./entrypoint.sh"]
