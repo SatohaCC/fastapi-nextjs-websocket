@@ -25,6 +25,9 @@ from app.infrastructure.persistence.sa_message_repository import (
 from app.infrastructure.persistence.sa_outbox_repository import (
     SqlAlchemyDeliveryFeedRepository,
 )
+from app.infrastructure.persistence.sa_refresh_token_repository import (
+    SqlAlchemyRefreshTokenRepository,
+)
 from app.infrastructure.persistence.sa_task_repository import (
     SqlAlchemyTaskRepository,
 )
@@ -48,6 +51,7 @@ def mock_uow():
     uow.outbox = AsyncMock()
     uow.user_settings = AsyncMock()
     uow.users = AsyncMock()
+    uow.refresh_tokens = AsyncMock()
     return uow
 
 
@@ -166,4 +170,5 @@ async def db_uow(db_session: AsyncSession) -> SqlAlchemyUnitOfWork:
         SqlAlchemyDeliveryFeedRepository(db_session),
         SqlAlchemyUserSettingsRepository(db_session),
         SqlAlchemyUserRepository(db_session),
+        SqlAlchemyRefreshTokenRepository(db_session),
     )

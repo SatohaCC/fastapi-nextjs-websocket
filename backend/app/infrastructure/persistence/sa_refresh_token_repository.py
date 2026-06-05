@@ -1,0 +1,77 @@
+"""SQLAlchemy を使用した RefreshToken リポジトリの実装。"""
+
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.domain.entities.refresh_token import RefreshToken
+from app.domain.primitives.primitives import UserId
+from app.domain.repositories.refresh_token_repository import RefreshTokenRepository
+
+from .orm_models import RefreshTokenORM
+
+
+class SqlAlchemyRefreshTokenRepository(RefreshTokenRepository):
+    """SQLAlchemy を用いた RefreshTokenRepository の実装。"""
+
+    def __init__(self, session: AsyncSession):
+        """SQLAlchemy セッションを初期化します。"""
+        self._session = session
+
+    async def get_by_hash(self, token_hash: str) -> RefreshToken | None:
+        """ハッシュ値に対応するリフレッシュトークンを取得します。"""
+        stmt = select(RefreshTokenORM).where(RefreshTokenORM.token_hash == token_hash)
+        res = await self._session.execute(stmt)
+        orm = res.scalar_one_or_none()
+        if orm is None:
+            return None
+        return self._to_entity(orm)
+
+    async def save(self, refresh_token: RefreshToken) -> RefreshToken:
+        """リフレッシュトークンを保存または更新します。"""
+        stmt = select(RefreshTokenORM).where(RefreshTokenORM.id == refresh_token.id)
+        res = await self._session.execute(stmt)
+        existing = res.scalar_one_or_none()
+        if existing:
+            existing.user_id = refresh_token.user_id.value
+            existing.token_hash = refresh_token.token_hash
+            existing.expires_at = refresh_token.expires_at
+            existing.ip_address = refresh_token.ip_address
+            existing.user_agent = refresh_token.user_agent
+            await self._session.flush()
+            return self._to_entity(existing)
+        else:
+            orm = RefreshTokenORM(
+                id=refresh_token.id,
+                user_id=refresh_token.user_id.value,
+                token_hash=refresh_token.token_hash,
+                expires_at=refresh_token.expires_at,
+                created_at=refresh_token.created_at,
+                ip_address=refresh_token.ip_address,
+                user_agent=refresh_token.user_agent,
+            )
+            self._session.add(orm)
+            await self._session.flush()
+            return self._to_entity(orm)
+
+    async def delete_by_hash(self, token_hash: str) -> bool:
+        """ハッシュ値に対応するリフレッシュトークンを物理削除します。"""
+        stmt = delete(RefreshTokenORM).where(RefreshTokenORM.token_hash == token_hash)
+        res = await self._session.execute(stmt)
+        return bool(res.rowcount)  # type: ignore[attr-defined]
+
+    async def delete_by_user_id(self, user_id: UserId) -> None:
+        """指定されたユーザーに紐づくすべてのリフレッシュトークンを物理削除します。"""
+        stmt = delete(RefreshTokenORM).where(RefreshTokenORM.user_id == user_id.value)
+        await self._session.execute(stmt)
+
+    def _to_entity(self, orm: RefreshTokenORM) -> RefreshToken:
+        """ORM モデルをドメインエンティティに変換します。"""
+        return RefreshToken(
+            id=orm.id,
+            user_id=UserId(orm.user_id),
+            token_hash=orm.token_hash,
+            expires_at=orm.expires_at,
+            created_at=orm.created_at,
+            ip_address=orm.ip_address,
+            user_agent=orm.user_agent,
+        )
