@@ -1,7 +1,7 @@
 """グローバルチャットに関するユースケースを実現するアプリケーションサービス。"""
 
 from ...domain.entities.message import DraftMessage, Message
-from ...domain.primitives.primitives import EntityId, MessageText, Username
+from ...domain.primitives.primitives import EntityId, MessageText, UserId, Username
 from ..outbox.delivery_feed import GLOBAL_CHAT_SEQUENCE, DraftDeliveryFeed
 from ..outbox.payload import GlobalChatPayload
 from ..uow import UnitOfWork
@@ -14,9 +14,11 @@ class GlobalChatService:
         """グローバルチャットサービスを初期化します。"""
         self._uow = uow
 
-    async def send_message(self, username: Username, text: MessageText) -> Message:
+    async def send_message(
+        self, user_id: UserId, username: Username, text: MessageText
+    ) -> Message:
         """メッセージを生成・保存し、パブリッシュします。"""
-        draft = DraftMessage(username=username, text=text)
+        draft = DraftMessage(user_id=user_id, username=username, text=text)
         async with self._uow:
             saved_message = await self._uow.messages.save(draft)
             payload = GlobalChatPayload(

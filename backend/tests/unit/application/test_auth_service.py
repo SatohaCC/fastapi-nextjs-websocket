@@ -16,6 +16,8 @@ from app.domain.primitives.primitives import (
 from app.infrastructure.auth.password_hasher import PasswordHasher
 from app.infrastructure.auth.uuid7 import generate_uuid7
 
+ALICE_ID = UserId(generate_uuid7())
+
 
 @pytest.fixture
 def mock_jwt():
@@ -25,8 +27,8 @@ def mock_jwt():
         AuthToken("mock_access_token"),
         RefreshToken("mock_refresh_token"),
     )
-    jwt.verify_refresh_token.return_value = Username("alice")
-    jwt.verify_token.return_value = Username("alice")
+    jwt.verify_refresh_token.return_value = ALICE_ID
+    jwt.verify_token.return_value = ALICE_ID
     return jwt
 
 
@@ -36,12 +38,13 @@ class TestAuthServiceLogin:
 
     async def test_login_success(self, mock_uow, mock_jwt):
         """パスワードが一致する場合、ログイン成功しトークンペアが返ることを確認。"""
-        user_id = UserId(generate_uuid7())
         username = Username("alice")
         password = Password("password1")
         hashed_password = PasswordHasher.hash_password(password.value)
 
-        mock_user = User(id=user_id, username=username, hashed_password=hashed_password)
+        mock_user = User(
+            id=ALICE_ID, username=username, hashed_password=hashed_password
+        )
         mock_uow.users.get_by_username.return_value = mock_user
 
         service = AuthService(mock_uow, mock_jwt, PasswordHasher())
@@ -51,7 +54,8 @@ class TestAuthServiceLogin:
         assert result[0].value == "mock_access_token"
         assert result[1].value == "mock_refresh_token"
         mock_uow.users.get_by_username.assert_called_once_with(username)
-        mock_jwt.create_token.assert_called_once_with(username)
+        # create_token は user.id（UUID）で呼ばれる
+        mock_jwt.create_token.assert_called_once_with(ALICE_ID)
 
     async def test_login_failure_user_not_found(self, mock_uow, mock_jwt):
         """ユーザーが存在しない場合、ログイン失敗（None が返る）を確認。"""
@@ -65,12 +69,11 @@ class TestAuthServiceLogin:
 
     async def test_login_failure_incorrect_password(self, mock_uow, mock_jwt):
         """パスワードが不一致の場合、ログイン失敗（None が返る）を確認。"""
-        user_id = UserId(generate_uuid7())
         username = Username("alice")
         correct_password_hashed = PasswordHasher.hash_password("correct_password")
 
         mock_user = User(
-            id=user_id,
+            id=ALICE_ID,
             username=username,
             hashed_password=correct_password_hashed,
         )
@@ -122,7 +125,7 @@ class TestAuthServiceRefresh:
 
         # モックDBトークンの用意
         mock_db_token = MagicMock()
-        mock_db_token.user_id = UserId(generate_uuid7())
+        mock_db_token.user_id = ALICE_ID
         # 現在より未来の有効期限
         from datetime import datetime, timedelta, timezone
 
@@ -159,7 +162,7 @@ class TestAuthServiceRefresh:
         refresh_token = RefreshToken("mock_refresh_token")
 
         mock_db_token = MagicMock()
-        mock_db_token.user_id = UserId(generate_uuid7())
+        mock_db_token.user_id = ALICE_ID
         # 過去の有効期限
         from datetime import datetime, timedelta, timezone
 

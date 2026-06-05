@@ -11,9 +11,17 @@ from app.application.outbox.payload import (
 )
 from app.application.services.direct_request_service import DirectRequestService
 from app.domain.entities.task import Task
+from app.domain.entities.user import User
 from app.domain.exceptions import EntityNotFoundException
-from app.domain.primitives.primitives import EntityId, TaskText, Username
+from app.domain.primitives.primitives import EntityId, TaskText, UserId, Username
 from app.domain.primitives.task_status import TaskStatus
+from app.infrastructure.auth.uuid7 import generate_uuid7
+
+ALICE_ID = UserId(generate_uuid7())
+BOB_ID = UserId(generate_uuid7())
+
+ALICE = User(id=ALICE_ID, username=Username("alice"), hashed_password="x")
+BOB = User(id=BOB_ID, username=Username("bob"), hashed_password="x")
 
 
 @pytest.fixture
@@ -22,6 +30,8 @@ def saved_task() -> Task:
     now = datetime.now(timezone.utc)
     return Task(
         id=EntityId(1),
+        sender_id=ALICE_ID,
+        recipient_id=BOB_ID,
         sender=Username("alice"),
         recipient=Username("bob"),
         text=TaskText("please review"),
@@ -34,7 +44,7 @@ def saved_task() -> Task:
 @pytest.fixture
 def processing_task(saved_task) -> Task:
     """PROCESSING 状態の Task。"""
-    return saved_task.transition_to(TaskStatus.PROCESSING, Username("bob"))
+    return saved_task.transition_to(TaskStatus.PROCESSING, BOB_ID)
 
 
 class TestDirectRequestServiceSendRequest:
@@ -42,46 +52,51 @@ class TestDirectRequestServiceSendRequest:
 
     async def test_saves_task_to_repository(self, mock_uow, saved_task):
         """tasks.save が 1 回呼ばれること。"""
+        mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         await service.send_request(
-            Username("alice"), Username("bob"), TaskText("please review")
+            ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
         mock_uow.tasks.save.assert_called_once()
 
     async def test_saves_feed_to_outbox(self, mock_uow, saved_task):
         """outbox.save が 1 回呼ばれること（Transactional Outbox）。"""
+        mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         await service.send_request(
-            Username("alice"), Username("bob"), TaskText("please review")
+            ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
         mock_uow.outbox.save.assert_called_once()
 
     async def test_commits_transaction(self, mock_uow, saved_task):
         """Commit が 1 回呼ばれること。"""
+        mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         await service.send_request(
-            Username("alice"), Username("bob"), TaskText("please review")
+            ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
         mock_uow.commit.assert_called_once()
 
     async def test_returns_saved_task(self, mock_uow, saved_task):
         """tasks.save の戻り値がそのまま返ること。"""
+        mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         result = await service.send_request(
-            Username("alice"), Username("bob"), TaskText("please review")
+            ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
         assert result == saved_task
 
     async def test_outbox_feed_payload_maps_entity_fields(self, mock_uow, saved_task):
         """Outbox の DirectRequestPayload が entity フィールドと一致すること。"""
+        mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         await service.send_request(
-            Username("alice"), Username("bob"), TaskText("please review")
+            ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
 
         feed = mock_uow.outbox.save.call_args.args[0]
@@ -94,14 +109,24 @@ class TestDirectRequestServiceSendRequest:
 
     async def test_outbox_feed_uses_direct_request_sequence(self, mock_uow, saved_task):
         """Outbox フィードのシーケンス名が DIRECT_REQUEST_SEQUENCE であること。"""
+        mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         await service.send_request(
-            Username("alice"), Username("bob"), TaskText("please review")
+            ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
 
         feed = mock_uow.outbox.save.call_args.args[0]
         assert feed.sequence_name == DIRECT_REQUEST_SEQUENCE
+
+    async def test_recipient_not_found_raises(self, mock_uow):
+        """存在しない recipient を指定すると EntityNotFoundException を送出すること。"""
+        mock_uow.users.get_by_username.return_value = None
+        service = DirectRequestService(mock_uow)
+        with pytest.raises(EntityNotFoundException):
+            await service.send_request(
+                ALICE_ID, Username("alice"), Username("nobody"), TaskText("test")
+            )
 
 
 class TestDirectRequestServiceUpdateStatus:
@@ -112,7 +137,7 @@ class TestDirectRequestServiceUpdateStatus:
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
-        await service.update_status(EntityId(1), TaskStatus.PROCESSING, Username("bob"))
+        await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
         mock_uow.tasks.get_by_id.assert_called_once_with(EntityId(1))
 
     async def test_saves_transitioned_task(self, mock_uow, saved_task, processing_task):
@@ -120,7 +145,7 @@ class TestDirectRequestServiceUpdateStatus:
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
-        await service.update_status(EntityId(1), TaskStatus.PROCESSING, Username("bob"))
+        await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
         mock_uow.tasks.save.assert_called_once()
 
     async def test_saves_update_feed_to_outbox(
@@ -130,7 +155,7 @@ class TestDirectRequestServiceUpdateStatus:
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
-        await service.update_status(EntityId(1), TaskStatus.PROCESSING, Username("bob"))
+        await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
         mock_uow.outbox.save.assert_called_once()
 
     async def test_commits_transaction(self, mock_uow, saved_task, processing_task):
@@ -138,7 +163,7 @@ class TestDirectRequestServiceUpdateStatus:
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
-        await service.update_status(EntityId(1), TaskStatus.PROCESSING, Username("bob"))
+        await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
         mock_uow.commit.assert_called_once()
 
     async def test_not_found_raises_entity_not_found(self, mock_uow):
@@ -146,18 +171,14 @@ class TestDirectRequestServiceUpdateStatus:
         mock_uow.tasks.get_by_id.return_value = None
         service = DirectRequestService(mock_uow)
         with pytest.raises(EntityNotFoundException):
-            await service.update_status(
-                EntityId(999), TaskStatus.PROCESSING, Username("bob")
-            )
+            await service.update_status(EntityId(999), TaskStatus.PROCESSING, BOB_ID)
 
     async def test_returns_updated_task(self, mock_uow, saved_task, processing_task):
         """更新後の Task が返ること。"""
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
-        result = await service.update_status(
-            EntityId(1), TaskStatus.PROCESSING, Username("bob")
-        )
+        result = await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
         assert result == processing_task
 
     async def test_outbox_feed_payload_maps_updated_entity_fields(
@@ -167,7 +188,7 @@ class TestDirectRequestServiceUpdateStatus:
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
-        await service.update_status(EntityId(1), TaskStatus.PROCESSING, Username("bob"))
+        await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
 
         feed = mock_uow.outbox.save.call_args.args[0]
         assert isinstance(feed.payload, DirectRequestUpdatePayload)
@@ -184,14 +205,14 @@ class TestDirectRequestServiceGetTasks:
         """get_tasks_for_user が tasks.get_for_user を正しい引数で呼ぶこと。"""
         mock_uow.tasks.get_for_user.return_value = []
         service = DirectRequestService(mock_uow)
-        result = await service.get_tasks_for_user(Username("alice"))
-        mock_uow.tasks.get_for_user.assert_called_once_with(Username("alice"))
+        result = await service.get_tasks_for_user(ALICE_ID)
+        mock_uow.tasks.get_for_user.assert_called_once_with(ALICE_ID)
         assert result == []
 
     async def test_get_tasks_after_delegates_to_repository(self, mock_uow):
         """get_tasks_after が tasks.get_after を正しい引数で呼ぶこと。"""
         mock_uow.tasks.get_after.return_value = []
         service = DirectRequestService(mock_uow)
-        result = await service.get_tasks_after(Username("alice"), EntityId(5))
-        mock_uow.tasks.get_after.assert_called_once_with(Username("alice"), EntityId(5))
+        result = await service.get_tasks_after(ALICE_ID, EntityId(5))
+        mock_uow.tasks.get_after.assert_called_once_with(ALICE_ID, EntityId(5))
         assert result == []

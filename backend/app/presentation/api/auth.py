@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from ...application.interfaces.auth import TicketStore
 from ...application.services.auth_service import AuthService
+from ...domain.entities.user import User
 from ...domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
 from ..dependencies import get_auth_service, get_authenticated_user, get_ticket_store
 
@@ -46,9 +47,9 @@ class MeResponse(BaseModel):
     username: str
 
     @classmethod
-    def from_domain(cls, username: Username) -> "MeResponse":
-        """Username ドメインプリミティブからレスポンス DTO を生成します。"""
-        return cls(username=username.value)
+    def from_domain(cls, user: User) -> "MeResponse":
+        """User エンティティからレスポンス DTO を生成します。"""
+        return cls(username=user.username.value)
 
 
 @router.post("/token")
@@ -116,15 +117,15 @@ async def logout(
 
 @router.get("/me")
 async def me(
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
 ) -> MeResponse:
     """現在のログインユーザー情報を取得します。"""
-    return MeResponse.from_domain(username)
+    return MeResponse.from_domain(user)
 
 
 @router.get("/users")
 async def list_users(
-    _: Annotated[Username, Depends(get_authenticated_user)],
+    _: Annotated[User, Depends(get_authenticated_user)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> list[str]:
     """システムに登録されているユーザー一覧を取得します。"""
@@ -140,9 +141,9 @@ class WsTicketResponse(BaseModel):
 
 @router.post("/ws-ticket")
 async def ws_ticket(
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     ticket_store: Annotated[TicketStore, Depends(get_ticket_store)],
 ) -> WsTicketResponse:
     """WebSocket 接続用のワンタイムチケットを発行します。"""
-    ticket = await ticket_store.create_ticket(username)
+    ticket = await ticket_store.create_ticket(user.id)
     return WsTicketResponse(ticket=ticket)

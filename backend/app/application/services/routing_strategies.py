@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..outbox.delivery_feed import DeliveryFeed
 
-from ...domain.primitives.primitives import Username
+from ...domain.primitives.primitives import UserId
 from ..interfaces.connection_manager import ConnectionManager
 
 
@@ -40,14 +40,14 @@ class DirectStrategy:
         from ..outbox.payload import DirectRequestPayload, DirectRequestUpdatePayload
 
         payload = feed.payload
-        sender: Username | None = None
-        recipient: Username | None = None
+        sender_id: UserId | None = None
+        recipient_id: UserId | None = None
 
         if isinstance(payload, (DirectRequestPayload, DirectRequestUpdatePayload)):
-            sender = payload.sender
-            recipient = payload.recipient
+            sender_id = payload.sender_id
+            recipient_id = payload.recipient_id
 
-        if sender:
-            await connection_manager.send_to_user(sender, feed)
-        if recipient and recipient != sender:
-            await connection_manager.send_to_user(recipient, feed)
+        if sender_id:
+            await connection_manager.send_to_user(sender_id, feed)
+        if recipient_id and recipient_id != sender_id:
+            await connection_manager.send_to_user(recipient_id, feed)

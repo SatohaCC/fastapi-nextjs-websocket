@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, field_validator
 
 from ...application.services.direct_request_service import DirectRequestService
+from ...domain.entities.user import User
 from ...domain.primitives.primitives import EntityId, TaskText, Username
 from ...domain.primitives.task_status import TaskStatus
 from ..dependencies import get_authenticated_user, get_direct_request_service
@@ -52,7 +53,7 @@ class SendDirectRequestRequest(BaseModel):
 @router.get("")
 async def get_requests_since(
     after_id: Annotated[int, Query()],
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
@@ -60,7 +61,7 @@ async def get_requests_since(
     """
     指定された ID 以降の、自分に関連するすべてのダイレクトリクエストを取得します。
     """
-    tasks = await direct_request_service.get_tasks_after(username, EntityId(after_id))
+    tasks = await direct_request_service.get_tasks_after(user.id, EntityId(after_id))
     return [
         DirectRequestServerMessage.from_domain(t, is_history=True)
         for t in tasks
@@ -71,14 +72,19 @@ async def get_requests_since(
 @router.post("")
 async def send_request(
     body: SendDirectRequestRequest,
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
 ) -> dict:
     """ダイレクトリクエストを新規送信します。"""
     recipient, text = body.to_domain()
-    await direct_request_service.send_request(username, recipient, text)
+    await direct_request_service.send_request(
+        sender_id=user.id,
+        sender=user.username,
+        recipient=recipient,
+        text=text,
+    )
     return {"status": "ok"}
 
 
@@ -86,13 +92,13 @@ async def send_request(
 async def update_request_status(
     task_id: int,
     body: UpdateDirectRequestStatusRequest,
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
 ) -> dict:
     """ダイレクトリクエストのステータスを更新します。"""
     await direct_request_service.update_status(
-        EntityId(task_id), body.to_domain(), username
+        EntityId(task_id), body.to_domain(), user.id
     )
     return {"status": "ok"}

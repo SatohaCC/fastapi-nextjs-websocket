@@ -2,7 +2,7 @@
 
 from typing import Any, Protocol
 
-from ...domain.primitives.primitives import Username
+from ...domain.primitives.primitives import UserId
 
 
 class ConnectionManager(Protocol):
@@ -11,11 +11,11 @@ class ConnectionManager(Protocol):
     リアルタイムでクライアントに届けるべきあらゆるペイロードを扱います。
     """
 
-    async def send_to_user(self, username: Username, payload: Any) -> None:
+    async def send_to_user(self, user_id: UserId, payload: Any) -> None:
         """指定したユーザーに対して、リアルタイムでデータを送信します。
 
         Args:
-            username (Username): 送信先のユーザー名。
+            user_id (UserId): 送信先のユーザー ID。
             payload (Any): 送信するドメインオブジェクト（DeliveryFeed等）。
                 プレゼンテーション層の実装において DTO へ変換されます。
         """

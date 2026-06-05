@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from app.domain.primitives.primitives import EntityId, MessageText, Username
+from app.domain.primitives.primitives import EntityId, MessageText, UserId, Username
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -14,7 +14,8 @@ class DraftMessage:
     永続化前のため id を持ちません。
     """
 
-    username: Username  # メッセージを送信したユーザーの名前
+    user_id: UserId  # 送信者の UUID（識別子）
+    username: Username  # 送信者の表示名（非正規化）
     text: MessageText  # メッセージの本文
     # 作成日時。
     # リアルタイム通知の一貫性維持とドメイン層内での完結のため、アプリ側で生成します。

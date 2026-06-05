@@ -4,7 +4,14 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 
 from app.domain.entities.refresh_token import RefreshToken as RefreshTokenEntity
-from app.domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
+from app.domain.entities.user import User
+from app.domain.primitives.primitives import (
+    AuthToken,
+    Password,
+    RefreshToken,
+    UserId,
+    Username,
+)
 from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.config import settings
 
@@ -42,7 +49,7 @@ class AuthService:
                 return None
 
             if self._password_verifier.verify(password.value, user.hashed_password):
-                access_token, refresh_token = self._jwt.create_token(username)
+                access_token, refresh_token = self._jwt.create_token(user.id)
 
                 # リフレッシュトークンをDBに保存
                 hash_val = self._hash_token(refresh_token.value)
@@ -72,8 +79,8 @@ class AuthService:
     ) -> tuple[AuthToken, RefreshToken] | None:
         """リフレッシュトークンを検証し、新しいトークンペアを返します。"""
         # JWTとしての形式・有効期限を検証
-        username = self._jwt.verify_refresh_token(refresh_token)
-        if username is None:
+        user_id = self._jwt.verify_refresh_token(refresh_token)
+        if user_id is None:
             return None
 
         hash_val = self._hash_token(refresh_token.value)
@@ -94,8 +101,10 @@ class AuthService:
             # 古いリフレッシュトークンを物理削除
             await uow.refresh_tokens.delete_by_hash(hash_val)
 
-            # 新しいトークンペアを発行
-            new_access_token, new_refresh_token = self._jwt.create_token(username)
+            # 新しいトークンペアを発行（db_token.user_id を使用）
+            new_access_token, new_refresh_token = self._jwt.create_token(
+                db_token.user_id
+            )
 
             # 新しいリフレッシュトークンをDBに保存
             new_hash_val = self._hash_token(new_refresh_token.value)
@@ -123,9 +132,14 @@ class AuthService:
             await uow.commit()
             return success
 
-    def get_user_from_token(self, token: AuthToken) -> Username | None:
-        """アクセストークンを検証し、ユーザー名を取得します。"""
+    def get_user_id_from_token(self, token: AuthToken) -> UserId | None:
+        """アクセストークンを検証し、ユーザー ID を取得します。"""
         return self._jwt.verify_token(token)
+
+    async def get_user_by_id(self, user_id: UserId) -> User | None:
+        """ユーザー ID でユーザーを取得します。"""
+        async with self._uow as uow:
+            return await uow.users.get_by_id(user_id)
 
     async def get_all_usernames(self) -> list[Username]:
         """全ユーザー名を取得します。"""

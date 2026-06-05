@@ -1,5 +1,6 @@
 """ドメインオブジェクトとシリアライズ形式（辞書）の相互変換を行うユーティリティ。"""
 
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -21,6 +22,7 @@ from ..domain.primitives.primitives import (
     EntityId,
     MessageText,
     TaskText,
+    UserId,
     Username,
 )
 from ..domain.primitives.task_status import TaskStatus
@@ -38,6 +40,8 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
     elif isinstance(payload, DirectRequestPayload):
         return {
             "id": payload.id.value,
+            "sender_id": str(payload.sender_id.value),
+            "recipient_id": str(payload.recipient_id.value),
             "sender": payload.sender.value,
             "recipient": payload.recipient.value,
             "text": payload.text.value,
@@ -49,6 +53,8 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
         return {
             "id": payload.id.value,
             "status": payload.status.value,
+            "sender_id": str(payload.sender_id.value),
+            "recipient_id": str(payload.recipient_id.value),
             "sender": payload.sender.value,
             "recipient": payload.recipient.value,
             "updated_at": payload.updated_at.isoformat(),
@@ -73,6 +79,8 @@ def dict_to_payload(event_type: FeedEventType, data: dict[str, Any]) -> FeedPayl
     elif event_type == FeedEventType.DIRECT_REQUEST:
         return DirectRequestPayload(
             id=EntityId(data["id"]),
+            sender_id=UserId(uuid.UUID(data["sender_id"])),
+            recipient_id=UserId(uuid.UUID(data["recipient_id"])),
             sender=Username(data["sender"]),
             recipient=Username(data["recipient"]),
             text=TaskText(data["text"]),
@@ -84,6 +92,8 @@ def dict_to_payload(event_type: FeedEventType, data: dict[str, Any]) -> FeedPayl
         return DirectRequestUpdatePayload(
             id=EntityId(data["id"]),
             status=TaskStatus(data["status"]),
+            sender_id=UserId(uuid.UUID(data["sender_id"])),
+            recipient_id=UserId(uuid.UUID(data["recipient_id"])),
             sender=Username(data["sender"]),
             recipient=Username(data["recipient"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),

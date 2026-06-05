@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
-from ...domain.primitives.primitives import Username
+from ...domain.primitives.primitives import UserId
 from ...infrastructure.config import settings
 from .schemas import (
     BaseServerMessage,
@@ -26,39 +26,37 @@ class ChatManager:
 
     def __init__(self) -> None:
         """ChatManager を初期化します。"""
-        self.connections: dict[Username, set[WebSocket]] = {}
+        self.connections: dict[UserId, set[WebSocket]] = {}
 
-    async def connect(self, username: Username, websocket: WebSocket) -> None:
+    async def connect(self, user_id: UserId, websocket: WebSocket) -> None:
         """新しい WebSocket 接続を受け入れ、管理リストに追加します。"""
         await websocket.accept()
         ws_id = id(websocket)
-        logger.info("connect: user=%s ws=%d", username.value, ws_id)
+        logger.info("connect: user=%s ws=%d", user_id.value, ws_id)
 
-        if username not in self.connections:
-            self.connections[username] = set()
-        self.connections[username].add(websocket)
+        if user_id not in self.connections:
+            self.connections[user_id] = set()
+        self.connections[user_id].add(websocket)
 
         active_users = [u.value for u in self.connections.keys()]
         logger.debug(
             "active connections: user=%s count=%d total_users=%s",
-            username.value,
-            len(self.connections[username]),
+            user_id.value,
+            len(self.connections[user_id]),
             active_users,
         )
 
-    def disconnect(
-        self, websocket: WebSocket, username: Username | None = None
-    ) -> None:
+    def disconnect(self, websocket: WebSocket, user_id: UserId | None = None) -> None:
         """指定された WebSocket 接続を管理リストから削除します。"""
         ws_id = id(websocket)
-        actual_user: Username | str = "unknown"
+        actual_user: UserId | str = "unknown"
 
-        if username and username in self.connections:
-            if websocket in self.connections[username]:
-                self.connections[username].discard(websocket)
-                actual_user = username
-            if not self.connections[username]:
-                del self.connections[username]
+        if user_id and user_id in self.connections:
+            if websocket in self.connections[user_id]:
+                self.connections[user_id].discard(websocket)
+                actual_user = user_id
+            if not self.connections[user_id]:
+                del self.connections[user_id]
         else:
             for user, ws_set in list(self.connections.items()):
                 if websocket in ws_set:
@@ -68,9 +66,7 @@ class ChatManager:
                         del self.connections[user]
                     break
 
-        user_str = (
-            actual_user.value if isinstance(actual_user, Username) else actual_user
-        )
+        user_str = actual_user.value if isinstance(actual_user, UserId) else actual_user
         logger.info(
             "disconnect: user=%s ws=%d remaining_users=%s",
             user_str,
@@ -96,26 +92,26 @@ class ChatManager:
         # dict などのフォールバック (Starlette と同じ separators / ensure_ascii)
         return json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
 
-    async def send_to_user(self, username: Username, payload: Any) -> None:
+    async def send_to_user(self, user_id: UserId, payload: Any) -> None:
         """特定のユーザーにのみデータを送信します。
         ユーザーが複数のデバイス（タブ）で接続している場合、すべてに送信されます。
         """
-        if username not in self.connections:
+        if user_id not in self.connections:
             logger.debug(
                 "send_to_user: user %s is not connected. Skipping.",
-                username.value,
+                user_id.value,
             )
             return
 
         text = self._serialize(payload)
-        ws_set = self.connections[username]
+        ws_set = self.connections[user_id]
         logger.debug(
             "send_to_user: user %s has %d connections. Sending...",
-            username.value,
+            user_id.value,
             len(ws_set),
         )
 
-        tasks = [self._send_safe(ws, text, username) for ws in ws_set]
+        tasks = [self._send_safe(ws, text, user_id) for ws in ws_set]
         if tasks:
             await asyncio.gather(*tasks)
 
@@ -141,20 +137,20 @@ class ChatManager:
             await asyncio.gather(*tasks)
 
     async def _send_safe(
-        self, ws: WebSocket, text: str, username: Username | None = None
+        self, ws: WebSocket, text: str, user_id: UserId | None = None
     ) -> None:
         """内部用の安全な送信メソッド。
 
         ``text`` は事前にシリアライズ済みの JSON 文字列であることを前提とする。
         """
-        user_str = username.value if username else "unknown"
+        user_str = str(user_id.value) if user_id else "unknown"
         # 既に close 済みの socket への送信を未然に skip し、例外ノイズを減らす。
         # 例外ベースの cleanup は維持しているため、これは最適化目的のみ。
         if ws.application_state != WebSocketState.CONNECTED:
             logger.debug(
                 "send_safe skip: user=%s state=%s", user_str, ws.application_state
             )
-            self.disconnect(ws, username)
+            self.disconnect(ws, user_id)
             return
         try:
             logger.debug(
@@ -174,11 +170,11 @@ class ChatManager:
                 e.code,
                 e.reason,
             )
-            self.disconnect(ws, username)
+            self.disconnect(ws, user_id)
         except RuntimeError as e:
             # state 違反等 (例: 既に close 済みの ws へ send)。
             logger.warning("send_safe runtime error: user=%s err=%s", user_str, e)
-            self.disconnect(ws, username)
+            self.disconnect(ws, user_id)
 
 
 # シングルトンインスタンス

@@ -19,8 +19,8 @@ from ...application.services.connection_service import ConnectionService
 from ...application.services.direct_request_service import DirectRequestService
 from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.global_chat_service import GlobalChatService
+from ...domain.entities.user import User
 from ...domain.exceptions import DomainException
-from ...domain.primitives.primitives import Username
 from ..dependencies import (
     get_chat_manager,
     get_connection_service,
@@ -49,7 +49,7 @@ router = APIRouter(tags=["websockets"])
 
 async def _send_initial_data(
     websocket: WebSocket,
-    username: Username,
+    user: User,
     last_id: int | None,
     sequence_name: SequenceName,
     feed_service: FeedQueryService,
@@ -67,7 +67,7 @@ async def _send_initial_data(
             )
     else:
         feeds = await feed_service.get_feeds_after(
-            sequence_name, SequenceId(last_id), username
+            sequence_name, SequenceId(last_id), user.username
         )
         from .schemas import create_server_message_from_feed
 
@@ -79,7 +79,7 @@ async def _send_initial_data(
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    username: Annotated[Username, Depends(get_ws_authenticated_user)],
+    user: Annotated[User, Depends(get_ws_authenticated_user)],
     global_chat_service: Annotated[GlobalChatService, Depends(get_global_chat_service)],
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
@@ -91,13 +91,13 @@ async def websocket_endpoint(
     last_request_id: Annotated[int | None, Query()] = None,
 ) -> None:
     """WebSocket メインハンドラ"""
-    logger.debug("WebSocket authenticated as: %s", username.value)
-    await ws_manager.connect(username, websocket)
+    logger.debug("WebSocket authenticated as: %s", user.username.value)
+    await ws_manager.connect(user.id, websocket)
 
     try:
         await _send_initial_data(
             websocket=websocket,
-            username=username,
+            user=user,
             last_id=last_chat_id,
             sequence_name=SequenceName("global_chat"),
             feed_service=feed_service,
@@ -107,48 +107,43 @@ async def websocket_endpoint(
 
         await _send_initial_data(
             websocket=websocket,
-            username=username,
+            user=user,
             last_id=last_request_id,
             sequence_name=SequenceName("direct_request"),
             feed_service=feed_service,
-            history_fetcher=lambda: direct_request_service.get_tasks_for_user(username),
+            history_fetcher=lambda: direct_request_service.get_tasks_for_user(user.id),
             response_model=DirectRequestServerMessage,
         )
 
         if last_chat_id is None and last_request_id is None:
-            await connection_service.handle_user_join(username)
+            await connection_service.handle_user_join(user.username)
 
     except WebSocketDisconnect as e:
-        # 初期化中の切断はよくあることなので、静かに終了する。
-        # ただし切断 code / reason は診断のために記録する。
         logger.info(
             "disconnect during init: user=%s code=%s reason=%r",
-            username.value,
+            user.username.value,
             e.code,
             e.reason,
         )
-        ws_manager.disconnect(websocket, username)
+        ws_manager.disconnect(websocket, user.id)
         return
     except Exception:
-        logger.exception("WebSocket initialization failed for %s", username.value)
-        ws_manager.disconnect(websocket, username)
+        logger.exception("WebSocket initialization failed for %s", user.username.value)
+        ws_manager.disconnect(websocket, user.id)
         try:
-            # 1011 = Internal Error。reason は debugging 用にクライアントへ届く。
             await websocket.close(code=1011, reason="Initialization failed")
         except Exception:
             pass
         return
 
     pong_event = asyncio.Event()
-    # heartbeat とメッセージループを TaskGroup で並列実行する。
-    # 片方が抜けたら TaskGroup が残りを cancel し、最後に finally で cleanup する。
     try:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(heartbeat(websocket, pong_event))
             tg.create_task(
                 _client_message_loop(
                     websocket=websocket,
-                    username=username,
+                    user=user,
                     pong_event=pong_event,
                     global_chat_service=global_chat_service,
                     direct_request_service=direct_request_service,
@@ -157,23 +152,19 @@ async def websocket_endpoint(
     except* WebSocketDisconnect as eg:
         raise eg.exceptions[0]
     finally:
-        ws_manager.disconnect(websocket, username)
-        await connection_service.handle_user_leave(username)
+        ws_manager.disconnect(websocket, user.id)
+        await connection_service.handle_user_leave(user.username)
 
 
 async def _client_message_loop(
     *,
     websocket: WebSocket,
-    username: Username,
+    user: User,
     pong_event: asyncio.Event,
     global_chat_service: GlobalChatService,
     direct_request_service: DirectRequestService,
 ) -> None:
-    """クライアントからの inbound メッセージをディスパッチする。
-
-    ``iter_json()`` は WebSocketDisconnect を内部で吸収するので、
-    正常切断時はループが普通に終了する。RuntimeError は state 違反の保険。
-    """
+    """クライアントからの inbound メッセージをディスパッチする。"""
     try:
         async for data in websocket.iter_json():
             try:
@@ -189,12 +180,15 @@ async def _client_message_loop(
                     pong_event.set()
                 elif isinstance(msg, GlobalChatClientMessage):
                     await global_chat_service.send_message(
-                        username=username, text=msg.to_domain()
+                        user_id=user.id,
+                        username=user.username,
+                        text=msg.to_domain(),
                     )
                 elif isinstance(msg, DirectRequestClientMessage):
                     recipient, text = msg.to_domain()
                     await direct_request_service.send_request(
-                        sender=username,
+                        sender_id=user.id,
+                        sender=user.username,
                         recipient=recipient,
                         text=text,
                     )
@@ -203,7 +197,7 @@ async def _client_message_loop(
                     await direct_request_service.update_status(
                         task_id=task_id,
                         new_status=new_status,
-                        operator=username,
+                        operator_id=user.id,
                     )
             except DomainException as e:
                 await websocket.send_json(

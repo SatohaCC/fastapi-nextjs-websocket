@@ -13,9 +13,14 @@ from app.domain.primitives.primitives import (
     EntityId,
     MessageText,
     TaskText,
+    UserId,
     Username,
 )
 from app.domain.primitives.task_status import TaskStatus
+from app.infrastructure.auth.uuid7 import generate_uuid7
+
+ALICE_ID = UserId(generate_uuid7())
+BOB_ID = UserId(generate_uuid7())
 
 
 class TestGlobalChatPayload:
@@ -54,6 +59,8 @@ class TestDirectRequestPayload:
         now = datetime.now(timezone.utc)
         payload = DirectRequestPayload(
             id=EntityId(20),
+            sender_id=ALICE_ID,
+            recipient_id=BOB_ID,
             sender=Username("alice"),
             recipient=Username("bob"),
             text=TaskText("please review"),
@@ -68,6 +75,8 @@ class TestDirectRequestPayload:
         now = datetime.now(timezone.utc)
         payload = DirectRequestPayload(
             id=EntityId(20),
+            sender_id=ALICE_ID,
+            recipient_id=BOB_ID,
             sender=Username("alice"),
             recipient=Username("bob"),
             text=TaskText("please review"),
@@ -76,6 +85,8 @@ class TestDirectRequestPayload:
             updated_at=now,
         )
         assert payload.id == EntityId(20)
+        assert payload.sender_id == ALICE_ID
+        assert payload.recipient_id == BOB_ID
         assert payload.sender == Username("alice")
         assert payload.recipient == Username("bob")
         assert payload.status == TaskStatus.REQUESTED
@@ -89,6 +100,8 @@ class TestDirectRequestUpdatePayload:
         payload = DirectRequestUpdatePayload(
             id=EntityId(20),
             status=TaskStatus.PROCESSING,
+            sender_id=ALICE_ID,
+            recipient_id=BOB_ID,
             sender=Username("alice"),
             recipient=Username("bob"),
             updated_at=datetime.now(timezone.utc),
@@ -100,6 +113,8 @@ class TestDirectRequestUpdatePayload:
         payload = DirectRequestUpdatePayload(
             id=EntityId(20),
             status=TaskStatus.PROCESSING,
+            sender_id=ALICE_ID,
+            recipient_id=BOB_ID,
             sender=Username("alice"),
             recipient=Username("bob"),
             updated_at=datetime.now(timezone.utc),
