@@ -2,15 +2,11 @@
 
 import asyncio
 from contextlib import asynccontextmanager
-from pathlib import Path
 
-from alembic.config import Config
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
-
-from alembic import command
 
 from .application.outbox.routing import FeedRouter
 from .application.services.routing_strategies import (
@@ -40,23 +36,10 @@ from .presentation.api.user_settings import router as user_settings_router
 from .presentation.websockets.endpoint import router as ws_router
 from .presentation.websockets.manager import get_manager
 
-_ALEMBIC_INI = Path(__file__).parent.parent / "alembic.ini"
-
-
-async def _run_migrations() -> None:
-    """Alembic マイグレーションをスレッドプールで実行します。
-
-    env.py が asyncio.run() を使うため、別スレッドで実行する必要がある。
-    """
-    alembic_cfg = Config(str(_ALEMBIC_INI))
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, command.upgrade, alembic_cfg, "head")
-
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """アプリケーションのライフサイクル管理。"""
-    await _run_migrations()
     async with engine.begin() as conn:
         # delivery_sequences 初期レコード（冪等）
         await conn.execute(
