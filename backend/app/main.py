@@ -2,11 +2,15 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+from alembic.config import Config
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+
+from alembic import command
 
 from .application.outbox.routing import FeedRouter
 from .application.services.routing_strategies import (
@@ -25,8 +29,8 @@ from .infrastructure.config import settings
 from .infrastructure.messaging.cleanup_worker import cleanup_worker
 from .infrastructure.messaging.redis_subscriber import redis_subscriber
 from .infrastructure.messaging.relay_worker import relay_worker
-from .infrastructure.persistence.orm_models import Base
 from .infrastructure.persistence.sa_uow import make_standalone_uow
+from .infrastructure.persistence.seeding import seed_users
 from .infrastructure.persistence.session import AsyncSessionLocal, engine
 from .presentation.api.auth import router as auth_router
 from .presentation.api.direct_requests import router as direct_requests_router
@@ -36,12 +40,24 @@ from .presentation.api.user_settings import router as user_settings_router
 from .presentation.websockets.endpoint import router as ws_router
 from .presentation.websockets.manager import get_manager
 
+_ALEMBIC_INI = Path(__file__).parent.parent / "alembic.ini"
+
+
+async def _run_migrations() -> None:
+    """Alembic マイグレーションをスレッドプールで実行します。
+
+    env.py が asyncio.run() を使うため、別スレッドで実行する必要がある。
+    """
+    alembic_cfg = Config(str(_ALEMBIC_INI))
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, command.upgrade, alembic_cfg, "head")
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """アプリケーションのライフサイクル管理。"""
+    await _run_migrations()
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
         # delivery_sequences 初期レコード（冪等）
         await conn.execute(
             text(
@@ -54,8 +70,6 @@ async def lifespan(_: FastAPI):
             )
         )
         # ユーザー初期レコードのシード（空の場合のみ）
-        from app.infrastructure.persistence.seeding import seed_users
-
         await seed_users(conn)
     print("Database tables initialized.")
 
