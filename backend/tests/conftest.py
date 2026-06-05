@@ -29,6 +29,9 @@ from app.infrastructure.persistence.sa_task_repository import (
     SqlAlchemyTaskRepository,
 )
 from app.infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
+from app.infrastructure.persistence.sa_user_repository import (
+    SqlAlchemyUserRepository,
+)
 from app.infrastructure.persistence.sa_user_settings_repository import (
     SqlAlchemyUserSettingsRepository,
 )
@@ -44,6 +47,7 @@ def mock_uow():
     uow.tasks = AsyncMock()
     uow.outbox = AsyncMock()
     uow.user_settings = AsyncMock()
+    uow.users = AsyncMock()
     return uow
 
 
@@ -124,6 +128,10 @@ async def db_engine(
     # 初回に全テーブルを作成
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # ユーザー初期データのシード
+        from app.infrastructure.persistence.seeding import seed_users
+
+        await seed_users(conn)
 
     yield engine
     await engine.dispose()
@@ -157,4 +165,5 @@ async def db_uow(db_session: AsyncSession) -> SqlAlchemyUnitOfWork:
         SqlAlchemyMessageRepository(db_session),
         SqlAlchemyDeliveryFeedRepository(db_session),
         SqlAlchemyUserSettingsRepository(db_session),
+        SqlAlchemyUserRepository(db_session),
     )

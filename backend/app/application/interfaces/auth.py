@@ -2,15 +2,11 @@
 
 from typing import Protocol
 
-from app.domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
+from app.domain.primitives.primitives import AuthToken, RefreshToken, Username
 
 
 class TokenProvider(Protocol):
-    """認証（パスワード検証）とトークン操作を抽象化したインターフェース。"""
-
-    def authenticate(self, username: Username, password: Password) -> bool:
-        """ユーザー名とパスワードを検証します。"""
-        ...
+    """トークン操作を抽象化したインターフェース。"""
 
     def create_token(self, username: Username) -> tuple[AuthToken, RefreshToken]:
         """ユーザー名に基づきアクセストークンとリフレッシュトークンのペアを生成します。"""

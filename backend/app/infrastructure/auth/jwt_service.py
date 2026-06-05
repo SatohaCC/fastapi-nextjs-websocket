@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
-from app.domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
+from app.domain.primitives.primitives import AuthToken, RefreshToken, Username
 
 from ..config import settings
 
@@ -14,10 +14,6 @@ _REFRESH_TYPE = "refresh"
 
 class JwtServiceImpl:
     """JwtService の実装。"""
-
-    def authenticate(self, username: Username, password: Password) -> bool:
-        """ユーザー名とパスワードの照合を行います。"""
-        return settings.USERS.get(username) == password
 
     def create_token(self, username: Username) -> tuple[AuthToken, RefreshToken]:
         """アクセストークンとリフレッシュトークンのペアを生成して返します。"""

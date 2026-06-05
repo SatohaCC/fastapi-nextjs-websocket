@@ -53,6 +53,10 @@ async def lifespan(_: FastAPI):
                 "ON CONFLICT (name) DO NOTHING"
             )
         )
+        # ユーザー初期レコードのシード（空の場合のみ）
+        from app.infrastructure.persistence.seeding import seed_users
+
+        await seed_users(conn)
     print("Database tables initialized.")
 
     # ルーティング戦略の組み立て

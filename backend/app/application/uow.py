@@ -4,6 +4,7 @@ from typing import Protocol
 
 from ..domain.repositories.message_repository import MessageRepository
 from ..domain.repositories.task_repository import TaskRepository
+from ..domain.repositories.user_repository import UserRepository
 from ..domain.repositories.user_settings_repository import UserSettingsRepository
 from .outbox.repository import DeliveryFeedRepository
 
@@ -17,6 +18,7 @@ class UnitOfWork(Protocol):
     messages: MessageRepository
     outbox: DeliveryFeedRepository
     user_settings: UserSettingsRepository
+    users: UserRepository
 
     async def commit(self) -> None:
         """トランザクションを確定します。"""

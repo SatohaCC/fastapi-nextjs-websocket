@@ -16,6 +16,7 @@ from ..application.services.user_settings_service import UserSettingsService
 from ..application.uow import UnitOfWork
 from ..domain.primitives.primitives import AuthToken, Username
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
+from ..infrastructure.auth.password_hasher import PasswordHasher
 from ..infrastructure.auth.redis_ticket_store import RedisTicketStore
 from ..infrastructure.config import settings
 from ..infrastructure.persistence.sa_message_repository import (
@@ -28,6 +29,9 @@ from ..infrastructure.persistence.sa_task_repository import (
     SqlAlchemyTaskRepository,
 )
 from ..infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
+from ..infrastructure.persistence.sa_user_repository import (
+    SqlAlchemyUserRepository,
+)
 from ..infrastructure.persistence.sa_user_settings_repository import (
     SqlAlchemyUserSettingsRepository,
 )
@@ -47,6 +51,7 @@ def get_uow(db: Annotated[AsyncSession, Depends(get_db)]) -> UnitOfWork:
         SqlAlchemyMessageRepository(db),
         SqlAlchemyDeliveryFeedRepository(db),
         SqlAlchemyUserSettingsRepository(db),
+        SqlAlchemyUserRepository(db),
     )
 
 
@@ -69,9 +74,11 @@ def get_ticket_store() -> TicketStore:
     return _ticket_store
 
 
-def get_auth_service() -> AuthService:
+def get_auth_service(
+    uow: Annotated[UnitOfWork, Depends(get_uow)],
+) -> AuthService:
     """AuthService の取得"""
-    return AuthService(jwt=JwtServiceImpl(), users=settings.USERS)
+    return AuthService(uow, jwt=JwtServiceImpl(), password_verifier=PasswordHasher())
 
 
 def get_global_chat_service(

@@ -1,0 +1,112 @@
+"""AuthService のユニットテスト（UoW / Repository をモック化）。"""
+
+from unittest.mock import MagicMock
+
+import pytest
+
+from app.application.services.auth_service import AuthService
+from app.domain.entities.user import User
+from app.domain.primitives.primitives import (
+    AuthToken,
+    Password,
+    RefreshToken,
+    UserId,
+    Username,
+)
+from app.infrastructure.auth.password_hasher import PasswordHasher
+from app.infrastructure.auth.uuid7 import generate_uuid7
+
+
+@pytest.fixture
+def mock_jwt():
+    """TokenProvider のモック。"""
+    jwt = MagicMock()
+    jwt.create_token.return_value = (
+        AuthToken("mock_access_token"),
+        RefreshToken("mock_refresh_token"),
+    )
+    jwt.verify_refresh_token.return_value = Username("alice")
+    jwt.verify_token.return_value = Username("alice")
+    return jwt
+
+
+@pytest.mark.asyncio
+class TestAuthServiceLogin:
+    """AuthService.login のテスト。"""
+
+    async def test_login_success(self, mock_uow, mock_jwt):
+        """パスワードが一致する場合、ログイン成功しトークンペアが返ることを確認。"""
+        user_id = UserId(generate_uuid7())
+        username = Username("alice")
+        password = Password("password1")
+        hashed_password = PasswordHasher.hash_password(password.value)
+
+        mock_user = User(id=user_id, username=username, hashed_password=hashed_password)
+        mock_uow.users.get_by_username.return_value = mock_user
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.login(username, password)
+
+        assert result is not None
+        assert result[0].value == "mock_access_token"
+        assert result[1].value == "mock_refresh_token"
+        mock_uow.users.get_by_username.assert_called_once_with(username)
+        mock_jwt.create_token.assert_called_once_with(username)
+
+    async def test_login_failure_user_not_found(self, mock_uow, mock_jwt):
+        """ユーザーが存在しない場合、ログイン失敗（None が返る）を確認。"""
+        mock_uow.users.get_by_username.return_value = None
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.login(Username("unknown"), Password("password1"))
+
+        assert result is None
+        mock_jwt.create_token.assert_not_called()
+
+    async def test_login_failure_incorrect_password(self, mock_uow, mock_jwt):
+        """パスワードが不一致の場合、ログイン失敗（None が返る）を確認。"""
+        user_id = UserId(generate_uuid7())
+        username = Username("alice")
+        correct_password_hashed = PasswordHasher.hash_password("correct_password")
+
+        mock_user = User(
+            id=user_id,
+            username=username,
+            hashed_password=correct_password_hashed,
+        )
+        mock_uow.users.get_by_username.return_value = mock_user
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.login(username, Password("wrong_password"))
+
+        assert result is None
+        mock_jwt.create_token.assert_not_called()
+
+
+@pytest.mark.asyncio
+class TestAuthServiceGetAllUsernames:
+    """AuthService.get_all_usernames のテスト。"""
+
+    async def test_returns_all_usernames(self, mock_uow, mock_jwt):
+        """登録されているすべてのユーザー名が返ることを確認。"""
+        users = [
+            User(
+                id=UserId(generate_uuid7()),
+                username=Username("alice"),
+                hashed_password="hashed_1",
+            ),
+            User(
+                id=UserId(generate_uuid7()),
+                username=Username("bob"),
+                hashed_password="hashed_2",
+            ),
+        ]
+        mock_uow.users.get_all.return_value = users
+
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        result = await service.get_all_usernames()
+
+        assert len(result) == 2
+        assert Username("alice") in result
+        assert Username("bob") in result
+        mock_uow.users.get_all.assert_called_once()

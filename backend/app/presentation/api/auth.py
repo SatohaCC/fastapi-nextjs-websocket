@@ -57,7 +57,7 @@ async def login(
 ) -> LoginResponse:
     """認証を行い、アクセストークンとリフレッシュトークンを発行します。"""
     username, password = body.to_domain()
-    token_pair = auth_service.login(username, password)
+    token_pair = await auth_service.login(username, password)
     if not token_pair:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -101,7 +101,8 @@ async def list_users(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> list[str]:
     """システムに登録されているユーザー一覧を取得します。"""
-    return [u.value for u in auth_service.get_all_usernames()]
+    usernames = await auth_service.get_all_usernames()
+    return [u.value for u in usernames]
 
 
 class WsTicketResponse(BaseModel):

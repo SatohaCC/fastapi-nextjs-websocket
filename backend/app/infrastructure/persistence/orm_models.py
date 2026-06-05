@@ -1,8 +1,9 @@
 """SQLAlchemy の ORM モデル定義（DB テーブルのマッピング）。"""
 
+import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, DateTime, Index, Integer, String, Text
+from sqlalchemy import UUID, BigInteger, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -89,4 +90,17 @@ class UserSettingsORM(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class UserORM(Base):
+    """ユーザー認証情報を管理するORMモデル"""
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(60), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
