@@ -6,6 +6,7 @@ import {
   attemptTokenRefresh,
   decryptSession,
   REFRESH_COOKIE,
+  type RefreshResult,
   SESSION_COOKIE,
 } from "@/lib/server/session";
 
@@ -14,16 +15,25 @@ export async function GET() {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get(SESSION_COOKIE);
 
-    if (!sessionCookie) {
-      return NextResponse.json({ detail: "未ログイン" }, { status: 401 });
-    }
+    let preRefreshResult: RefreshResult | null = null;
+    let token: string | null = null;
 
-    const token = await decryptSession(sessionCookie.value);
-    if (!token) {
-      return NextResponse.json(
-        { detail: "セッションが無効です" },
-        { status: 401 },
+    if (!sessionCookie) {
+      preRefreshResult = await attemptTokenRefresh(
+        cookieStore.get(REFRESH_COOKIE)?.value,
       );
+      if (!preRefreshResult) {
+        return NextResponse.json({ detail: "未ログイン" }, { status: 401 });
+      }
+      token = preRefreshResult.accessToken;
+    } else {
+      token = await decryptSession(sessionCookie.value);
+      if (!token) {
+        return NextResponse.json(
+          { detail: "セッションが無効です" },
+          { status: 401 },
+        );
+      }
     }
 
     const res = await fetch(`${API_BASE}/api/auth/me`, {
@@ -73,7 +83,11 @@ export async function GET() {
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+    const response = NextResponse.json(data);
+    if (preRefreshResult) {
+      applyRefreshedCookies(response, preRefreshResult);
+    }
+    return response;
   } catch (error) {
     // biome-ignore lint/suspicious/noConsole: Error tracking
     console.error("[BFF Me] Error:", error);
