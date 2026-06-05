@@ -49,6 +49,13 @@ export function updateSetting<K extends keyof NotificationSettings>(
   notify();
 }
 
+export function resetSettings(): void {
+  isInitialized = false;
+  modifiedKeys.clear();
+  current = { ...DEFAULT_SETTINGS };
+  notify();
+}
+
 export function subscribe(fn: Listener): () => void {
   listeners.add(fn);
   fn({ ...current });
