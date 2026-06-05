@@ -1,14 +1,39 @@
 "use client";
 
-import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
-import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
+import { NotificationSettings } from "./NotificationSettings";
+import notifStyles from "./NotificationSettings.module.css";
 import styles from "./WorkspaceHeader.module.css";
 
-export function WorkspaceHeader() {
-  const { username, onLogout } = useWorkspaceContext();
-  const { isConnected, isOnline, error, heartbeatStatus, syncStatus } =
-    useWebSocketContext();
+interface WorkspaceHeaderProps {
+  username: string;
+  onLogout: () => void;
+  isConnected: boolean;
+  isOnline: boolean;
+  error: string | null | undefined;
+  heartbeatStatus: string;
+  syncStatus: string;
+  isSettingsOpen: boolean;
+  onToggleSettings: () => void;
+  settingsRef: { current: HTMLDivElement | null };
+  settings: Settings;
+  onUpdateSetting: (key: keyof Settings, value: boolean) => void;
+}
 
+export function WorkspaceHeader({
+  username,
+  onLogout,
+  isConnected,
+  isOnline,
+  error,
+  heartbeatStatus,
+  syncStatus,
+  isSettingsOpen,
+  onToggleSettings,
+  settingsRef,
+  settings,
+  onUpdateSetting,
+}: WorkspaceHeaderProps) {
   const isActuallyConnected = isConnected && isOnline;
 
   return (
@@ -73,6 +98,23 @@ export function WorkspaceHeader() {
         <div className={styles.userInfo}>
           <div className={styles.username}>{username}</div>
           <div className={styles.handle}>@{username?.toLowerCase()}</div>
+        </div>
+        <div ref={settingsRef} className={notifStyles.wrapper}>
+          <button
+            type="button"
+            className={notifStyles.gearButton}
+            onClick={onToggleSettings}
+            aria-label="通知設定"
+            aria-expanded={isSettingsOpen}
+          >
+            ⚙
+          </button>
+          {isSettingsOpen && (
+            <NotificationSettings
+              settings={settings}
+              onUpdate={onUpdateSetting}
+            />
+          )}
         </div>
         <button
           type="button"
