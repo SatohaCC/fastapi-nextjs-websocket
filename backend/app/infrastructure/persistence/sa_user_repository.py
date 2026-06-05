@@ -37,22 +37,23 @@ class SqlAlchemyUserRepository(UserRepository):
 
     async def save(self, user: User) -> User:
         """ユーザー情報を保存または更新（新規作成または更新）します。"""
-        orm = UserORM(
-            id=user.id.value,
-            username=user.username.value,
-            hashed_password=user.hashed_password,
-        )
         stmt = select(UserORM).where(UserORM.id == user.id.value)
         res = await self._session.execute(stmt)
         existing = res.scalar_one_or_none()
         if existing:
             existing.username = user.username.value
             existing.hashed_password = user.hashed_password
-            orm = await self._session.merge(existing)
+            await self._session.flush()
+            return self._to_entity(existing)
         else:
+            orm = UserORM(
+                id=user.id.value,
+                username=user.username.value,
+                hashed_password=user.hashed_password,
+            )
             self._session.add(orm)
-        await self._session.flush()
-        return self._to_entity(orm)
+            await self._session.flush()
+            return self._to_entity(orm)
 
     async def get_all(self) -> list[User]:
         """登録されているすべてのユーザーを取得します。"""

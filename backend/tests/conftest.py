@@ -129,23 +129,9 @@ async def db_engine(
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         # ユーザー初期データのシード
-        from app.infrastructure.auth.password_hasher import PasswordHasher
-        from app.infrastructure.auth.uuid7 import generate_uuid7
+        from app.infrastructure.persistence.seeding import seed_users
 
-        for username, password in settings.USERS.items():
-            user_id = generate_uuid7()
-            hashed = PasswordHasher.hash_password(password.value)
-            await conn.execute(
-                text(
-                    "INSERT INTO users (id, username, hashed_password, created_at) "
-                    "VALUES (:id, :username, :hashed_password, :created_at)"
-                ).bindparams(
-                    id=user_id,
-                    username=username.value,
-                    hashed_password=hashed,
-                    created_at=datetime.now(timezone.utc),
-                )
-            )
+        await seed_users(conn)
 
     yield engine
     await engine.dispose()

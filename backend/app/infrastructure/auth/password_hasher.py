@@ -2,9 +2,18 @@
 
 import bcrypt
 
+from app.application.interfaces.password import PasswordVerifier
 
-class PasswordHasher:
+
+class PasswordHasher(PasswordVerifier):
     """パスワードのセキュアなハッシュ化と照合を行うクラス。"""
+
+    def verify(self, plain: str, hashed: str) -> bool:
+        """平文パスワードとハッシュ値を照合します。"""
+        try:
+            return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+        except ValueError:
+            return False
 
     @staticmethod
     def hash_password(password: str) -> str:
@@ -12,13 +21,3 @@ class PasswordHasher:
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
         return hashed.decode("utf-8")
-
-    @staticmethod
-    def verify_password(password: str, hashed_password: str) -> bool:
-        """生のパスワードとハッシュ値を照合し、一致するか確認します。"""
-        try:
-            return bcrypt.checkpw(
-                password.encode("utf-8"), hashed_password.encode("utf-8")
-            )
-        except Exception:
-            return False

@@ -30,6 +30,7 @@ def mock_jwt():
     return jwt
 
 
+@pytest.mark.asyncio
 class TestAuthServiceLogin:
     """AuthService.login のテスト。"""
 
@@ -43,7 +44,7 @@ class TestAuthServiceLogin:
         mock_user = User(id=user_id, username=username, hashed_password=hashed_password)
         mock_uow.users.get_by_username.return_value = mock_user
 
-        service = AuthService(mock_uow, mock_jwt)
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
         result = await service.login(username, password)
 
         assert result is not None
@@ -56,7 +57,7 @@ class TestAuthServiceLogin:
         """ユーザーが存在しない場合、ログイン失敗（None が返る）を確認。"""
         mock_uow.users.get_by_username.return_value = None
 
-        service = AuthService(mock_uow, mock_jwt)
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
         result = await service.login(Username("unknown"), Password("password1"))
 
         assert result is None
@@ -75,13 +76,14 @@ class TestAuthServiceLogin:
         )
         mock_uow.users.get_by_username.return_value = mock_user
 
-        service = AuthService(mock_uow, mock_jwt)
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
         result = await service.login(username, Password("wrong_password"))
 
         assert result is None
         mock_jwt.create_token.assert_not_called()
 
 
+@pytest.mark.asyncio
 class TestAuthServiceGetAllUsernames:
     """AuthService.get_all_usernames のテスト。"""
 
@@ -101,7 +103,7 @@ class TestAuthServiceGetAllUsernames:
         ]
         mock_uow.users.get_all.return_value = users
 
-        service = AuthService(mock_uow, mock_jwt)
+        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
         result = await service.get_all_usernames()
 
         assert len(result) == 2

@@ -2,7 +2,6 @@
 
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,25 +54,9 @@ async def lifespan(_: FastAPI):
             )
         )
         # ユーザー初期レコードのシード（空の場合のみ）
-        result = await conn.execute(text("SELECT COUNT(*) FROM users"))
-        if result.scalar() == 0:
-            from app.infrastructure.auth.password_hasher import PasswordHasher
-            from app.infrastructure.auth.uuid7 import generate_uuid7
+        from app.infrastructure.persistence.seeding import seed_users
 
-            for username, password in settings.USERS.items():
-                user_id = generate_uuid7()
-                hashed = PasswordHasher.hash_password(password.value)
-                await conn.execute(
-                    text(
-                        "INSERT INTO users (id, username, hashed_password, created_at) "
-                        "VALUES (:id, :username, :hashed_password, :created_at)"
-                    ).bindparams(
-                        id=user_id,
-                        username=username.value,
-                        hashed_password=hashed,
-                        created_at=datetime.now(timezone.utc),
-                    )
-                )
+        await seed_users(conn)
     print("Database tables initialized.")
 
     # ルーティング戦略の組み立て

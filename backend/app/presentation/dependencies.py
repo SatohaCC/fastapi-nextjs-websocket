@@ -16,6 +16,7 @@ from ..application.services.user_settings_service import UserSettingsService
 from ..application.uow import UnitOfWork
 from ..domain.primitives.primitives import AuthToken, Username
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
+from ..infrastructure.auth.password_hasher import PasswordHasher
 from ..infrastructure.auth.redis_ticket_store import RedisTicketStore
 from ..infrastructure.config import settings
 from ..infrastructure.persistence.sa_message_repository import (
@@ -77,7 +78,7 @@ def get_auth_service(
     uow: Annotated[UnitOfWork, Depends(get_uow)],
 ) -> AuthService:
     """AuthService の取得"""
-    return AuthService(uow, jwt=JwtServiceImpl())
+    return AuthService(uow, jwt=JwtServiceImpl(), password_verifier=PasswordHasher())
 
 
 def get_global_chat_service(

@@ -100,7 +100,7 @@ class UserORM(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(100), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(60), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

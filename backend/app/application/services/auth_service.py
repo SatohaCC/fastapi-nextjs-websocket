@@ -1,19 +1,22 @@
 """ユーザー認証とトークン発行を管理するアプリケーションサービス。"""
 
 from app.domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
-from app.infrastructure.auth.password_hasher import PasswordHasher
 
 from ..interfaces.auth import TokenProvider
+from ..interfaces.password import PasswordVerifier
 from ..uow import UnitOfWork
 
 
 class AuthService:
     """ユーザー認証とトークン発行を管理するアプリケーションサービス。"""
 
-    def __init__(self, uow: UnitOfWork, jwt: TokenProvider) -> None:
+    def __init__(
+        self, uow: UnitOfWork, jwt: TokenProvider, password_verifier: PasswordVerifier
+    ) -> None:
         """認証サービスを初期化します。"""
         self._uow = uow
         self._jwt = jwt
+        self._password_verifier = password_verifier
 
     async def login(
         self, username: Username, password: Password
@@ -24,7 +27,7 @@ class AuthService:
             if user is None:
                 return None
 
-            if PasswordHasher.verify_password(password.value, user.hashed_password):
+            if self._password_verifier.verify(password.value, user.hashed_password):
                 return self._jwt.create_token(username)
         return None
 
