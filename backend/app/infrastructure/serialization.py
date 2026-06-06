@@ -1,5 +1,6 @@
 """ドメインオブジェクトとシリアライズ形式（辞書）の相互変換を行うユーティリティ。"""
 
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -21,6 +22,7 @@ from ..domain.primitives.primitives import (
     EntityId,
     MessageText,
     TaskText,
+    UserId,
     Username,
 )
 from ..domain.primitives.task_status import TaskStatus
@@ -38,6 +40,8 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
     elif isinstance(payload, DirectRequestPayload):
         return {
             "id": payload.id.value,
+            "sender_id": str(payload.sender_id.value),
+            "recipient_id": str(payload.recipient_id.value),
             "sender": payload.sender.value,
             "recipient": payload.recipient.value,
             "text": payload.text.value,
@@ -49,6 +53,8 @@ def payload_to_dict(payload: FeedPayload) -> dict[str, Any]:
         return {
             "id": payload.id.value,
             "status": payload.status.value,
+            "sender_id": str(payload.sender_id.value),
+            "recipient_id": str(payload.recipient_id.value),
             "sender": payload.sender.value,
             "recipient": payload.recipient.value,
             "updated_at": payload.updated_at.isoformat(),
@@ -71,8 +77,22 @@ def dict_to_payload(event_type: FeedEventType, data: dict[str, Any]) -> FeedPayl
             created_at=datetime.fromisoformat(data["created_at"]),
         )
     elif event_type == FeedEventType.DIRECT_REQUEST:
+        sender_id_str = data.get("sender_id")
+        recipient_id_str = data.get("recipient_id")
+        sender_uuid = (
+            uuid.UUID(sender_id_str)
+            if sender_id_str
+            else uuid.UUID("00000000-0000-0000-0000-000000000000")
+        )
+        recipient_uuid = (
+            uuid.UUID(recipient_id_str)
+            if recipient_id_str
+            else uuid.UUID("00000000-0000-0000-0000-000000000000")
+        )
         return DirectRequestPayload(
             id=EntityId(data["id"]),
+            sender_id=UserId(sender_uuid),
+            recipient_id=UserId(recipient_uuid),
             sender=Username(data["sender"]),
             recipient=Username(data["recipient"]),
             text=TaskText(data["text"]),
@@ -81,9 +101,23 @@ def dict_to_payload(event_type: FeedEventType, data: dict[str, Any]) -> FeedPayl
             updated_at=datetime.fromisoformat(data["updated_at"]),
         )
     elif event_type == FeedEventType.DIRECT_REQUEST_UPDATED:
+        sender_id_str = data.get("sender_id")
+        recipient_id_str = data.get("recipient_id")
+        sender_uuid = (
+            uuid.UUID(sender_id_str)
+            if sender_id_str
+            else uuid.UUID("00000000-0000-0000-0000-000000000000")
+        )
+        recipient_uuid = (
+            uuid.UUID(recipient_id_str)
+            if recipient_id_str
+            else uuid.UUID("00000000-0000-0000-0000-000000000000")
+        )
         return DirectRequestUpdatePayload(
             id=EntityId(data["id"]),
             status=TaskStatus(data["status"]),
+            sender_id=UserId(sender_uuid),
+            recipient_id=UserId(recipient_uuid),
             sender=Username(data["sender"]),
             recipient=Username(data["recipient"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),

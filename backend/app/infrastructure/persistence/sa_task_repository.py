@@ -4,7 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...domain.entities.task import DraftTask, Task
-from ...domain.primitives.primitives import EntityId, TaskText, Username
+from ...domain.primitives.primitives import EntityId, TaskText, UserId, Username
 from ...domain.primitives.task_status import TaskStatus
 from ...domain.repositories.task_repository import TaskRepository
 from .orm_models import TaskORM
@@ -20,6 +20,8 @@ class SqlAlchemyTaskRepository(TaskRepository):
     async def save(self, task: DraftTask) -> Task:
         """エンティティを DB に保存（新規作成または更新）します。"""
         orm = TaskORM(
+            sender_id=task.sender_id.value,
+            recipient_id=task.recipient_id.value,
             sender=task.sender.value,
             recipient=task.recipient.value,
             text=task.text.value,
@@ -46,14 +48,14 @@ class SqlAlchemyTaskRepository(TaskRepository):
         orm = res.scalar_one_or_none()
         return self._to_entity(orm) if orm else None
 
-    async def get_for_user(self, username: Username) -> list[Task]:
+    async def get_for_user(self, user_id: UserId) -> list[Task]:
         """ユーザーに関連する Task を全件取得します（送信、受信の両方）。"""
         stmt = (
             select(TaskORM)
             .where(
                 or_(
-                    TaskORM.sender == username.value,
-                    TaskORM.recipient == username.value,
+                    TaskORM.sender_id == user_id.value,
+                    TaskORM.recipient_id == user_id.value,
                 )
             )
             .order_by(TaskORM.created_at.asc())
@@ -61,14 +63,14 @@ class SqlAlchemyTaskRepository(TaskRepository):
         res = await self._session.execute(stmt)
         return [self._to_entity(row) for row in res.scalars().all()]
 
-    async def get_after(self, username: Username, after_id: EntityId) -> list[Task]:
+    async def get_after(self, user_id: UserId, after_id: EntityId) -> list[Task]:
         """指定したID以降のユーザー関連 Task を取得します。"""
         stmt = (
             select(TaskORM)
             .where(
                 or_(
-                    TaskORM.sender == username.value,
-                    TaskORM.recipient == username.value,
+                    TaskORM.sender_id == user_id.value,
+                    TaskORM.recipient_id == user_id.value,
                 ),
                 TaskORM.id > after_id.value,
             )
@@ -81,6 +83,8 @@ class SqlAlchemyTaskRepository(TaskRepository):
         """ORM モデルをドメインエンティティに変換します。"""
         return Task(
             id=EntityId(orm.id),
+            sender_id=UserId(orm.sender_id),
+            recipient_id=UserId(orm.recipient_id),
             sender=Username(orm.sender),
             recipient=Username(orm.recipient),
             text=TaskText(orm.text),

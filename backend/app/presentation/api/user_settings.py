@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from ...application.services.user_settings_service import UserSettingsService
+from ...domain.entities.user import User
 from ...domain.entities.user_settings import UserSettings
-from ...domain.primitives.primitives import Username
 from ..dependencies import get_authenticated_user, get_user_settings_service
 
 router = APIRouter(prefix="/api/user_settings", tags=["user_settings"])
@@ -46,23 +46,23 @@ class UpdateUserSettingsRequest(BaseModel):
 
 @router.get("", response_model=UserSettingsResponse)
 async def get_settings(
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     service: Annotated[UserSettingsService, Depends(get_user_settings_service)],
 ) -> UserSettingsResponse:
     """現在のユーザーの通知設定を取得します。"""
-    settings = await service.get_settings(username)
+    settings = await service.get_settings(user.id)
     return UserSettingsResponse.from_domain(settings)
 
 
 @router.put("", response_model=UserSettingsResponse)
 async def update_settings(
     body: UpdateUserSettingsRequest,
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     service: Annotated[UserSettingsService, Depends(get_user_settings_service)],
 ) -> UserSettingsResponse:
     """現在のユーザーの通知設定を更新します。"""
     settings = await service.update_settings(
-        username=username,
+        user_id=user.id,
         global_chat=body.global_chat,
         direct_request=body.direct_request,
         direct_request_updated=body.direct_request_updated,

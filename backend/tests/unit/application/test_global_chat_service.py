@@ -8,7 +8,10 @@ from app.application.outbox.delivery_feed import GLOBAL_CHAT_SEQUENCE
 from app.application.outbox.payload import GlobalChatPayload
 from app.application.services.global_chat_service import GlobalChatService
 from app.domain.entities.message import Message
-from app.domain.primitives.primitives import EntityId, MessageText, Username
+from app.domain.primitives.primitives import EntityId, MessageText, UserId, Username
+from app.infrastructure.auth.uuid7 import generate_uuid7
+
+ALICE_ID = UserId(generate_uuid7())
 
 
 @pytest.fixture
@@ -16,6 +19,7 @@ def saved_message() -> Message:
     """テスト用の永続化済み Message。"""
     return Message(
         id=EntityId(1),
+        user_id=ALICE_ID,
         username=Username("alice"),
         text=MessageText("hello"),
         created_at=datetime.now(timezone.utc),
@@ -29,38 +33,41 @@ class TestGlobalChatServiceSendMessage:
         """messages.save が 1 回呼ばれること。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        await service.send_message(Username("alice"), MessageText("hello"))
+        await service.send_message(ALICE_ID, Username("alice"), MessageText("hello"))
         mock_uow.messages.save.assert_called_once()
 
     async def test_saves_feed_to_outbox(self, mock_uow, saved_message):
         """outbox.save が 1 回呼ばれること（Transactional Outbox）。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        await service.send_message(Username("alice"), MessageText("hello"))
+        await service.send_message(ALICE_ID, Username("alice"), MessageText("hello"))
         mock_uow.outbox.save.assert_called_once()
 
     async def test_commits_transaction(self, mock_uow, saved_message):
         """Commit が 1 回呼ばれること。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        await service.send_message(Username("alice"), MessageText("hello"))
+        await service.send_message(ALICE_ID, Username("alice"), MessageText("hello"))
         mock_uow.commit.assert_called_once()
 
     async def test_returns_saved_message(self, mock_uow, saved_message):
         """messages.save の戻り値がそのまま返ること。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        result = await service.send_message(Username("alice"), MessageText("hello"))
+        result = await service.send_message(
+            ALICE_ID, Username("alice"), MessageText("hello")
+        )
         assert result == saved_message
 
     async def test_draft_message_contains_correct_fields(self, mock_uow, saved_message):
         """messages.save に渡された DraftMessage のフィールドが正しいこと。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        await service.send_message(Username("alice"), MessageText("hello"))
+        await service.send_message(ALICE_ID, Username("alice"), MessageText("hello"))
 
         call_args = mock_uow.messages.save.call_args
         draft = call_args.args[0]
+        assert draft.user_id == ALICE_ID
         assert draft.username == Username("alice")
         assert draft.text == MessageText("hello")
 
@@ -70,7 +77,7 @@ class TestGlobalChatServiceSendMessage:
         """Outbox の GlobalChatPayload が entity のフィールドと一致すること。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        await service.send_message(Username("alice"), MessageText("hello"))
+        await service.send_message(ALICE_ID, Username("alice"), MessageText("hello"))
 
         feed = mock_uow.outbox.save.call_args.args[0]
         assert isinstance(feed.payload, GlobalChatPayload)
@@ -83,7 +90,7 @@ class TestGlobalChatServiceSendMessage:
         """Outbox フィードのシーケンス名が GLOBAL_CHAT_SEQUENCE であること。"""
         mock_uow.messages.save.return_value = saved_message
         service = GlobalChatService(mock_uow)
-        await service.send_message(Username("alice"), MessageText("hello"))
+        await service.send_message(ALICE_ID, Username("alice"), MessageText("hello"))
 
         feed = mock_uow.outbox.save.call_args.args[0]
         assert feed.sequence_name == GLOBAL_CHAT_SEQUENCE

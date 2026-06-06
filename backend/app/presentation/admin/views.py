@@ -74,15 +74,13 @@ class UserSettingsAdmin(ModelView, model=UserSettingsORM):
     name_plural = "通知設定一覧"
     icon = "fa-solid fa-gear"
     column_list = [
-        UserSettingsORM.username,
+        UserSettingsORM.user_id,
         UserSettingsORM.global_chat,
         UserSettingsORM.direct_request,
         UserSettingsORM.direct_request_updated,
         UserSettingsORM.updated_at,
     ]
-    column_filters = [
-        AllUniqueStringValuesFilter(UserSettingsORM.username, title="ユーザー名"),
-    ]
+    column_filters = []
 
 
 class RefreshTokenAdmin(ModelView, model=RefreshTokenORM):

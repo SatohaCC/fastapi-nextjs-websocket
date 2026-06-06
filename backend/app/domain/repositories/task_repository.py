@@ -4,7 +4,7 @@
 from typing import Protocol
 
 from ..entities.task import DraftTask, Task
-from ..primitives.primitives import EntityId, Username
+from ..primitives.primitives import EntityId, UserId
 
 
 class TaskRepository(Protocol):
@@ -18,10 +18,10 @@ class TaskRepository(Protocol):
         """ID で Task を取得する"""
         ...
 
-    async def get_for_user(self, username: Username) -> list[Task]:
+    async def get_for_user(self, user_id: UserId) -> list[Task]:
         """特定のユーザーに関連する Task を取得する"""
         ...
 
-    async def get_after(self, username: Username, after_id: EntityId) -> list[Task]:
+    async def get_after(self, user_id: UserId, after_id: EntityId) -> list[Task]:
         """特定のユーザーに関連する、指定ID以降の Task を取得する"""
         ...

@@ -16,7 +16,8 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 
 from app.domain.entities.message import Message
-from app.domain.primitives.primitives import EntityId, MessageText, Username
+from app.domain.primitives.primitives import EntityId, MessageText, UserId, Username
+from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.config import settings
 from app.infrastructure.persistence.orm_models import Base
 from app.infrastructure.persistence.sa_message_repository import (
@@ -60,6 +61,7 @@ def saved_message():
     """テスト用の永続化済み Message エンティティ。"""
     return Message(
         id=EntityId(1),
+        user_id=UserId(generate_uuid7()),
         username=Username("alice"),
         text=MessageText("hello"),
         created_at=datetime.now(timezone.utc),
@@ -172,3 +174,13 @@ async def db_uow(db_session: AsyncSession) -> SqlAlchemyUnitOfWork:
         SqlAlchemyUserRepository(db_session),
         SqlAlchemyRefreshTokenRepository(db_session),
     )
+
+
+@pytest.fixture
+async def seeded_users(db_session: AsyncSession) -> dict[str, UserId]:
+    """シードされたユーザーの username → UserId マッピングを返します。"""
+    from sqlalchemy import text
+
+    result = await db_session.execute(text("SELECT id, username FROM users"))
+    rows = result.fetchall()
+    return {row.username: UserId(row.id) for row in rows}

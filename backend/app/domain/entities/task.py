@@ -10,7 +10,7 @@ from app.domain.exceptions import (
     InvalidOperationException,
     UnauthorizedException,
 )
-from app.domain.primitives.primitives import EntityId, TaskText, Username
+from app.domain.primitives.primitives import EntityId, TaskText, UserId, Username
 from app.domain.primitives.task_status import TaskStatus
 
 
@@ -27,8 +27,10 @@ class DraftTask:
         詳細は CONVENTIONS.md 第 6 節を参照。
     """
 
-    sender: Username  # 送信者
-    recipient: Username  # 受信者
+    sender_id: UserId  # 送信者の UUID（識別子）
+    recipient_id: UserId  # 受信者の UUID（識別子）
+    sender: Username  # 送信者の表示名（非正規化）
+    recipient: Username  # 受信者の表示名（非正規化）
     text: TaskText
     status: TaskStatus
     # 作成日時はドメイン層内での一貫性維持、リアルタイム通知の低遅延化、
@@ -37,7 +39,7 @@ class DraftTask:
 
     def __post_init__(self):
         """バリデーションルールを適用します。"""
-        if self.sender == self.recipient:
+        if self.sender_id == self.recipient_id:
             raise DomainValidationError("Sender and recipient cannot be the same")
 
 
@@ -52,12 +54,12 @@ class Task(DraftTask):
     id: EntityId
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
-    def transition_to(self, next_status: TaskStatus, operator: Username) -> Task:
+    def transition_to(self, next_status: TaskStatus, operator: UserId) -> Task:
         """ステータスを次の状態へ遷移させた新しいインスタンスを返します。
         バリデーションを行い、成功した場合は updated_at も更新します。
         """
         # 権限チェック: 受信者本人以外はステータスを変更できない
-        if self.recipient != operator:
+        if self.recipient_id != operator:
             raise UnauthorizedException("Only the recipient can update the status")
 
         self.validate_status_transition(next_status)

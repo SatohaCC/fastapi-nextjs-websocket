@@ -14,7 +14,8 @@ from ..application.services.feed_query_service import FeedQueryService
 from ..application.services.global_chat_service import GlobalChatService
 from ..application.services.user_settings_service import UserSettingsService
 from ..application.uow import UnitOfWork
-from ..domain.primitives.primitives import AuthToken, Username
+from ..domain.entities.user import User
+from ..domain.primitives.primitives import AuthToken
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
 from ..infrastructure.auth.password_hasher import PasswordHasher
 from ..infrastructure.auth.redis_ticket_store import RedisTicketStore
@@ -126,35 +127,50 @@ def get_user_settings_service(
 async def get_authenticated_user(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-) -> Username:
-    """REST API 用の認証依存関係"""
+) -> User:
+    """REST API 用の認証依存関係。User エンティティを返します。"""
     token = credentials.credentials
-    username = auth_service.get_user_from_token(AuthToken(token))
-    if not username:
+    user_id = auth_service.get_user_id_from_token(AuthToken(token))
+    if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="無効なトークンです",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return username
+    user = await auth_service.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="ユーザーが存在しません",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
 
 async def get_ws_authenticated_user(
     websocket: WebSocket,
     ticket_store: Annotated[TicketStore, Depends(get_ticket_store)],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
     ticket: Annotated[str, Query(...)],
-) -> Username:
-    """WebSocket 用の認証依存関係。ワンタイム・チケットの検証を行います。"""
+) -> User:
+    """WebSocket 用の認証依存関係。チケット検証後に User エンティティを返します。"""
     # 1. Origin の検証
     origin = websocket.headers.get("origin", "")
     if origin != settings.ALLOWED_ORIGIN:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     # 2. チケットの検証
-    username = await ticket_store.consume_ticket(ticket)
-    if not username:
+    user_id = await ticket_store.consume_ticket(ticket)
+    if not user_id:
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION, reason="Invalid or expired ticket"
         )
 
-    return username
+    # 3. ユーザー情報の取得
+    user = await auth_service.get_user_by_id(user_id)
+    if not user:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION, reason="User not found"
+        )
+
+    return user

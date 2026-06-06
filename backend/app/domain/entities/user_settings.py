@@ -2,14 +2,14 @@
 
 from dataclasses import dataclass
 
-from app.domain.primitives.primitives import Username
+from app.domain.primitives.primitives import UserId
 
 
 @dataclass(frozen=True, kw_only=True)
 class UserSettings:
     """ユーザーの通知設定（グローバルチャット、ダイレクトリクエストなど）を表すエンティティ。"""
 
-    username: Username
+    user_id: UserId
     global_chat: bool
     direct_request: bool
     direct_request_updated: bool

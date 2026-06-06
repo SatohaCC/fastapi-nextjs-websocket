@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from ...application.outbox.delivery_feed import DeliveryFeed, SequenceId, SequenceName
 from ...application.services.feed_query_service import FeedQueryService
-from ...domain.primitives.primitives import Username
+from ...domain.entities.user import User
 from ..dependencies import get_authenticated_user, get_feed_query_service
 from ..websockets.schemas import create_server_message_from_feed
 
@@ -39,7 +39,7 @@ class FeedResponse(BaseModel):
 
 @router.get("/api/feeds/global_chat", response_model=list[FeedResponse])
 async def get_chat_feeds_since(
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
     after_chat_id: Annotated[
         int, Query(description="この ID 以降のチャットフィードを取得します")
@@ -47,7 +47,7 @@ async def get_chat_feeds_since(
 ) -> list[FeedResponse]:
     """指定された ID 以降のグローバルチャットフィードを取得します（リカバリ用）。"""
     feeds = await feed_service.get_feeds_after(
-        SequenceName("global_chat"), SequenceId(after_chat_id), username
+        SequenceName("global_chat"), SequenceId(after_chat_id), user.username
     )
     return [
         FeedResponse.from_domain(f)
@@ -58,7 +58,7 @@ async def get_chat_feeds_since(
 
 @router.get("/api/feeds/direct_requests", response_model=list[FeedResponse])
 async def get_request_feeds_since(
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
     after_request_id: Annotated[
         int, Query(description="この ID 以降のリクエストフィードを取得します")
@@ -66,7 +66,7 @@ async def get_request_feeds_since(
 ) -> list[FeedResponse]:
     """指定された ID 以降のダイレクトリクエストフィードを取得します（リカバリ用）。"""
     feeds = await feed_service.get_feeds_after(
-        SequenceName("direct_request"), SequenceId(after_request_id), username
+        SequenceName("direct_request"), SequenceId(after_request_id), user.username
     )
     return [
         FeedResponse.from_domain(f)

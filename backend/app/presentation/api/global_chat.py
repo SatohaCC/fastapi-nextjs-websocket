@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from ...application.services.global_chat_service import GlobalChatService
-from ...domain.primitives.primitives import EntityId, MessageText, Username
+from ...domain.entities.user import User
+from ...domain.primitives.primitives import EntityId, MessageText
 from ..dependencies import get_authenticated_user, get_global_chat_service
 from ..websockets.schemas import GlobalChatServerMessage
 
@@ -29,7 +30,7 @@ class SendGlobalChatMessageRequest(BaseModel):
 @router.get("/messages")
 async def get_messages_since(
     after_id: Annotated[int, Query()],
-    _: Annotated[Username, Depends(get_authenticated_user)],
+    _: Annotated[User, Depends(get_authenticated_user)],
     global_chat_service: Annotated[GlobalChatService, Depends(get_global_chat_service)],
 ) -> list[GlobalChatServerMessage]:
     """指定された ID 以降のすべてのグローバルチャットメッセージを取得します。"""
@@ -40,9 +41,11 @@ async def get_messages_since(
 @router.post("/messages")
 async def send_message(
     body: SendGlobalChatMessageRequest,
-    username: Annotated[Username, Depends(get_authenticated_user)],
+    user: Annotated[User, Depends(get_authenticated_user)],
     global_chat_service: Annotated[GlobalChatService, Depends(get_global_chat_service)],
 ) -> dict:
     """メッセージを新規送信します（REST API 経由）。"""
-    await global_chat_service.send_message(username, body.to_domain())
+    await global_chat_service.send_message(
+        user_id=user.id, username=user.username, text=body.to_domain()
+    )
     return {"status": "ok"}

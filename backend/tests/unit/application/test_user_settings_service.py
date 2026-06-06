@@ -2,7 +2,11 @@
 
 from app.application.services.user_settings_service import UserSettingsService
 from app.domain.entities.user_settings import UserSettings
-from app.domain.primitives.primitives import Username
+from app.domain.primitives.primitives import UserId
+from app.infrastructure.auth.uuid7 import generate_uuid7
+
+ALICE_ID = UserId(generate_uuid7())
+BOB_ID = UserId(generate_uuid7())
 
 
 class TestUserSettingsServiceGetSettings:
@@ -16,22 +20,20 @@ class TestUserSettingsServiceGetSettings:
         mock_uow.user_settings.get.return_value = None
         service = UserSettingsService(mock_uow)
 
-        username = Username("alice")
-        result = await service.get_settings(username)
+        result = await service.get_settings(ALICE_ID)
 
-        assert result.username == username
+        assert result.user_id == ALICE_ID
         assert result.global_chat is True
         assert result.direct_request is True
         assert result.direct_request_updated is True
-        mock_uow.user_settings.get.assert_called_once_with(username)
+        mock_uow.user_settings.get.assert_called_once_with(ALICE_ID)
         mock_uow.user_settings.upsert.assert_not_called()
         mock_uow.commit.assert_not_called()
 
     async def test_returns_existing_settings(self, mock_uow):
         """既存の設定がある場合、それをそのまま返すことを確認します。"""
-        username = Username("alice")
         existing = UserSettings(
-            username=username,
+            user_id=ALICE_ID,
             global_chat=False,
             direct_request=True,
             direct_request_updated=False,
@@ -39,10 +41,10 @@ class TestUserSettingsServiceGetSettings:
         mock_uow.user_settings.get.return_value = existing
         service = UserSettingsService(mock_uow)
 
-        result = await service.get_settings(username)
+        result = await service.get_settings(ALICE_ID)
 
         assert result == existing
-        mock_uow.user_settings.get.assert_called_once_with(username)
+        mock_uow.user_settings.get.assert_called_once_with(ALICE_ID)
 
 
 class TestUserSettingsServiceUpdateSettings:
@@ -50,9 +52,8 @@ class TestUserSettingsServiceUpdateSettings:
 
     async def test_upserts_settings_and_commits(self, mock_uow):
         """設定が upsert され、トランザクションがコミットされることを確認します。"""
-        username = Username("bob")
         settings_to_save = UserSettings(
-            username=username,
+            user_id=BOB_ID,
             global_chat=False,
             direct_request=False,
             direct_request_updated=True,
@@ -61,7 +62,7 @@ class TestUserSettingsServiceUpdateSettings:
         service = UserSettingsService(mock_uow)
 
         result = await service.update_settings(
-            username=username,
+            user_id=BOB_ID,
             global_chat=False,
             direct_request=False,
             direct_request_updated=True,

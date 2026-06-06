@@ -31,6 +31,11 @@ class MessageORM(Base):
     __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     username: Mapped[str] = mapped_column(String(50), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -44,6 +49,16 @@ class TaskORM(Base):
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sender_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    recipient_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     sender: Mapped[str] = mapped_column(String(50), nullable=False)
     recipient: Mapped[str] = mapped_column(String(50), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
@@ -93,7 +108,11 @@ class UserSettingsORM(Base):
 
     __tablename__ = "user_settings"
 
-    username: Mapped[str] = mapped_column(String(50), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
     global_chat: Mapped[bool] = mapped_column(default=True)
     direct_request: Mapped[bool] = mapped_column(default=True)
     direct_request_updated: Mapped[bool] = mapped_column(default=True)

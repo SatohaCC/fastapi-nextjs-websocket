@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from ...domain.primitives.feed import FeedEventType
-from ...domain.primitives.primitives import EntityId, MessageText, TaskText, Username
+from ...domain.primitives.primitives import (
+    EntityId,
+    MessageText,
+    TaskText,
+    UserId,
+    Username,
+)
 from ...domain.primitives.task_status import TaskStatus
 
 
@@ -42,6 +48,8 @@ class DirectRequestPayload(FeedPayload):
     """ダイレクトリクエスト作成時のペイロード。"""
 
     id: EntityId
+    sender_id: UserId
+    recipient_id: UserId
     sender: Username
     recipient: Username
     text: TaskText
@@ -61,6 +69,8 @@ class DirectRequestUpdatePayload(FeedPayload):
 
     id: EntityId
     status: TaskStatus
+    sender_id: UserId
+    recipient_id: UserId
     sender: Username
     recipient: Username
     updated_at: datetime
