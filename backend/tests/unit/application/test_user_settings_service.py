@@ -27,6 +27,7 @@ class TestUserSettingsServiceGetSettings:
         assert result.global_chat is True
         assert result.direct_request is True
         assert result.direct_request_updated is True
+        assert result.browser_notification is False
         mock_uow.user_settings.get.assert_called_once_with(ALICE_ID)
         mock_uow.user_settings.upsert.assert_not_called()
         mock_uow.commit.assert_not_called()
@@ -38,6 +39,7 @@ class TestUserSettingsServiceGetSettings:
             global_chat=False,
             direct_request=True,
             direct_request_updated=False,
+            browser_notification=True,
         )
         mock_uow.user_settings.get.return_value = existing
         service = UserSettingsService(mock_uow)
@@ -58,6 +60,7 @@ class TestUserSettingsServiceUpdateSettings:
             global_chat=False,
             direct_request=False,
             direct_request_updated=True,
+            browser_notification=True,
         )
         mock_uow.user_settings.upsert.return_value = settings_to_save
         service = UserSettingsService(mock_uow)
@@ -67,6 +70,7 @@ class TestUserSettingsServiceUpdateSettings:
             global_chat=False,
             direct_request=False,
             direct_request_updated=True,
+            browser_notification=True,
         )
 
         assert result == settings_to_save

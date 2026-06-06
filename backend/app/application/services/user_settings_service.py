@@ -26,6 +26,7 @@ class UserSettingsService:
                     global_chat=True,
                     direct_request=True,
                     direct_request_updated=True,
+                    browser_notification=False,
                 )
             return settings
 
@@ -35,6 +36,7 @@ class UserSettingsService:
         global_chat: bool,
         direct_request: bool,
         direct_request_updated: bool,
+        browser_notification: bool,
     ) -> UserSettings:
         """指定されたユーザーの通知設定を新規作成または更新します。"""
         async with self._uow as uow:
@@ -43,6 +45,7 @@ class UserSettingsService:
                 global_chat=global_chat,
                 direct_request=direct_request,
                 direct_request_updated=direct_request_updated,
+                browser_notification=browser_notification,
             )
             updated = await uow.user_settings.upsert(settings)
             await self._uow.commit()

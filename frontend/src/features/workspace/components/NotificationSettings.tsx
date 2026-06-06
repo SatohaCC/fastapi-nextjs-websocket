@@ -32,6 +32,11 @@ export function NotificationSettings({
           onChange={(v) => onUpdate("directRequestUpdated", v)}
           label="ステータス変更"
         />
+        <Toggle
+          checked={settings.browserNotification}
+          onChange={(v) => onUpdate("browserNotification", v)}
+          label="ブラウザ通知"
+        />
       </div>
     </div>
   );

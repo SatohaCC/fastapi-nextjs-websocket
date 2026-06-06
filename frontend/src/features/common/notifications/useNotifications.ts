@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useWsSubscribe } from "@/features/common/websocket/hooks/useWsSubscribe";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
+import { showBrowserNotification } from "@/lib/browserNotification";
 import { toast } from "@/lib/toast";
 import type {
   DirectRequestServerMessage,
@@ -19,22 +20,27 @@ export function useNotifications(): void {
     (data: GlobalChatServerMessage) => {
       if (!settings.globalChat) return;
       if (data.is_history || data.username === username) return;
-      toast.message("グローバルチャット", {
-        description: `${data.username}: ${data.text}`,
-      });
+      const title = "グローバルチャット";
+      const description = `${data.username}: ${data.text}`;
+      toast.message(title, { description });
+      if (settings.browserNotification) {
+        showBrowserNotification(title, description);
+      }
     },
-    [username, settings.globalChat],
+    [username, settings.globalChat, settings.browserNotification],
   );
 
   const handleDirectRequest = useCallback(
     (data: DirectRequestServerMessage) => {
       if (!settings.directRequest) return;
       if (data.is_history || data.recipient !== username) return;
-      toast.message(`${data.sender} からリクエスト`, {
-        description: data.text,
-      });
+      const title = `${data.sender} からリクエスト`;
+      toast.message(title, { description: data.text });
+      if (settings.browserNotification) {
+        showBrowserNotification(title, data.text);
+      }
     },
-    [username, settings.directRequest],
+    [username, settings.directRequest, settings.browserNotification],
   );
 
   const handleDirectRequestUpdated = useCallback(
@@ -43,11 +49,14 @@ export function useNotifications(): void {
       if (data.is_history || data.sender !== username) return;
       const label =
         data.status === "processing" ? "承諾されました" : "完了しました";
-      toast.message(`リクエストが${label}`, {
-        description: `${data.recipient} が対応`,
-      });
+      const title = `リクエストが${label}`;
+      const description = `${data.recipient} が対応`;
+      toast.message(title, { description });
+      if (settings.browserNotification) {
+        showBrowserNotification(title, description);
+      }
     },
-    [username, settings.directRequestUpdated],
+    [username, settings.directRequestUpdated, settings.browserNotification],
   );
 
   useWsSubscribe<GlobalChatServerMessage>("global_chat", handleGlobalChat);

@@ -22,6 +22,7 @@ class UserSettingsResponse(BaseModel):
     global_chat: bool
     direct_request: bool
     direct_request_updated: bool
+    browser_notification: bool
 
     @classmethod
     def from_domain(cls, settings: UserSettings) -> "UserSettingsResponse":
@@ -30,6 +31,7 @@ class UserSettingsResponse(BaseModel):
             global_chat=settings.global_chat,
             direct_request=settings.direct_request,
             direct_request_updated=settings.direct_request_updated,
+            browser_notification=settings.browser_notification,
         )
 
 
@@ -42,6 +44,7 @@ class UpdateUserSettingsRequest(BaseModel):
     global_chat: bool
     direct_request: bool
     direct_request_updated: bool
+    browser_notification: bool
 
 
 @router.get("", response_model=UserSettingsResponse)
@@ -66,5 +69,6 @@ async def update_settings(
         global_chat=body.global_chat,
         direct_request=body.direct_request,
         direct_request_updated=body.direct_request_updated,
+        browser_notification=body.browser_notification,
     )
     return UserSettingsResponse.from_domain(settings)

@@ -13,3 +13,4 @@ class UserSettings:
     global_chat: bool
     direct_request: bool
     direct_request_updated: bool
+    browser_notification: bool
