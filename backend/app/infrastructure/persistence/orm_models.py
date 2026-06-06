@@ -16,8 +16,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from app.infrastructure.auth.uuid7 import generate_uuid7
-
 
 class Base(DeclarativeBase):
     """SQLAlchemy のベースクラス"""
@@ -142,7 +140,7 @@ class RefreshTokenORM(Base):
     __tablename__ = "refresh_tokens"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=generate_uuid7
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid7
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

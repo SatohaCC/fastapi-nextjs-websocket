@@ -8,7 +8,6 @@ import jwt
 from app.domain.primitives.primitives import AuthToken, RefreshToken, UserId
 
 from ..config import settings
-from .uuid7 import generate_uuid7
 
 _ACCESS_TYPE = "access"
 _REFRESH_TYPE = "refresh"
@@ -25,7 +24,7 @@ class JwtServiceImpl:
             "sub": str(user_id.value),
             "type": _ACCESS_TYPE,
             "exp": now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-            "jti": str(generate_uuid7()),
+            "jti": str(uuid.uuid7()),
         }
         access_token = AuthToken(
             jwt.encode(
@@ -37,7 +36,7 @@ class JwtServiceImpl:
             "sub": str(user_id.value),
             "type": _REFRESH_TYPE,
             "exp": now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-            "jti": str(generate_uuid7()),
+            "jti": str(uuid.uuid7()),
         }
         refresh_token = RefreshToken(
             jwt.encode(
@@ -59,7 +58,7 @@ class JwtServiceImpl:
             if sub is None:
                 return None
             return UserId(uuid.UUID(sub))
-        except (jwt.PyJWTError, ValueError):
+        except jwt.PyJWTError, ValueError:
             return None
 
     def verify_refresh_token(self, token: RefreshToken) -> UserId | None:
@@ -74,5 +73,5 @@ class JwtServiceImpl:
             if sub is None:
                 return None
             return UserId(uuid.UUID(sub))
-        except (jwt.PyJWTError, ValueError):
+        except jwt.PyJWTError, ValueError:
             return None

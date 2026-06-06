@@ -1,12 +1,12 @@
 """データベースの初期データシード処理。"""
 
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.infrastructure.auth.password_hasher import PasswordHasher
-from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.config import settings
 
 
@@ -19,7 +19,7 @@ async def seed_users(conn: AsyncConnection) -> None:
     result = await conn.execute(text("SELECT COUNT(*) FROM users"))
     if result.scalar() == 0:
         for username, password in settings.USERS.items():
-            user_id = generate_uuid7()
+            user_id = uuid.uuid7()
             hashed = PasswordHasher.hash_password(password.value)
             await conn.execute(
                 text(

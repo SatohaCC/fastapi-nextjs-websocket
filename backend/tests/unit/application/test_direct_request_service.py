@@ -1,5 +1,6 @@
 """DirectRequestService のユニットテスト（UoW / Repository をモック化）。"""
 
+import uuid
 from datetime import datetime, timezone
 
 import pytest
@@ -15,10 +16,9 @@ from app.domain.entities.user import User
 from app.domain.exceptions import EntityNotFoundException
 from app.domain.primitives.primitives import EntityId, TaskText, UserId, Username
 from app.domain.primitives.task_status import TaskStatus
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-ALICE_ID = UserId(generate_uuid7())
-BOB_ID = UserId(generate_uuid7())
+ALICE_ID = UserId(uuid.uuid7())
+BOB_ID = UserId(uuid.uuid7())
 
 ALICE = User(id=ALICE_ID, username=Username("alice"), hashed_password="x")
 BOB = User(id=BOB_ID, username=Username("bob"), hashed_password="x")

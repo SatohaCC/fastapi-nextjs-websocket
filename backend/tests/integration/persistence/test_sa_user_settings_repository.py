@@ -1,11 +1,12 @@
 """SqlAlchemyUserSettingsRepository の統合テスト。"""
 
+import uuid
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.user_settings import UserSettings
 from app.domain.primitives.primitives import UserId
-from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.persistence.sa_user_settings_repository import (
     SqlAlchemyUserSettingsRepository,
 )
@@ -16,7 +17,7 @@ async def test_get_non_existent_settings(db_session: AsyncSession):
     """設定が存在しない場合は None を返すことを確認します。"""
     repo = SqlAlchemyUserSettingsRepository(db_session)
     # 存在しない UUID で検索
-    non_existent_id = UserId(generate_uuid7())
+    non_existent_id = UserId(uuid.uuid7())
     settings = await repo.get(non_existent_id)
     assert settings is None
 

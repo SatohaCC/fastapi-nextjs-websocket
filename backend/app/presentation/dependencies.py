@@ -83,7 +83,12 @@ def get_auth_service(
     uow: Annotated[UnitOfWork, Depends(get_uow)],
 ) -> AuthService:
     """AuthService の取得"""
-    return AuthService(uow, jwt=JwtServiceImpl(), password_verifier=PasswordHasher())
+    return AuthService(
+        uow,
+        jwt=JwtServiceImpl(),
+        password_verifier=PasswordHasher(),
+        refresh_token_expire_days=settings.REFRESH_TOKEN_EXPIRE_DAYS,
+    )
 
 
 def get_global_chat_service(

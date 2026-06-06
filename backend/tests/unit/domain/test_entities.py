@@ -1,5 +1,6 @@
 """Task エンティティのステータス遷移・権限チェックのユニットテスト。"""
 
+import uuid
 from datetime import datetime, timezone
 
 import pytest
@@ -12,10 +13,9 @@ from app.domain.exceptions import (
 )
 from app.domain.primitives.primitives import EntityId, TaskText, UserId, Username
 from app.domain.primitives.task_status import TaskStatus
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-ALICE_ID = UserId(generate_uuid7())
-BOB_ID = UserId(generate_uuid7())
+ALICE_ID = UserId(uuid.uuid7())
+BOB_ID = UserId(uuid.uuid7())
 
 
 def make_task(
@@ -45,7 +45,7 @@ class TestDraftTask:
 
     def test_self_request_raises(self):
         """送信者と受信者が同じ場合は DomainValidationError を送出する。"""
-        same_id = UserId(generate_uuid7())
+        same_id = UserId(uuid.uuid7())
         with pytest.raises(DomainValidationError):
             DraftTask(
                 sender_id=same_id,

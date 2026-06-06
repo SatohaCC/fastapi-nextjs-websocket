@@ -1,6 +1,7 @@
 """テスト全体で共有するフィクスチャ定義。"""
 
 import re
+import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock
@@ -17,7 +18,6 @@ from sqlalchemy.pool import NullPool
 
 from app.domain.entities.message import Message
 from app.domain.primitives.primitives import EntityId, MessageText, UserId, Username
-from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.config import settings
 from app.infrastructure.persistence.orm_models import Base
 from app.infrastructure.persistence.sa_message_repository import (
@@ -61,7 +61,7 @@ def saved_message():
     """テスト用の永続化済み Message エンティティ。"""
     return Message(
         id=EntityId(1),
-        user_id=UserId(generate_uuid7()),
+        user_id=UserId(uuid.uuid7()),
         username=Username("alice"),
         text=MessageText("hello"),
         created_at=datetime.now(timezone.utc),
@@ -69,8 +69,6 @@ def saved_message():
 
 
 # --- Integration Test Fixtures ---
-
-
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
     """テスト用データベースの URL を返します。"""

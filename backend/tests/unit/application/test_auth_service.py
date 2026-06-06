@@ -1,5 +1,6 @@
 """AuthService のユニットテスト（UoW / Repository をモック化）。"""
 
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,9 +15,8 @@ from app.domain.primitives.primitives import (
     Username,
 )
 from app.infrastructure.auth.password_hasher import PasswordHasher
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-ALICE_ID = UserId(generate_uuid7())
+ALICE_ID = UserId(uuid.uuid7())
 
 
 @pytest.fixture
@@ -47,7 +47,9 @@ class TestAuthServiceLogin:
         )
         mock_uow.users.get_by_username.return_value = mock_user
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.login(username, password)
 
         assert result is not None
@@ -61,7 +63,9 @@ class TestAuthServiceLogin:
         """ユーザーが存在しない場合、ログイン失敗（None が返る）を確認。"""
         mock_uow.users.get_by_username.return_value = None
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.login(Username("unknown"), Password("password1"))
 
         assert result is None
@@ -79,7 +83,9 @@ class TestAuthServiceLogin:
         )
         mock_uow.users.get_by_username.return_value = mock_user
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.login(username, Password("wrong_password"))
 
         assert result is None
@@ -94,19 +100,21 @@ class TestAuthServiceGetAllUsernames:
         """登録されているすべてのユーザー名が返ることを確認。"""
         users = [
             User(
-                id=UserId(generate_uuid7()),
+                id=UserId(uuid.uuid7()),
                 username=Username("alice"),
                 hashed_password="hashed_1",
             ),
             User(
-                id=UserId(generate_uuid7()),
+                id=UserId(uuid.uuid7()),
                 username=Username("bob"),
                 hashed_password="hashed_2",
             ),
         ]
         mock_uow.users.get_all.return_value = users
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.get_all_usernames()
 
         assert len(result) == 2
@@ -133,7 +141,9 @@ class TestAuthServiceRefresh:
 
         mock_uow.refresh_tokens.get_by_hash.return_value = mock_db_token
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.refresh(refresh_token)
 
         assert result is not None
@@ -150,7 +160,9 @@ class TestAuthServiceRefresh:
         refresh_token = RefreshToken("mock_refresh_token")
         mock_uow.refresh_tokens.get_by_hash.return_value = None
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.refresh(refresh_token)
 
         assert result is None
@@ -170,7 +182,9 @@ class TestAuthServiceRefresh:
 
         mock_uow.refresh_tokens.get_by_hash.return_value = mock_db_token
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.refresh(refresh_token)
 
         assert result is None
@@ -188,7 +202,9 @@ class TestAuthServiceLogout:
         refresh_token = RefreshToken("mock_refresh_token")
         mock_uow.refresh_tokens.delete_by_hash.return_value = True
 
-        service = AuthService(mock_uow, mock_jwt, PasswordHasher())
+        service = AuthService(
+            mock_uow, mock_jwt, PasswordHasher(), refresh_token_expire_days=7
+        )
         result = await service.logout(refresh_token)
 
         assert result is True

@@ -1,6 +1,6 @@
 """ユーザー認証とトークン発行を管理するアプリケーションサービス。"""
 
-import hashlib
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from app.domain.entities.refresh_token import RefreshToken as RefreshTokenEntity
@@ -12,8 +12,6 @@ from app.domain.primitives.primitives import (
     UserId,
     Username,
 )
-from app.infrastructure.auth.uuid7 import generate_uuid7
-from app.infrastructure.config import settings
 
 from ..interfaces.auth import TokenProvider
 from ..interfaces.password import PasswordVerifier
@@ -24,16 +22,17 @@ class AuthService:
     """ユーザー認証とトークン発行を管理するアプリケーションサービス。"""
 
     def __init__(
-        self, uow: UnitOfWork, jwt: TokenProvider, password_verifier: PasswordVerifier
+        self,
+        uow: UnitOfWork,
+        jwt: TokenProvider,
+        password_verifier: PasswordVerifier,
+        refresh_token_expire_days: int,
     ) -> None:
         """認証サービスを初期化します。"""
         self._uow = uow
         self._jwt = jwt
         self._password_verifier = password_verifier
-
-    def _hash_token(self, token: str) -> str:
-        """トークン文字列を SHA-256 でハッシュ化して 16 進数文字列を返します。"""
-        return hashlib.sha256(token.encode("utf-8")).hexdigest()
+        self._refresh_token_expire_days = refresh_token_expire_days
 
     async def login(
         self,
@@ -52,14 +51,13 @@ class AuthService:
                 access_token, refresh_token = self._jwt.create_token(user.id)
 
                 # リフレッシュトークンをDBに保存
-                hash_val = self._hash_token(refresh_token.value)
                 now = datetime.now(timezone.utc)
-                expires_at = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+                expires_at = now + timedelta(days=self._refresh_token_expire_days)
 
-                db_token = RefreshTokenEntity(
-                    id=generate_uuid7(),
+                db_token = RefreshTokenEntity.create(
+                    id=uuid.uuid7(),
                     user_id=user.id,
-                    token_hash=hash_val,
+                    token_value=refresh_token.value,
                     expires_at=expires_at,
                     created_at=now,
                     ip_address=ip_address,
@@ -83,7 +81,7 @@ class AuthService:
         if user_id is None:
             return None
 
-        hash_val = self._hash_token(refresh_token.value)
+        hash_val = RefreshTokenEntity.hash_token(refresh_token.value)
 
         async with self._uow as uow:
             # DBにハッシュ値のレコードが存在するか確認
@@ -107,13 +105,12 @@ class AuthService:
             )
 
             # 新しいリフレッシュトークンをDBに保存
-            new_hash_val = self._hash_token(new_refresh_token.value)
-            new_expires_at = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+            new_expires_at = now + timedelta(days=self._refresh_token_expire_days)
 
-            new_db_token = RefreshTokenEntity(
-                id=generate_uuid7(),
+            new_db_token = RefreshTokenEntity.create(
+                id=uuid.uuid7(),
                 user_id=db_token.user_id,
-                token_hash=new_hash_val,
+                token_value=new_refresh_token.value,
                 expires_at=new_expires_at,
                 created_at=now,
                 ip_address=ip_address,
@@ -126,7 +123,7 @@ class AuthService:
 
     async def logout(self, refresh_token: RefreshToken) -> bool:
         """指定されたリフレッシュトークンをDBから物理削除します。"""
-        hash_val = self._hash_token(refresh_token.value)
+        hash_val = RefreshTokenEntity.hash_token(refresh_token.value)
         async with self._uow as uow:
             success = await uow.refresh_tokens.delete_by_hash(hash_val)
             await uow.commit()

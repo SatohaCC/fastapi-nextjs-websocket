@@ -1,11 +1,12 @@
 """SqlAlchemyUserRepository の統合テスト。"""
 
+import uuid
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.user import User
 from app.domain.primitives.primitives import UserId, Username
-from app.infrastructure.auth.uuid7 import generate_uuid7
 from app.infrastructure.persistence.sa_user_repository import (
     SqlAlchemyUserRepository,
 )
@@ -15,7 +16,7 @@ from app.infrastructure.persistence.sa_user_repository import (
 async def test_get_by_id_returns_none_if_not_found(db_session: AsyncSession):
     """存在しない ID を取得しようとした場合に None が返ることを確認します。"""
     repo = SqlAlchemyUserRepository(db_session)
-    user = await repo.get_by_id(UserId(generate_uuid7()))
+    user = await repo.get_by_id(UserId(uuid.uuid7()))
     assert user is None
 
 
@@ -31,7 +32,7 @@ async def test_get_by_username_returns_none_if_not_found(db_session: AsyncSessio
 async def test_save_and_get_user(db_session: AsyncSession):
     """ユーザー情報を保存し、ID およびユーザー名で取得できることを確認します。"""
     repo = SqlAlchemyUserRepository(db_session)
-    user_id = UserId(generate_uuid7())
+    user_id = UserId(uuid.uuid7())
     username = Username("dave")
     hashed_password = "hashed_dave_password_123"
 
@@ -70,14 +71,14 @@ async def test_get_all_returns_all_users(db_session: AsyncSession):
     # 新規ユーザー追加
     await repo.save(
         User(
-            id=UserId(generate_uuid7()),
+            id=UserId(uuid.uuid7()),
             username=Username("eve"),
             hashed_password="hashed_eve_password",
         )
     )
     await repo.save(
         User(
-            id=UserId(generate_uuid7()),
+            id=UserId(uuid.uuid7()),
             username=Username("frank"),
             hashed_password="hashed_frank_password",
         )

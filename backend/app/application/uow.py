@@ -7,7 +7,7 @@ from ..domain.repositories.refresh_token_repository import RefreshTokenRepositor
 from ..domain.repositories.task_repository import TaskRepository
 from ..domain.repositories.user_repository import UserRepository
 from ..domain.repositories.user_settings_repository import UserSettingsRepository
-from .outbox.repository import DeliveryFeedRepository
+from .repositories.delivery_feed_repository import DeliveryFeedRepository
 
 
 class UnitOfWork(Protocol):

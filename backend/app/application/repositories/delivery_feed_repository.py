@@ -3,7 +3,12 @@
 from typing import Protocol
 
 from ...domain.primitives.primitives import Username
-from .delivery_feed import DeliveryFeed, DraftDeliveryFeed, SequenceId, SequenceName
+from ..outbox.delivery_feed import (
+    DeliveryFeed,
+    DraftDeliveryFeed,
+    SequenceId,
+    SequenceName,
+)
 
 
 class DeliveryFeedRepository(Protocol):
