@@ -40,7 +40,7 @@ export function useNotifications(): void {
   const handleDirectRequestUpdated = useCallback(
     (data: DirectRequestUpdatedServerMessage) => {
       if (!settings.directRequestUpdated) return;
-      if (data.sender !== username) return;
+      if (data.is_history || data.sender !== username) return;
       const label =
         data.status === "processing" ? "承諾されました" : "完了しました";
       toast.message(`リクエストが${label}`, {
