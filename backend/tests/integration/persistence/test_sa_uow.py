@@ -12,17 +12,21 @@ from app.application.outbox.delivery_feed import (
 from app.application.outbox.payload import GlobalChatPayload
 from app.domain.entities.message import DraftMessage
 from app.domain.primitives.feed import FeedEventType
-from app.domain.primitives.primitives import EntityId, MessageText, Username
+from app.domain.primitives.primitives import EntityId, MessageText, UserId, Username
 from app.infrastructure.persistence.sa_uow import SqlAlchemyUnitOfWork
 
 
 @pytest.mark.asyncio
-async def test_uow_commit_saves_multiple_entities(db_uow: SqlAlchemyUnitOfWork):
+async def test_uow_commit_saves_multiple_entities(
+    db_uow: SqlAlchemyUnitOfWork, seeded_users: dict[str, UserId]
+):
     """メッセージと Outbox 両方の保存が、1つのトランザクションで確定することを確認。"""
+    alice_id = seeded_users["alice"]
     async with db_uow:
         # 1. メッセージ保存
         msg = await db_uow.messages.save(
             DraftMessage(
+                user_id=alice_id,
                 username=Username("alice"),
                 text=MessageText("hello"),
                 created_at=datetime.now(timezone.utc),
@@ -56,12 +60,16 @@ async def test_uow_commit_saves_multiple_entities(db_uow: SqlAlchemyUnitOfWork):
 
 
 @pytest.mark.asyncio
-async def test_uow_rollback_on_exception(db_uow: SqlAlchemyUnitOfWork):
+async def test_uow_rollback_on_exception(
+    db_uow: SqlAlchemyUnitOfWork, seeded_users: dict[str, UserId]
+):
     """例外発生時に、それまでの書き込みがすべてロールバックされることを確認。"""
+    alice_id = seeded_users["alice"]
     try:
         async with db_uow:
             await db_uow.messages.save(
                 DraftMessage(
+                    user_id=alice_id,
                     username=Username("alice"),
                     text=MessageText("fail"),
                     created_at=datetime.now(timezone.utc),

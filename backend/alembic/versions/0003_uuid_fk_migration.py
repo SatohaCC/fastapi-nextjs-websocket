@@ -127,6 +127,36 @@ def upgrade() -> None:
     # 3. username 列を削除
     op.drop_column("user_settings", "username")
 
+    # --- delivery_feeds: payload (JSONB) の sender_id / recipient_id を埋める ---
+    op.execute(
+        """
+        UPDATE delivery_feeds
+        SET payload = payload || jsonb_build_object(
+            'sender_id', (
+                SELECT id::text FROM users WHERE username = payload->>'sender'
+            ),
+            'recipient_id', (
+                SELECT id::text FROM users WHERE username = payload->>'recipient'
+            )
+        )
+        WHERE event_type = 'direct_request';
+        """
+    )
+    op.execute(
+        """
+        UPDATE delivery_feeds
+        SET payload = payload || jsonb_build_object(
+            'sender_id', (
+                SELECT id::text FROM users WHERE username = payload->>'sender'
+            ),
+            'recipient_id', (
+                SELECT id::text FROM users WHERE username = payload->>'recipient'
+            )
+        )
+        WHERE event_type = 'direct_request_updated';
+        """
+    )
+
 
 def downgrade() -> None:
     """変更を元に戻します。"""
@@ -158,3 +188,12 @@ def downgrade() -> None:
     # --- messages: user_id を削除 ---
     op.drop_constraint("fk_messages_user_id", "messages", type_="foreignkey")
     op.drop_column("messages", "user_id")
+
+    # --- delivery_feeds: payload (JSONB) の sender_id / recipient_id を削除する ---
+    op.execute(
+        """
+        UPDATE delivery_feeds
+        SET payload = payload - 'sender_id' - 'recipient_id'
+        WHERE event_type IN ('direct_request', 'direct_request_updated');
+        """
+    )

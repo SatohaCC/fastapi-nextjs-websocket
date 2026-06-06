@@ -198,6 +198,11 @@ docker-compose up -d postgres redis pgadmin
 > docker-compose down -v
 > docker-compose up -d postgres redis pgadmin
 > ```
+>
+> **注: user_id 移行後のマイグレーション**
+>
+> 送信者の識別子を一意な `user_id` に移行したため、`messages`, `tasks`, `user_settings` テーブルのスキーマ変更と同時に、`delivery_feeds`（Outbox）の JSONB ペイロード内にも `sender_id` / `recipient_id` が追加されました。
+> 既存の DB がある場合は、必ず `alembic upgrade head` を実行してください。既存の JSONB データに対しても自動的に UUID が解決・補完されます。
 
 ### 2. バックエンドの起動 (Python)
 `backend` ディレクトリでライブラリをインストールし、サーバーを起動します。

@@ -21,6 +21,7 @@ from app.domain.primitives.primitives import (
     EntityId,
     MessageText,
     TaskText,
+    UserId,
     Username,
 )
 from app.domain.primitives.task_status import TaskStatus
@@ -85,11 +86,15 @@ async def test_get_pending_and_mark_processed(repo: SqlAlchemyDeliveryFeedReposi
 
 
 @pytest.mark.asyncio
-async def test_get_after_filtering(repo: SqlAlchemyDeliveryFeedRepository):
-    """指定した ID 以降のフィードを取得できることを確認。
+async def test_get_after_filtering(
+    repo: SqlAlchemyDeliveryFeedRepository, seeded_users: dict[str, UserId]
+):
+    """指定した ID 以隔のフィードを取得できることを確認。
     ユーザー名によるフィルタリングも含めて検証します。
     """
     seq_name = SequenceName("test_seq")
+    charlie_id = seeded_users["charlie"]
+    bob_id = seeded_users["bob"]
 
     # 全体向けメッセージ
     await repo.save(
@@ -111,6 +116,8 @@ async def test_get_after_filtering(repo: SqlAlchemyDeliveryFeedRepository):
             event_type=FeedEventType.DIRECT_REQUEST,
             payload=DirectRequestPayload(
                 id=EntityId(2),
+                sender_id=charlie_id,
+                recipient_id=bob_id,
                 sender=Username("charlie"),
                 recipient=Username("bob"),
                 text=TaskText("hey"),
