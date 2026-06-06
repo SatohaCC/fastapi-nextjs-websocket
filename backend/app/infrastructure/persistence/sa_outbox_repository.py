@@ -16,7 +16,7 @@ from ...application.outbox.delivery_feed import (
     SequenceId,
     SequenceName,
 )
-from ...application.outbox.repository import DeliveryFeedRepository
+from ...application.repositories.delivery_feed_repository import DeliveryFeedRepository
 from ..serialization import dict_to_payload, payload_to_dict
 from .orm_models import DeliveryFeedORM, DeliverySequenceORM
 

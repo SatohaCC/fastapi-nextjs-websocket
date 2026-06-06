@@ -1,5 +1,6 @@
 """アプリケーション層 Payload クラスのユニットテスト。"""
 
+import uuid
 from datetime import datetime, timezone
 
 from app.application.outbox.payload import (
@@ -17,10 +18,9 @@ from app.domain.primitives.primitives import (
     Username,
 )
 from app.domain.primitives.task_status import TaskStatus
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-ALICE_ID = UserId(generate_uuid7())
-BOB_ID = UserId(generate_uuid7())
+ALICE_ID = UserId(uuid.uuid7())
+BOB_ID = UserId(uuid.uuid7())
 
 
 class TestGlobalChatPayload:

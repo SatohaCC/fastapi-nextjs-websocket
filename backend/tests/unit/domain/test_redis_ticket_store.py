@@ -1,14 +1,14 @@
 """RedisTicketStore のユニットテスト。"""
 
+import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.domain.primitives.primitives import UserId
 from app.infrastructure.auth.redis_ticket_store import RedisTicketStore
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-TEST_UUID = generate_uuid7()
+TEST_UUID = uuid.uuid7()
 TEST_USER_ID = UserId(TEST_UUID)
 
 

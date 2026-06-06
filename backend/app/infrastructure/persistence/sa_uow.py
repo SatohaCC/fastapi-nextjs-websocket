@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from ...application.outbox.repository import DeliveryFeedRepository
+from ...application.repositories.delivery_feed_repository import DeliveryFeedRepository
 from ...application.uow import UnitOfWork
 from ...domain.repositories.message_repository import MessageRepository
 from ...domain.repositories.refresh_token_repository import RefreshTokenRepository

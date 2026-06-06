@@ -1,5 +1,6 @@
 """GlobalChatService のユニットテスト（UoW / Repository をモック化）。"""
 
+import uuid
 from datetime import datetime, timezone
 
 import pytest
@@ -9,9 +10,8 @@ from app.application.outbox.payload import GlobalChatPayload
 from app.application.services.global_chat_service import GlobalChatService
 from app.domain.entities.message import Message
 from app.domain.primitives.primitives import EntityId, MessageText, UserId, Username
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-ALICE_ID = UserId(generate_uuid7())
+ALICE_ID = UserId(uuid.uuid7())
 
 
 @pytest.fixture

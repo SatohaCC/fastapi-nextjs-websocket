@@ -1,12 +1,13 @@
 """UserSettingsService のユニットテスト（UoW / Repository をモック化）。"""
 
+import uuid
+
 from app.application.services.user_settings_service import UserSettingsService
 from app.domain.entities.user_settings import UserSettings
 from app.domain.primitives.primitives import UserId
-from app.infrastructure.auth.uuid7 import generate_uuid7
 
-ALICE_ID = UserId(generate_uuid7())
-BOB_ID = UserId(generate_uuid7())
+ALICE_ID = UserId(uuid.uuid7())
+BOB_ID = UserId(uuid.uuid7())
 
 
 class TestUserSettingsServiceGetSettings:
