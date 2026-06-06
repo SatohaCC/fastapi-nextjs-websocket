@@ -44,6 +44,7 @@ export interface DirectRequestUpdatedServerMessage {
   sender: string;
   recipient: string;
   updated_at: string;
+  is_history: boolean;
 }
 
 export interface JoinLeaveServerMessage {
