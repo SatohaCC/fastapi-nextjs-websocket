@@ -3,19 +3,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { type ToastItem, toast } from "@/lib/toast";
-import { css } from "@/styled-system/css";
 import { Toast } from "./Toast";
-
-const containerStyles = css({
-  position: "fixed",
-  top: "1rem",
-  right: "1rem",
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.5rem",
-  zIndex: 9999,
-  pointerEvents: "none",
-});
+import { containerStyles } from "./Toast.styles";
 
 export function ToastContainer() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
