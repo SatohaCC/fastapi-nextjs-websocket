@@ -39,6 +39,9 @@ from .schemas import (
     GlobalChatClientMessage,
     GlobalChatServerMessage,
     PongClientMessage,
+    StopTypingServerMessage,
+    TypingClientMessage,
+    TypingServerMessage,
     UpdateDirectRequestStatusClientMessage,
 )
 
@@ -147,6 +150,7 @@ async def websocket_endpoint(
                     pong_event=pong_event,
                     global_chat_service=global_chat_service,
                     direct_request_service=direct_request_service,
+                    ws_manager=ws_manager,
                 )
             )
     except* WebSocketDisconnect as eg:
@@ -163,8 +167,17 @@ async def _client_message_loop(
     pong_event: asyncio.Event,
     global_chat_service: GlobalChatService,
     direct_request_service: DirectRequestService,
+    ws_manager: ChatManager,
 ) -> None:
     """クライアントからの inbound メッセージをディスパッチする。"""
+    typing_tasks: dict[str, asyncio.Task[None]] = {}
+
+    async def _auto_stop_typing(username: str) -> None:
+        """3秒後に stop_typing をブロードキャストしてタスクを削除する。"""
+        await asyncio.sleep(3)
+        await ws_manager.broadcast(StopTypingServerMessage(username=username))
+        typing_tasks.pop(username, None)
+
     try:
         async for data in websocket.iter_json():
             try:
@@ -199,10 +212,22 @@ async def _client_message_loop(
                         new_status=new_status,
                         operator_id=user.id,
                     )
+                elif isinstance(msg, TypingClientMessage):
+                    username = user.username.value
+                    existing = typing_tasks.get(username)
+                    if existing:
+                        existing.cancel()
+                    await ws_manager.broadcast(TypingServerMessage(username=username))
+                    typing_tasks[username] = asyncio.create_task(
+                        _auto_stop_typing(username)
+                    )
             except DomainException as e:
                 await websocket.send_json(
                     ErrorServerMessage(text=str(e)).model_dump(mode="json")
                 )
     except RuntimeError:
         pass
+    finally:
+        for task in typing_tasks.values():
+            task.cancel()
     raise WebSocketDisconnect(code=1000, reason="Client loop finished")

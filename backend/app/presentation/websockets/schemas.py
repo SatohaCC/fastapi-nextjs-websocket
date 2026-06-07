@@ -75,11 +75,18 @@ class UpdateDirectRequestStatusClientMessage(BaseModel):
         return EntityId(self.task_id), TaskStatus(self.status)
 
 
+class TypingClientMessage(BaseModel):
+    """グローバルチャットで入力中であることを通知するメッセージ。"""
+
+    type: Literal["typing"]
+
+
 ClientMessage = Union[
     PongClientMessage,
     GlobalChatClientMessage,
     DirectRequestClientMessage,
     UpdateDirectRequestStatusClientMessage,
+    TypingClientMessage,
 ]
 
 
@@ -202,6 +209,20 @@ class JoinLeaveServerMessage(BaseServerMessage):
             type=cast(Literal["join", "leave"], entity.type.value),
             username=entity.username.value,
         )
+
+
+class TypingServerMessage(BaseServerMessage):
+    """ユーザーが入力中であることを全クライアントに通知するメッセージ。"""
+
+    type: Literal["typing"] = "typing"
+    username: str
+
+
+class StopTypingServerMessage(BaseServerMessage):
+    """ユーザーの入力が終了したことを全クライアントに通知するメッセージ。"""
+
+    type: Literal["stop_typing"] = "stop_typing"
+    username: str
 
 
 class ErrorServerMessage(BaseModel):

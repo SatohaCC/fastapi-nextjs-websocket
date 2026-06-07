@@ -5,6 +5,7 @@ import { Card, CardHeader } from "@/components/ui/Card/Card";
 import { Input } from "@/components/ui/Input/Input";
 import type { GlobalChatServerMessage } from "@/types/ws";
 import styles from "./GlobalChat.module.css";
+import { TypingIndicator } from "./TypingIndicator";
 
 export interface GlobalChatProps {
   messages: (GlobalChatServerMessage & { isPending?: boolean })[];
@@ -14,6 +15,7 @@ export interface GlobalChatProps {
   onSend: (e: React.FormEvent) => void;
   formatTime: (dateStr: string) => string;
   bottomRef: React.RefObject<HTMLDivElement | null>;
+  typingUsers: Set<string>;
 }
 
 export function GlobalChat({
@@ -24,6 +26,7 @@ export function GlobalChat({
   onSend,
   formatTime,
   bottomRef,
+  typingUsers,
 }: GlobalChatProps) {
   return (
     <Card className={`fade-in ${styles.panel}`}>
@@ -75,6 +78,7 @@ export function GlobalChat({
         <div ref={bottomRef} />
       </div>
       <div className={styles.formWrapper}>
+        <TypingIndicator typingUsers={typingUsers} />
         <form onSubmit={onSend} className={styles.inputForm}>
           <label htmlFor="global-chat-input" className="sr-only">
             メッセージを入力

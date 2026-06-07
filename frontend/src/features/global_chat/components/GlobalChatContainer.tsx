@@ -3,6 +3,7 @@
 import { useMemo, useOptimistic } from "react";
 import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
 import { useGlobalChatForm } from "@/features/global_chat/hooks/useGlobalChatForm";
+import { useTypingIndicator } from "@/features/global_chat/hooks/useTypingIndicator";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import type { GlobalChatServerMessage } from "@/types/ws";
@@ -36,6 +37,7 @@ export function GlobalChatContainer() {
     currentUser: username,
   });
 
+  const { typingUsers } = useTypingIndicator(username);
   const bottomRef = useScrollToBottom(optimisticMessages.length);
 
   return (
@@ -47,6 +49,7 @@ export function GlobalChatContainer() {
       onSend={handleSend}
       formatTime={formatDateTime}
       bottomRef={bottomRef}
+      typingUsers={typingUsers}
     />
   );
 }

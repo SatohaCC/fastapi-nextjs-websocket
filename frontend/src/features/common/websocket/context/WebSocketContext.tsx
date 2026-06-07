@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { ClientMessage } from "@/types/ws";
 import { dispatch } from "../handlers/dispatcher";
 import { type SeqProvider, useConnection } from "../hooks/useConnection";
 
@@ -24,6 +25,7 @@ export interface WebSocketContextValue {
   setError: (value: string | null) => void;
   subscribe: (type: string, handler: WsHandler) => () => void;
   registerSeqProvider: (paramName: string, get: SeqProvider) => () => void;
+  send: (msg: ClientMessage) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);
@@ -79,6 +81,7 @@ export function WebSocketProvider({
     disconnect,
     resetPingTimeout,
     retryMsRef,
+    send,
   } = useConnection({
     isAuthenticated,
     seqProvidersRef,
@@ -137,6 +140,7 @@ export function WebSocketProvider({
       setError,
       subscribe,
       registerSeqProvider,
+      send,
     }),
     [
       isConnected,
@@ -147,6 +151,7 @@ export function WebSocketProvider({
       setError,
       subscribe,
       registerSeqProvider,
+      send,
     ],
   );
 

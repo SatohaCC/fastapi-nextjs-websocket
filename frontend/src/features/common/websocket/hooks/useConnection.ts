@@ -191,6 +191,13 @@ export function useConnection({
     };
   }, [connectWs]);
 
+  const send = useCallback((data: unknown) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(data));
+    }
+  }, []);
+
   return {
     isConnected,
     isOnline,
@@ -203,5 +210,6 @@ export function useConnection({
     disconnect,
     resetPingTimeout,
     retryMsRef,
+    send,
   };
 }
