@@ -1,6 +1,33 @@
 import type { ReactNode } from "react";
 import { Card, CardHeader } from "@/components/ui/Card/Card";
-import styles from "./PanelLayout.module.css";
+import { css } from "@/styled-system/css";
+
+const containerStyles = css({
+  gridRow: "span 3",
+  display: "grid",
+  gridTemplateRows: "subgrid",
+  "@media (max-width: 1024px)": {
+    gridRow: "unset",
+    display: "flex",
+    flexDirection: "column",
+  },
+});
+
+const contentStyles = css({
+  overflowY: "auto",
+  minHeight: 0,
+  "@media (max-width: 1024px)": {
+    flex: 1,
+  },
+});
+
+const formWrapperStyles = css({
+  borderTop: "1px solid",
+  borderColor: "panelBorder",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "flex-end",
+});
 
 interface PanelLayoutProps {
   header: ReactNode;
@@ -25,10 +52,12 @@ export function PanelLayout({
 }: PanelLayoutProps) {
   let contentElement: ReactNode;
 
+  const combinedContentClass = `${contentStyles} ${contentClassName}`.trim();
+
   if (contentRole === "log") {
     contentElement = (
       <div
-        className={`${styles.content} ${contentClassName}`.trim()}
+        className={combinedContentClass}
         role="log"
         aria-label={contentAriaLabel}
         aria-live={contentAriaLive}
@@ -39,7 +68,7 @@ export function PanelLayout({
   } else if (contentRole === "region") {
     contentElement = (
       <section
-        className={`${styles.content} ${contentClassName}`.trim()}
+        className={combinedContentClass}
         aria-label={contentAriaLabel}
         aria-live={contentAriaLive}
       >
@@ -48,20 +77,17 @@ export function PanelLayout({
     );
   } else {
     contentElement = (
-      <div
-        className={`${styles.content} ${contentClassName}`.trim()}
-        aria-live={contentAriaLive}
-      >
+      <div className={combinedContentClass} aria-live={contentAriaLive}>
         {children}
       </div>
     );
   }
 
   return (
-    <Card className={`fade-in ${styles.container} ${className}`.trim()}>
+    <Card className={`fade-in ${containerStyles} ${className}`.trim()}>
       <CardHeader>{header}</CardHeader>
       {contentElement}
-      <div className={styles.formWrapper}>{form}</div>
+      <div className={formWrapperStyles}>{form}</div>
     </Card>
   );
 }

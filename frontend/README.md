@@ -20,6 +20,13 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## スタイリング & UIコンポーネント
+
+本プロジェクトのスタイリングとUIコンポーネント設計には、以下のモダンな技術スタックを採用しています。
+
+- **Panda CSS**: ビルド時に静的に解析されて CSS が出力される、Zero-runtime な CSS-in-JS です。`panda.config.ts` で定義されたデザイントークンに基づいた安全なスタイリングを実現します。
+- **React Aria Components**: WAI-ARIAに準拠したアクセシブルかつアンスタイルのUIコンポーネントライブラリです。`Button` や `Switch` などのネイティブUIパーツの置き換えに使用され、スタイリングは Panda CSS で行っています。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
