@@ -1,9 +1,120 @@
 "use client";
 
 import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
+import { css } from "@/styled-system/css";
 import { NotificationSettings } from "./NotificationSettings";
-import notifStyles from "./NotificationSettings.module.css";
-import styles from "./WorkspaceHeader.module.css";
+
+const headerStyles = css({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "12px 16px",
+  borderBottom: "1px solid",
+  borderColor: "panelBorder",
+  background: "rgba(0, 0, 0, 0.6)",
+  backdropFilter: "blur(20px) saturate(150%)",
+  position: "sticky",
+  top: 0,
+  zIndex: 10,
+  borderRadius: "0 0 16px 16px",
+  boxShadow: "0 4px 30px rgba(0, 0, 0, 0.5)",
+  "@media (max-width: 1024px)": {
+    flexDirection: "column",
+    gap: "16px",
+    alignItems: "flex-start",
+  },
+});
+
+const brandGroupStyles = css({
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+});
+
+const logoStyles = css({
+  fontSize: "28px",
+  fontWeight: 900,
+  color: "white",
+  letterSpacing: "-0.05em",
+});
+
+const statusIndicatorStyles = css({
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  fontSize: "13px",
+  padding: "4px 12px",
+  borderRadius: "99px",
+  border: "1px solid transparent",
+});
+
+const statusDotStyles = css({
+  width: "6px",
+  height: "6px",
+  borderRadius: "50%",
+});
+
+const statusTextStyles = css({
+  fontWeight: 700,
+});
+
+const systemInfoStyles = css({
+  fontSize: "13px",
+  color: "rgba(255, 255, 255, 0.6)",
+  marginLeft: "16px",
+  fontFamily: "monospace",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  display: "flex",
+  gap: "16px",
+});
+
+const userGroupStyles = css({
+  display: "flex",
+  alignItems: "center",
+  gap: "24px",
+  "@media (max-width: 1024px)": {
+    width: "100%",
+    justifyContent: "space-between",
+  },
+});
+
+const userInfoStyles = css({
+  textAlign: "right",
+});
+
+const usernameStyles = css({
+  fontSize: "16px",
+  color: "white",
+  fontWeight: 800,
+});
+
+const handleStyles = css({
+  fontSize: "13px",
+  color: "textSecondary",
+});
+
+const gearButtonStyles = css({
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  fontSize: "18px",
+  color: "textSecondary",
+  padding: "4px",
+  borderRadius: "50%",
+  lineHeight: 1,
+  transition: "color 0.15s",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  _hover: {
+    color: "textPrimary",
+  },
+});
+
+const settingsWrapperStyles = css({
+  position: "relative",
+});
 
 interface WorkspaceHeaderProps {
   username: string;
@@ -37,11 +148,11 @@ export function WorkspaceHeader({
   const isActuallyConnected = isConnected && isOnline;
 
   return (
-    <header className={styles.header}>
-      <div className={styles.brandGroup}>
-        <div className={styles.logo}>WebSocket test</div>
+    <header className={headerStyles}>
+      <div className={brandGroupStyles}>
+        <div className={logoStyles}>WebSocket test</div>
         <output
-          className={styles.statusIndicator}
+          className={statusIndicatorStyles}
           aria-live="polite"
           style={{
             background: isActuallyConnected
@@ -57,7 +168,7 @@ export function WorkspaceHeader({
           }}
         >
           <div
-            className={styles.statusDot}
+            className={statusDotStyles}
             style={{
               background: isActuallyConnected
                 ? "var(--status-completed)"
@@ -67,7 +178,7 @@ export function WorkspaceHeader({
             }}
           />
           <span
-            className={styles.statusText}
+            className={statusTextStyles}
             style={{
               color: isActuallyConnected
                 ? "var(--status-completed)"
@@ -84,7 +195,7 @@ export function WorkspaceHeader({
           </span>
         </output>
         <output
-          className={styles.systemInfo}
+          className={systemInfoStyles}
           aria-live="polite"
           aria-label={`システム情報: 心拍ステータス ${heartbeatStatus}、同期ステータス ${syncStatus}`}
         >
@@ -94,15 +205,15 @@ export function WorkspaceHeader({
         </output>
       </div>
 
-      <div className={styles.userGroup}>
-        <div className={styles.userInfo}>
-          <div className={styles.username}>{username}</div>
-          <div className={styles.handle}>@{username?.toLowerCase()}</div>
+      <div className={userGroupStyles}>
+        <div className={userInfoStyles}>
+          <div className={usernameStyles}>{username}</div>
+          <div className={handleStyles}>@ {username?.toLowerCase()}</div>
         </div>
-        <div ref={settingsRef} className={notifStyles.wrapper}>
+        <div ref={settingsRef} className={settingsWrapperStyles}>
           <button
             type="button"
-            className={notifStyles.gearButton}
+            className={gearButtonStyles}
             onClick={onToggleSettings}
             aria-label="通知設定"
             aria-expanded={isSettingsOpen}

@@ -1,4 +1,11 @@
-import styles from "./GlobalChat.module.css";
+import { css } from "@/styled-system/css";
+
+const typingIndicatorStyles = css({
+  padding: "4px 20px 0",
+  fontSize: "12px",
+  color: "textSecondary",
+  minHeight: "20px",
+});
 
 interface TypingIndicatorProps {
   typingUsers: Set<string>;
@@ -13,5 +20,5 @@ export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
       ? `${users[0]} is typing...`
       : `${users.join(", ")} are typing...`;
 
-  return <p className={styles.typingIndicator}>{text}</p>;
+  return <p className={typingIndicatorStyles}>{text}</p>;
 }

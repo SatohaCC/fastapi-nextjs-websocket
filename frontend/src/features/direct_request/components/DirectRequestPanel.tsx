@@ -4,8 +4,131 @@ import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { Input, Select } from "@/components/ui/Input/Input";
 import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
+import { css } from "@/styled-system/css";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
-import styles from "./DirectRequestPanel.module.css";
+
+const titleStyles = css({
+  fontSize: "17px",
+  fontWeight: 800,
+});
+
+const subtitleStyles = css({
+  fontSize: "12px",
+  color: "textSecondary",
+});
+
+const requestFormStyles = css({
+  padding: "16px 20px",
+});
+
+const formGridStyles = css({
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+});
+
+const inputGroupStyles = css({
+  display: "flex",
+  gap: "10px",
+});
+
+const selectRecipientStyles = css({
+  flex: 1,
+  borderRadius: "20px",
+  backgroundColor: "#16181c",
+});
+
+const inputTaskStyles = css({
+  flex: 2,
+  borderRadius: "20px",
+  background: "#16181c",
+  border: "1px solid transparent",
+});
+
+const submitButtonStyles = css({
+  fontSize: "15px",
+  padding: "10px 0",
+});
+
+const requestListStyles = css({
+  display: "flex",
+  flexDirection: "column",
+});
+
+const emptyStateStyles = css({
+  textAlign: "center",
+  color: "textSecondary",
+  padding: "40px 20px",
+  fontSize: "14px",
+});
+
+const requestItemStyles = css({
+  padding: "16px 20px",
+  borderBottom: "1px solid",
+  borderColor: "panelBorder",
+});
+
+const itemHeaderStyles = css({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  marginBottom: "8px",
+});
+
+const metaInfoStyles = css({
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+});
+
+const senderNameStyles = css({
+  fontSize: "13px",
+  fontWeight: 800,
+});
+
+const separatorStyles = css({
+  color: "textSecondary",
+});
+
+const timestampStyles = css({
+  fontSize: "11px",
+  color: "textSecondary",
+});
+
+const requestTextStyles = css({
+  fontSize: "14px",
+  lineHeight: 1.5,
+  marginBottom: "12px",
+  color: "#e7e9ea",
+  wordBreak: "break-word",
+});
+
+const actionGroupStyles = css({
+  display: "flex",
+  gap: "8px",
+  marginTop: "12px",
+});
+
+const actionButtonStyles = css({
+  fontSize: "14px",
+  padding: "8px 0",
+  flex: 1,
+});
+
+const completeButtonStyles = css({
+  background: "status.completed!",
+});
+
+const resolvedNoteStyles = css({
+  fontSize: "11px",
+  color: "status.completed",
+  fontWeight: 600,
+  marginTop: "8px",
+});
+
+const requestPendingStyles = css({
+  opacity: 0.5,
+});
 
 export interface DirectRequestPanelProps {
   otherUsers: string[];
@@ -40,17 +163,17 @@ export function DirectRequestPanel({
     <PanelLayout
       header={
         <>
-          <h2 className={styles.title}>ダイレクトリクエスト</h2>
-          <p className={styles.subtitle}>タスクの依頼や問い合わせ</p>
+          <h2 className={titleStyles}>ダイレクトリクエスト</h2>
+          <p className={subtitleStyles}>タスクの依頼や問い合わせ</p>
         </>
       }
-      contentClassName={styles.requestList}
+      contentClassName={requestListStyles}
       contentRole="region"
       contentAriaLabel="ダイレクトリクエスト一覧"
       form={
-        <form onSubmit={onSend} className={styles.requestForm}>
-          <div className={styles.formGrid}>
-            <div className={styles.inputGroup}>
+        <form onSubmit={onSend} className={requestFormStyles}>
+          <div className={formGridStyles}>
+            <div className={inputGroupStyles}>
               <label htmlFor="direct-request-recipient" className="sr-only">
                 依頼先を選択
               </label>
@@ -60,7 +183,7 @@ export function DirectRequestPanel({
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   onTargetUserChange(e.target.value)
                 }
-                className={styles.selectRecipient}
+                className={selectRecipientStyles}
                 disabled={isSending}
               >
                 <option value="" disabled>
@@ -83,13 +206,13 @@ export function DirectRequestPanel({
                   onTextChange(e.target.value)
                 }
                 placeholder="依頼内容を入力してください"
-                className={styles.inputTask}
+                className={inputTaskStyles}
               />
             </div>
             <Button
               type="submit"
               variant="primary"
-              className={styles.submitButton}
+              className={submitButtonStyles}
               disabled={!targetUser || !text.trim()}
             >
               リクエストを送信
@@ -99,7 +222,7 @@ export function DirectRequestPanel({
       }
     >
       {requests.length === 0 ? (
-        <div className={styles.emptyState}>現在リクエストはありません。</div>
+        <div className={emptyStateStyles}>現在リクエストはありません。</div>
       ) : (
         requests.map((m) => {
           const isFromMe = m.sender === currentUser;
@@ -109,22 +232,22 @@ export function DirectRequestPanel({
           return (
             <article
               key={m.id}
-              className={`tweet-card ${styles.requestItem} ${
-                m.isPending ? styles.requestPending : ""
+              className={`tweet-card ${requestItemStyles} ${
+                m.isPending ? requestPendingStyles : ""
               }`}
               aria-label={
                 isFromMe ? `${m.recipient} への依頼` : `${m.sender} からの依頼`
               }
             >
-              <div className={styles.itemHeader}>
-                <div className={styles.metaInfo}>
-                  <div className={styles.senderName}>
+              <div className={itemHeaderStyles}>
+                <div className={metaInfoStyles}>
+                  <div className={senderNameStyles}>
                     {isFromMe
                       ? `${m.recipient} への依頼`
                       : `${m.sender} からの依頼`}
                   </div>
-                  <div className={styles.separator}>·</div>
-                  <time dateTime={m.created_at} className={styles.timestamp}>
+                  <div className={separatorStyles}>·</div>
+                  <time dateTime={m.created_at} className={timestampStyles}>
                     {formatDate(m.created_at)}
                   </time>
                 </div>
@@ -135,16 +258,16 @@ export function DirectRequestPanel({
                 </Badge>
               </div>
 
-              <div className={styles.requestText}>{m.text}</div>
+              <div className={requestTextStyles}>{m.text}</div>
 
               {canUpdate && (
-                <div className={styles.actionGroup}>
+                <div className={actionGroupStyles}>
                   {m.status === "requested" && (
                     <Button
                       type="button"
                       onClick={() => onUpdateStatus(m.id, "processing")}
                       variant="secondary"
-                      className={styles.actionButton}
+                      className={actionButtonStyles}
                       aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
                     >
                       承諾
@@ -154,7 +277,7 @@ export function DirectRequestPanel({
                     type="button"
                     onClick={() => onUpdateStatus(m.id, "completed")}
                     variant="primary"
-                    className={`${styles.actionButton} ${styles.completeButton}`}
+                    className={`${actionButtonStyles} ${completeButtonStyles}`}
                     aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
                   >
                     完了
@@ -163,7 +286,7 @@ export function DirectRequestPanel({
               )}
 
               {m.status === "completed" && (
-                <div className={styles.resolvedNote}>
+                <div className={resolvedNoteStyles}>
                   ✓ 解決済み:{" "}
                   <time dateTime={m.updated_at}>
                     {formatDate(m.updated_at)}
