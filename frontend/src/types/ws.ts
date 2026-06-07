@@ -9,7 +9,9 @@ export type ServerMessage =
   | DirectRequestUpdatedServerMessage
   | JoinLeaveServerMessage
   | PingServerMessage
-  | ErrorServerMessage;
+  | ErrorServerMessage
+  | TypingServerMessage
+  | StopTypingServerMessage;
 
 export interface GlobalChatServerMessage {
   type: "global_chat";
@@ -52,6 +54,16 @@ export interface JoinLeaveServerMessage {
   username: string;
 }
 
+export interface TypingServerMessage {
+  type: "typing";
+  username: string;
+}
+
+export interface StopTypingServerMessage {
+  type: "stop_typing";
+  username: string;
+}
+
 export interface PingServerMessage {
   type: "ping";
 }
@@ -66,7 +78,8 @@ export type ClientMessage =
   | GlobalChatClientMessage
   | DirectRequestClientMessage
   | UpdateDirectRequestStatusClientMessage
-  | PongClientMessage;
+  | PongClientMessage
+  | TypingClientMessage;
 
 export interface GlobalChatClientMessage {
   type: "global_chat";
@@ -87,6 +100,10 @@ export interface UpdateDirectRequestStatusClientMessage {
 
 export interface PongClientMessage {
   type: "pong";
+}
+
+export interface TypingClientMessage {
+  type: "typing";
 }
 
 // --- Type Guards ---

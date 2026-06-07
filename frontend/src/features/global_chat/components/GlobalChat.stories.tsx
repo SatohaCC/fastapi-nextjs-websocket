@@ -14,6 +14,7 @@ const meta: Meta<typeof GlobalChat> = {
       const d = new Date(dateStr);
       return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     },
+    typingUsers: new Set<string>(),
   },
 };
 
