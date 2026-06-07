@@ -24,7 +24,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 本プロジェクトのスタイリングとUIコンポーネント設計には、以下のモダンな技術スタックを採用しています。
 
-- **Panda CSS**: ビルド時に静的に解析されて CSS が出力される、Zero-runtime な CSS-in-JS です。`panda.config.ts` で定義されたデザイントークンに基づいた安全なスタイリングを実現します。
+- **Panda CSS**: ビルド時に静的に解析されて CSS が出力される、Zero-runtime な CSS-in-JS です。`panda.config.ts` で定義されたデザイントークンに基づいた安全なスタイリングを実現します。本プロジェクトでは、コードの可読性と保守性を向上させるため、コンポーネントファイル (`.tsx`) からスタイル定義 (`css({...})`, `cva({...})`) を別ファイル (`*.styles.ts`) に分離して管理するアプローチを採用しています。
 - **React Aria Components**: WAI-ARIAに準拠したアクセシブルかつアンスタイルのUIコンポーネントライブラリです。`Button` や `Switch` などのネイティブUIパーツの置き換えに使用され、スタイリングは Panda CSS で行っています。
 
 ## Learn More

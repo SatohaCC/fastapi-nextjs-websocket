@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prepare": "panda codegen",
-    "dev": "panda codegen && next dev",
-    "build": "panda codegen && next build",
+    "prepare": "panda codegen && panda cssgen",
+    "dev": "panda codegen && panda cssgen && next dev",
+    "build": "panda codegen && panda cssgen && next build",
     "start": "next start",
     "lint": "biome check",
     "lint:fix": "biome check --write",

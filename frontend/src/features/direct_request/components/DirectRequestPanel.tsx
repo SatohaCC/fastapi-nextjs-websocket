@@ -4,131 +4,31 @@ import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { Input, Select } from "@/components/ui/Input/Input";
 import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
-import { css } from "@/styled-system/css";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
-
-const titleStyles = css({
-  fontSize: "17px",
-  fontWeight: 800,
-});
-
-const subtitleStyles = css({
-  fontSize: "12px",
-  color: "textSecondary",
-});
-
-const requestFormStyles = css({
-  padding: "16px 20px",
-});
-
-const formGridStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-});
-
-const inputGroupStyles = css({
-  display: "flex",
-  gap: "10px",
-});
-
-const selectRecipientStyles = css({
-  flex: 1,
-  borderRadius: "20px",
-  backgroundColor: "#16181c",
-});
-
-const inputTaskStyles = css({
-  flex: 2,
-  borderRadius: "20px",
-  background: "#16181c",
-  border: "1px solid transparent",
-});
-
-const submitButtonStyles = css({
-  fontSize: "15px",
-  padding: "10px 0",
-});
-
-const requestListStyles = css({
-  display: "flex",
-  flexDirection: "column",
-});
-
-const emptyStateStyles = css({
-  textAlign: "center",
-  color: "textSecondary",
-  padding: "40px 20px",
-  fontSize: "14px",
-});
-
-const requestItemStyles = css({
-  padding: "16px 20px",
-  borderBottom: "1px solid",
-  borderColor: "panelBorder",
-});
-
-const itemHeaderStyles = css({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  marginBottom: "8px",
-});
-
-const metaInfoStyles = css({
-  display: "flex",
-  gap: "8px",
-  alignItems: "center",
-});
-
-const senderNameStyles = css({
-  fontSize: "13px",
-  fontWeight: 800,
-});
-
-const separatorStyles = css({
-  color: "textSecondary",
-});
-
-const timestampStyles = css({
-  fontSize: "11px",
-  color: "textSecondary",
-});
-
-const requestTextStyles = css({
-  fontSize: "14px",
-  lineHeight: 1.5,
-  marginBottom: "12px",
-  color: "#e7e9ea",
-  wordBreak: "break-word",
-});
-
-const actionGroupStyles = css({
-  display: "flex",
-  gap: "8px",
-  marginTop: "12px",
-});
-
-const actionButtonStyles = css({
-  fontSize: "14px",
-  padding: "8px 0",
-  flex: 1,
-});
-
-const completeButtonStyles = css({
-  background: "status.completed!",
-});
-
-const resolvedNoteStyles = css({
-  fontSize: "11px",
-  color: "status.completed",
-  fontWeight: 600,
-  marginTop: "8px",
-});
-
-const requestPendingStyles = css({
-  opacity: 0.5,
-});
+import {
+  actionButtonStyles,
+  actionGroupStyles,
+  completeButtonStyles,
+  emptyStateStyles,
+  formGridStyles,
+  inputGroupStyles,
+  inputTaskStyles,
+  itemHeaderStyles,
+  metaInfoStyles,
+  requestFormStyles,
+  requestItemStyles,
+  requestListStyles,
+  requestPendingStyles,
+  requestTextStyles,
+  resolvedNoteStyles,
+  selectRecipientStyles,
+  senderNameStyles,
+  separatorStyles,
+  submitButtonStyles,
+  subtitleStyles,
+  timestampStyles,
+  titleStyles,
+} from "./DirectRequestPanel.styles";
 
 export interface DirectRequestPanelProps {
   otherUsers: string[];

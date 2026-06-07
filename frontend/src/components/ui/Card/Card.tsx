@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import { cardStyles, hoverableStyles, headerStyles, contentStyles } from "./Card.styles";
+import {
+  cardStyles,
+  contentStyles,
+  headerStyles,
+  hoverableStyles,
+} from "./Card.styles";
 
 interface CardProps {
   children: ReactNode;

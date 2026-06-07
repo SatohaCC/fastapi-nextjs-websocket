@@ -1,15 +1,4 @@
-import { css } from "@/styled-system/css";
-
-const footerStyles = css({
-  textAlign: "center",
-  padding: "8px 0",
-});
-
-const footerTextStyles = css({
-  fontSize: "11px",
-  color: "textSecondary",
-  letterSpacing: "0.02em",
-});
+import { footerStyles, footerTextStyles } from "./WorkspaceFooter.styles";
 
 export function WorkspaceFooter() {
   return (

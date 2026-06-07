@@ -1,5 +1,12 @@
 import type { ToastItem } from "@/lib/toast";
-import { toastStyles, leavingStyles, bodyStyles, titleStyles, descriptionStyles, closeStyles } from "./Toast.styles";
+import {
+  bodyStyles,
+  closeStyles,
+  descriptionStyles,
+  leavingStyles,
+  titleStyles,
+  toastStyles,
+} from "./Toast.styles";
 
 interface ToastProps extends ToastItem {
   onClose: (id: string) => void;
@@ -32,4 +39,3 @@ export function Toast({
     </output>
   );
 }
-

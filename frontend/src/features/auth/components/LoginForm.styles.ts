@@ -5,114 +5,158 @@ export const containerStyles = css({
   justifyContent: "center",
   alignItems: "center",
   height: "100vh",
-  background: "black",
+  background: "bg",
   overflow: "hidden",
+  padding: "20px",
 });
 
 export const formStyles = css({
-  padding: "32px",
+  padding: "48px 48px 40px",
   width: "100%",
-  maxWidth: "360px",
+  maxWidth: "480px",
   display: "flex",
   flexDirection: "column",
-  gap: "16px",
+  gap: "24px",
+  background: "panelBg",
+  borderRadius: "panel",
+  border: "1px solid",
+  borderColor: "border.default",
+  boxShadow: "modal",
 });
 
 export const headerStyles = css({
   textAlign: "center",
-  marginBottom: "4px",
 });
 
 export const logoStyles = css({
-  fontSize: "22px",
-  fontWeight: 900,
-  color: "white",
+  fontSize: "26px",
+  fontWeight: 500,
+  color: "textPrimary",
+  letterSpacing: "-0.01em",
 });
 
 export const subtitleStyles = css({
   fontSize: "14px",
   color: "textSecondary",
-  marginTop: "8px",
+  marginTop: "10px",
+  lineHeight: 1.6,
 });
 
 export const accountsStyles = css({
   border: "1px solid",
-  borderColor: "panelBorder",
-  borderRadius: "8px",
+  borderColor: "border.default",
+  borderRadius: "control",
+  background: "panelBg",
   overflow: "hidden",
+  boxShadow: "subtle",
 });
 
 export const accountsLabelStyles = css({
   fontSize: "11px",
-  color: "textSecondary",
-  padding: "7px 12px",
+  fontWeight: 500,
+  color: "textMuted",
+  padding: "10px 16px",
   borderBottom: "1px solid",
-  borderColor: "panelBorder",
+  borderBottomColor: "border.divider",
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  background: "bg",
 });
 
 export const accountItemStyles = css({
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: "8px 12px",
+  padding: "14px 18px",
   width: "100%",
   background: "transparent",
   border: "none",
   borderBottom: "1px solid",
-  borderColor: "panelBorder",
-  color: "white",
+  borderBottomColor: "border.divider",
+  color: "textPrimary",
   cursor: "pointer",
-  fontSize: "13px",
-  transition: "background 0.15s",
+  fontSize: "14px",
+  transition: "background 0.15s ease",
   textAlign: "left",
   _last: {
     borderBottom: "none",
   },
   _hover: {
-    background: "rgba(255, 255, 255, 0.05)",
+    background: "bg",
+  },
+  _focusVisible: {
+    outlineWidth: "2px",
+    outlineStyle: "solid",
+    outlineColor: "primary",
+    outlineOffset: "-2px",
+    background: "bg",
   },
 });
 
 export const accountItemActiveStyles = css({
-  background: "rgba(29, 155, 240, 0.12)!",
-  borderLeft: "2px solid",
+  background: "surface.active!",
+  borderLeftWidth: "3px",
+  borderLeftStyle: "solid",
   borderLeftColor: "primary",
-  paddingLeft: "10px",
+  paddingLeft: "15px",
+  _hover: {
+    background: "surface.active!",
+  },
 });
 
 export const accountNameStyles = css({
-  fontWeight: 700,
+  fontWeight: 500,
+  color: "textPrimary",
+  fontSize: "14px",
 });
 
 export const accountPasswordStyles = css({
   fontSize: "12px",
-  color: "textSecondary",
+  color: "textMuted",
   fontFamily: "monospace",
+  letterSpacing: "0.02em",
 });
 
 export const errorBoxStyles = css({
-  padding: "12px",
-  background: "rgba(244, 33, 46, 0.1)",
+  padding: "12px 16px",
+  background: "badge.errorBg",
   color: "error",
-  borderRadius: "4px",
+  borderRadius: "panel",
   fontSize: "13px",
   textAlign: "center",
-  border: "1px solid rgba(244, 33, 46, 0.2)",
+  border: "1px solid",
+  borderColor: "border.errorOverlay",
+  fontWeight: 500,
 });
 
 export const fieldGroupStyles = css({
   display: "flex",
   flexDirection: "column",
-  gap: "4px",
+  gap: "16px",
 });
 
 export const inputStyles = css({
-  padding: "12px 16px",
-  fontSize: "14px",
+  padding: "14px 16px",
+  fontSize: "15px",
+  borderRadius: "control!",
+  border: "1px solid",
+  borderColor: "border.default!",
+  background: "panelBg",
+  color: "textPrimary",
+  _focus: {
+    borderColor: "primary!",
+    boxShadow: "focusSubtle!",
+  },
 });
 
 export const submitButtonStyles = css({
-  padding: "12px",
+  padding: "14px",
   fontSize: "15px",
+  fontWeight: 500,
   width: "100%",
+  borderRadius: "control!",
+  letterSpacing: "0.01em",
+  _active: {
+    transform: "scale(0.99)",
+  },
 });

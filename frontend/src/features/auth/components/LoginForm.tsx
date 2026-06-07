@@ -4,21 +4,21 @@ import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/Input/Input";
 import { css } from "@/styled-system/css";
 import {
-  containerStyles,
-  formStyles,
-  headerStyles,
-  logoStyles,
-  subtitleStyles,
-  accountsStyles,
-  accountsLabelStyles,
-  accountItemStyles,
   accountItemActiveStyles,
+  accountItemStyles,
   accountNameStyles,
   accountPasswordStyles,
+  accountsLabelStyles,
+  accountsStyles,
+  containerStyles,
   errorBoxStyles,
   fieldGroupStyles,
+  formStyles,
+  headerStyles,
   inputStyles,
+  logoStyles,
   submitButtonStyles,
+  subtitleStyles,
 } from "./LoginForm.styles";
 
 const ACCOUNTS = [
@@ -103,9 +103,6 @@ export function LoginForm({
             placeholder="ユーザー名"
             className={inputStyles}
           />
-        </div>
-
-        <div className={fieldGroupStyles}>
           <label htmlFor="password" className="sr-only">
             パスワード
           </label>

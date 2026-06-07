@@ -1,17 +1,6 @@
 "use client";
 
-import { css } from "@/styled-system/css";
-
-const loadingContainerStyles = css({
-  height: "100vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "black",
-  color: "white",
-  fontSize: "14px",
-  letterSpacing: "0.1em",
-});
+import { loadingContainerStyles } from "./WorkspaceLoading.styles";
 
 export interface WorkspaceLoadingProps {
   message?: string;

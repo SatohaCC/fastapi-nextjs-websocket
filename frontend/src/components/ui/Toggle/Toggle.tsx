@@ -1,7 +1,12 @@
 "use client";
 
 import { Switch as RACSwitch } from "react-aria-components";
-import { switchStyles, labelStyles, trackStyles, thumbStyles } from "./Toggle.styles";
+import {
+  labelStyles,
+  switchStyles,
+  thumbStyles,
+  trackStyles,
+} from "./Toggle.styles";
 
 interface ToggleProps {
   checked: boolean;

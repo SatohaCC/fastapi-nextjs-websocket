@@ -1,11 +1,4 @@
-import { css } from "@/styled-system/css";
-
-const typingIndicatorStyles = css({
-  padding: "4px 20px 0",
-  fontSize: "12px",
-  color: "textSecondary",
-  minHeight: "20px",
-});
+import { typingIndicatorStyles } from "./GlobalChat.styles";
 
 interface TypingIndicatorProps {
   typingUsers: Set<string>;

@@ -21,7 +21,7 @@ export const contentStyles = css({
 
 export const formWrapperStyles = css({
   borderTop: "1px solid",
-  borderColor: "panelBorder",
+  borderColor: "border.divider",
   display: "flex",
   flexDirection: "column",
   justifyContent: "flex-end",

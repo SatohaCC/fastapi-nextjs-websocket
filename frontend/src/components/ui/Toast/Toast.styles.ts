@@ -16,10 +16,11 @@ export const toastStyles = css({
   alignItems: "flex-start",
   gap: "12px",
   padding: "12px 16px",
-  borderRadius: "12px",
-  background: "#ffffff",
-  border: "1px solid rgba(0, 0, 0, 0.08)",
-  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12)",
+  borderRadius: "panel",
+  background: "panelBg",
+  border: "1px solid",
+  borderColor: "border.overlay",
+  boxShadow: "toast",
   minWidth: "240px",
   maxWidth: "360px",
   pointerEvents: "auto",
@@ -38,14 +39,14 @@ export const bodyStyles = css({
 export const titleStyles = css({
   fontSize: "0.875rem",
   fontWeight: 500,
-  color: "#0f1419",
+  color: "toast.text",
   lineHeight: 1.4,
   wordBreak: "break-word",
 });
 
 export const descriptionStyles = css({
   fontSize: "0.8rem",
-  color: "#536471",
+  color: "toast.subtext",
   marginTop: "2px",
   lineHeight: 1.4,
   wordBreak: "break-word",
@@ -55,13 +56,13 @@ export const closeStyles = css({
   flexShrink: 0,
   background: "none",
   border: "none",
-  color: "#536471",
+  color: "toast.subtext",
   cursor: "pointer",
   fontSize: "1rem",
   lineHeight: 1,
   padding: 0,
   transition: "color 0.15s",
   _hover: {
-    color: "#0f1419",
+    color: "toast.text",
   },
 });

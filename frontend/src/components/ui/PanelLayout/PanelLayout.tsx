@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { Card, CardHeader } from "@/components/ui/Card/Card";
-import { containerStyles, contentStyles, formWrapperStyles } from "./PanelLayout.styles";
+import {
+  containerStyles,
+  contentStyles,
+  formWrapperStyles,
+} from "./PanelLayout.styles";
 
 interface PanelLayoutProps {
   header: ReactNode;
