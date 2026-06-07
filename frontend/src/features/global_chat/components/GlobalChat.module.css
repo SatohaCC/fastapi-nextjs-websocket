@@ -121,3 +121,83 @@
   color: var(--text-secondary);
   min-height: 20px;
 }
+
+.inputWrapper {
+  position: relative;
+  flex: 1;
+}
+
+.mentionDropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #1e2024;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.mentionItem {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+
+.mentionItem:hover {
+  background: #2a2d33;
+}
+
+.mentionItem:focus-visible {
+  background: #2a2d33;
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.mentionItemFocused {
+  background: #2a2d33;
+}
+
+/* mark のデフォルト黄背景を消し、暗いバブル上では primary 色テキスト */
+.mention {
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* 自分がメンションされた場合: アンバーで目立たせる（コントラスト比 10.4:1） */
+.mentionMe {
+  background: rgba(251, 191, 36, 0.22);
+  color: #fbbf24;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 3px;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35);
+}
+
+/* 自分のバブル（青背景）上では白に統一してコントラストを確保 */
+.bubbleMe .mention {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+.bubbleMe .mentionMe {
+  background: rgba(251, 191, 36, 0.35);
+  color: #fef3c7;
+  border-radius: 3px;
+  padding: 0 3px;
+  box-shadow: none;
+}

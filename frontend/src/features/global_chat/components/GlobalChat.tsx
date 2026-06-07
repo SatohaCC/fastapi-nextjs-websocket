@@ -5,6 +5,7 @@ import { Card, CardHeader } from "@/components/ui/Card/Card";
 import { Input } from "@/components/ui/Input/Input";
 import type { GlobalChatServerMessage } from "@/types/ws";
 import styles from "./GlobalChat.module.css";
+import { MentionText } from "./MentionText";
 import { TypingIndicator } from "./TypingIndicator";
 
 export interface GlobalChatProps {
@@ -13,9 +14,14 @@ export interface GlobalChatProps {
   text: string;
   onTextChange: (value: string) => void;
   onSend: (e: React.FormEvent) => void;
+  onInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   formatTime: (dateStr: string) => string;
   bottomRef: React.RefObject<HTMLDivElement | null>;
   typingUsers: Set<string>;
+  mentionIsOpen: boolean;
+  mentionSuggestions: string[];
+  mentionFocusedIndex: number;
+  onMentionSelect: (username: string) => void;
 }
 
 export function GlobalChat({
@@ -24,9 +30,14 @@ export function GlobalChat({
   text,
   onTextChange,
   onSend,
+  onInputKeyDown,
   formatTime,
   bottomRef,
   typingUsers,
+  mentionIsOpen,
+  mentionSuggestions,
+  mentionFocusedIndex,
+  onMentionSelect,
 }: GlobalChatProps) {
   return (
     <Card className={`fade-in ${styles.panel}`}>
@@ -62,7 +73,7 @@ export function GlobalChat({
                   isMe ? styles.bubbleMe : styles.bubbleOther
                 }`}
               >
-                {m.text}
+                <MentionText text={m.text} currentUser={currentUser} />
               </div>
               <time
                 dateTime={m.created_at}
@@ -80,20 +91,42 @@ export function GlobalChat({
       <div className={styles.formWrapper}>
         <TypingIndicator typingUsers={typingUsers} />
         <form onSubmit={onSend} className={styles.inputForm}>
-          <label htmlFor="global-chat-input" className="sr-only">
-            メッセージを入力
-          </label>
-          <Input
-            id="global-chat-input"
-            type="text"
-            value={text}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onTextChange(e.target.value)
-            }
-            placeholder="Start a new message"
-            className={styles.textInput}
-            autoComplete="off"
-          />
+          <div className={styles.inputWrapper}>
+            {mentionIsOpen && (
+              <div className={styles.mentionDropdown}>
+                {mentionSuggestions.map((u, i) => (
+                  <button
+                    key={u}
+                    type="button"
+                    className={`${styles.mentionItem} ${
+                      i === mentionFocusedIndex ? styles.mentionItemFocused : ""
+                    }`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      onMentionSelect(u);
+                    }}
+                  >
+                    @{u}
+                  </button>
+                ))}
+              </div>
+            )}
+            <label htmlFor="global-chat-input" className="sr-only">
+              メッセージを入力
+            </label>
+            <Input
+              id="global-chat-input"
+              type="text"
+              value={text}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onTextChange(e.target.value)
+              }
+              onKeyDown={onInputKeyDown}
+              placeholder="Start a new message"
+              className={styles.textInput}
+              autoComplete="off"
+            />
+          </div>
           <Button
             type="submit"
             variant="primary"
