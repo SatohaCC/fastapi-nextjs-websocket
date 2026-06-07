@@ -2,23 +2,17 @@ export function isBrowserNotificationSupported(): boolean {
   return typeof window !== "undefined" && "Notification" in window;
 }
 
-export async function requestBrowserNotificationPermission(): Promise<boolean> {
-  if (!isBrowserNotificationSupported()) return false;
-  if (Notification.permission === "granted") return true;
-  const result = await Notification.requestPermission();
-  return result === "granted";
+export function requestBrowserNotificationPermission(): Promise<boolean> {
+  if (!isBrowserNotificationSupported()) return Promise.resolve(false);
+  if (Notification.permission === "granted") return Promise.resolve(true);
+  return Notification.requestPermission().then((result) => result === "granted");
 }
 
 export function showBrowserNotification(title: string, body?: string): void {
   if (!isBrowserNotificationSupported()) return;
   if (Notification.permission !== "granted") return;
 
-  // タブがアクティブでフォーカスされているときはデスクトップ通知を出さない
-  if (
-    typeof document !== "undefined" &&
-    document.visibilityState === "visible" &&
-    document.hasFocus()
-  ) {
+  if (typeof document !== "undefined" && document.visibilityState === "visible") {
     return;
   }
 
