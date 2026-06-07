@@ -2,12 +2,14 @@ export interface NotificationSettings {
   globalChat: boolean;
   directRequest: boolean;
   directRequestUpdated: boolean;
+  browserNotification: boolean;
 }
 
 export const DEFAULT_SETTINGS: NotificationSettings = {
   globalChat: true,
   directRequest: true,
   directRequestUpdated: true,
+  browserNotification: false,
 };
 
 type Listener = (settings: NotificationSettings) => void;

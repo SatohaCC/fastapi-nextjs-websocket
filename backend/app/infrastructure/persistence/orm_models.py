@@ -114,6 +114,7 @@ class UserSettingsORM(Base):
     global_chat: Mapped[bool] = mapped_column(default=True)
     direct_request: Mapped[bool] = mapped_column(default=True)
     direct_request_updated: Mapped[bool] = mapped_column(default=True)
+    browser_notification: Mapped[bool] = mapped_column(default=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

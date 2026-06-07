@@ -10,6 +10,7 @@ export async function fetchNotificationSettings(): Promise<NotificationSettings>
     globalChat: data.global_chat,
     directRequest: data.direct_request,
     directRequestUpdated: data.direct_request_updated,
+    browserNotification: data.browser_notification,
   };
 }
 
@@ -25,6 +26,7 @@ export async function saveNotificationSettings(
       global_chat: s.globalChat,
       direct_request: s.directRequest,
       direct_request_updated: s.directRequestUpdated,
+      browser_notification: s.browserNotification,
     }),
   });
   if (!res.ok) {

@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WS_BASE } from "@/lib/config";
+import { workerTimer } from "@/lib/workerTimer";
 
 const PING_TIMEOUT_MS = (10 + 5 + 2) * 1000;
 const INITIAL_RETRY_MS = 1000;
@@ -27,9 +28,9 @@ export function useConnection({
   const [isOnline, setIsOnline] = useState<boolean>(true);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
   const retryMsRef = useRef<number>(INITIAL_RETRY_MS);
-  const pingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pingTimerRef = useRef<number | null>(null);
   const isManualRef = useRef(false);
 
   const currentAuthRef = useRef<boolean>(isAuthenticated);
@@ -45,7 +46,7 @@ export function useConnection({
 
   const clearPingTimeout = useCallback(() => {
     if (pingTimerRef.current) {
-      clearTimeout(pingTimerRef.current);
+      workerTimer.clearTimeout(pingTimerRef.current);
       pingTimerRef.current = null;
     }
   }, []);
@@ -53,7 +54,7 @@ export function useConnection({
   const resetPingTimeout = useCallback(
     (socket: WebSocket) => {
       clearPingTimeout();
-      pingTimerRef.current = setTimeout(() => {
+      pingTimerRef.current = workerTimer.setTimeout(() => {
         onStatusChangeRef.current?.("タイムアウトしました。再接続中...");
         socket.close();
       }, PING_TIMEOUT_MS);
@@ -87,7 +88,7 @@ export function useConnection({
         onStatusChangeRef.current?.(
           `接続失敗。${delay / 1000}秒後に再試行します...`,
         );
-        reconnectTimerRef.current = setTimeout(() => {
+        reconnectTimerRef.current = workerTimer.setTimeout(() => {
           connectWs().catch(() => {});
         }, delay);
       }
@@ -134,7 +135,7 @@ export function useConnection({
         onStatusChangeRef.current?.(
           `切断されました。${delay / 1000}秒後に再試行します...`,
         );
-        reconnectTimerRef.current = setTimeout(() => {
+        reconnectTimerRef.current = workerTimer.setTimeout(() => {
           connectWs().catch(() => {});
         }, delay);
       }
@@ -155,7 +156,7 @@ export function useConnection({
   const disconnect = useCallback(() => {
     isManualRef.current = true;
     if (reconnectTimerRef.current) {
-      clearTimeout(reconnectTimerRef.current);
+      workerTimer.clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
     if (wsRef.current) {
@@ -165,6 +166,30 @@ export function useConnection({
     setIsConnected(false);
     setHeartbeatStatus("切断");
   }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const activeAuth = currentAuthRef.current;
+        if (activeAuth && !wsRef.current && !isManualRef.current) {
+          onStatusChangeRef.current?.(
+            "タブがアクティブになりました。即座に再接続します...",
+          );
+          if (reconnectTimerRef.current) {
+            workerTimer.clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = null;
+          }
+          retryMsRef.current = INITIAL_RETRY_MS;
+          connectWs().catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [connectWs]);
 
   return {
     isConnected,

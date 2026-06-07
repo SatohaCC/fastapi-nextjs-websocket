@@ -34,6 +34,7 @@ async def test_upsert_and_get_settings(
         global_chat=False,
         direct_request=True,
         direct_request_updated=False,
+        browser_notification=True,
     )
 
     # 保存（挿入）
@@ -42,6 +43,7 @@ async def test_upsert_and_get_settings(
     assert saved.global_chat is False
     assert saved.direct_request is True
     assert saved.direct_request_updated is False
+    assert saved.browser_notification is True
 
     # 取得して検証
     retrieved = await repo.get(alice_id)
@@ -50,6 +52,7 @@ async def test_upsert_and_get_settings(
     assert retrieved.global_chat is False
     assert retrieved.direct_request is True
     assert retrieved.direct_request_updated is False
+    assert retrieved.browser_notification is True
 
     # 更新（Upsert の Conflict 動作検証）
     updated_settings = UserSettings(
@@ -57,6 +60,7 @@ async def test_upsert_and_get_settings(
         global_chat=True,
         direct_request=False,
         direct_request_updated=True,
+        browser_notification=False,
     )
     await repo.upsert(updated_settings)
 
@@ -66,3 +70,4 @@ async def test_upsert_and_get_settings(
     assert retrieved2.global_chat is True
     assert retrieved2.direct_request is False
     assert retrieved2.direct_request_updated is True
+    assert retrieved2.browser_notification is False

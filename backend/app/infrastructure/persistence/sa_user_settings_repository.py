@@ -36,6 +36,7 @@ class SqlAlchemyUserSettingsRepository(UserSettingsRepository):
             global_chat=settings.global_chat,
             direct_request=settings.direct_request,
             direct_request_updated=settings.direct_request_updated,
+            browser_notification=settings.browser_notification,
         )
         stmt = insert_stmt.on_conflict_do_update(
             index_elements=["user_id"],
@@ -43,6 +44,7 @@ class SqlAlchemyUserSettingsRepository(UserSettingsRepository):
                 "global_chat": insert_stmt.excluded.global_chat,
                 "direct_request": insert_stmt.excluded.direct_request,
                 "direct_request_updated": insert_stmt.excluded.direct_request_updated,
+                "browser_notification": insert_stmt.excluded.browser_notification,
                 "updated_at": datetime.now(timezone.utc),
             },
         )
@@ -57,4 +59,5 @@ class SqlAlchemyUserSettingsRepository(UserSettingsRepository):
             global_chat=orm.global_chat,
             direct_request=orm.direct_request,
             direct_request_updated=orm.direct_request_updated,
+            browser_notification=orm.browser_notification,
         )
