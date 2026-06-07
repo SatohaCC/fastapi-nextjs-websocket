@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # ログインエンドポイントのレートリミット設定
+    LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS: int = 10
+    LOGIN_RATE_LIMIT_IP_WINDOW_SECONDS: int = 60
+    LOGIN_RATE_LIMIT_USER_MAX_ATTEMPTS: int = 20
+    LOGIN_RATE_LIMIT_USER_WINDOW_SECONDS: int = 900
+
     # SQLAdmin 設定
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin-password"

@@ -9,7 +9,13 @@ from ...application.interfaces.auth import TicketStore
 from ...application.services.auth_service import AuthService
 from ...domain.entities.user import User
 from ...domain.primitives.primitives import AuthToken, Password, RefreshToken, Username
-from ..dependencies import get_auth_service, get_authenticated_user, get_ticket_store
+from ...infrastructure.auth.login_rate_limiter import LoginRateLimiter
+from ..dependencies import (
+    get_auth_service,
+    get_authenticated_user,
+    get_login_rate_limiter,
+    get_ticket_store,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -57,10 +63,16 @@ async def login(
     request: Request,
     body: LoginRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    rate_limiter: Annotated[LoginRateLimiter, Depends(get_login_rate_limiter)],
 ) -> LoginResponse:
     """認証を行い、アクセストークンとリフレッシュトークンを発行します。"""
-    username, password = body.to_domain()
     ip = request.client.host if request.client else None
+    if await rate_limiter.is_limited(ip, body.username):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="ログイン試行回数が上限に達しました。しばらく待ってから再試行してください。",
+        )
+    username, password = body.to_domain()
     ua = request.headers.get("user-agent")
     token_pair = await auth_service.login(
         username, password, ip_address=ip, user_agent=ua

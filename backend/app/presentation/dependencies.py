@@ -17,6 +17,7 @@ from ..application.uow import UnitOfWork
 from ..domain.entities.user import User
 from ..domain.primitives.primitives import AuthToken
 from ..infrastructure.auth.jwt_service import JwtServiceImpl
+from ..infrastructure.auth.login_rate_limiter import LoginRateLimiter
 from ..infrastructure.auth.password_hasher import PasswordHasher
 from ..infrastructure.auth.redis_ticket_store import RedisTicketStore
 from ..infrastructure.config import settings
@@ -69,6 +70,21 @@ def get_chat_manager() -> ChatManager:
 
 
 _ticket_store: TicketStore | None = None
+_login_rate_limiter: LoginRateLimiter | None = None
+
+
+def get_login_rate_limiter() -> LoginRateLimiter:
+    """LoginRateLimiter シングルトンの取得。"""
+    global _login_rate_limiter
+    if _login_rate_limiter is None:
+        _login_rate_limiter = LoginRateLimiter(
+            redis_url=settings.REDIS_URL,
+            ip_max_attempts=settings.LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS,
+            ip_window_seconds=settings.LOGIN_RATE_LIMIT_IP_WINDOW_SECONDS,
+            user_max_attempts=settings.LOGIN_RATE_LIMIT_USER_MAX_ATTEMPTS,
+            user_window_seconds=settings.LOGIN_RATE_LIMIT_USER_WINDOW_SECONDS,
+        )
+    return _login_rate_limiter
 
 
 def get_ticket_store() -> TicketStore:
