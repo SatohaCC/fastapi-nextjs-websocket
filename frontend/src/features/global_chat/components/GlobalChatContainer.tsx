@@ -3,6 +3,7 @@
 import { useMemo, useOptimistic } from "react";
 import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
 import { useGlobalChatForm } from "@/features/global_chat/hooks/useGlobalChatForm";
+import { useMentionDropdown } from "@/features/global_chat/hooks/useMentionDropdown";
 import { useTypingIndicator } from "@/features/global_chat/hooks/useTypingIndicator";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
@@ -11,7 +12,7 @@ import { formatDateTime } from "@/utils/date";
 import { GlobalChat } from "./GlobalChat";
 
 export function GlobalChatContainer() {
-  const { username } = useWorkspaceContext();
+  const { username, users } = useWorkspaceContext();
   // ワークスペース内は常に認証済みであるため true を渡します
   const { chatMessages, sendChat } = useGlobalChat(true);
 
@@ -38,6 +39,21 @@ export function GlobalChatContainer() {
   });
 
   const { typingUsers } = useTypingIndicator(username);
+
+  const {
+    isOpen: mentionIsOpen,
+    suggestions: mentionSuggestions,
+    focusedIndex: mentionFocusedIndex,
+    handleMentionSelect,
+    handleInputKeyDown,
+    handleInputChange,
+  } = useMentionDropdown({
+    text,
+    users,
+    currentUser: username,
+    onTextChange: setText,
+  });
+
   const bottomRef = useScrollToBottom(optimisticMessages.length);
 
   return (
@@ -45,11 +61,16 @@ export function GlobalChatContainer() {
       messages={optimisticMessages}
       currentUser={username}
       text={text}
-      onTextChange={setText}
+      onTextChange={handleInputChange}
       onSend={handleSend}
+      onInputKeyDown={handleInputKeyDown}
       formatTime={formatDateTime}
       bottomRef={bottomRef}
       typingUsers={typingUsers}
+      mentionIsOpen={mentionIsOpen}
+      mentionSuggestions={mentionSuggestions}
+      mentionFocusedIndex={mentionFocusedIndex}
+      onMentionSelect={handleMentionSelect}
     />
   );
 }
