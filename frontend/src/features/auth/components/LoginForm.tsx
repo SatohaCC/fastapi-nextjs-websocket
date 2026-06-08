@@ -1,23 +1,15 @@
 "use client";
 
+import { AccountList } from "@/components/ui/AccountList/AccountList";
 import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/Input/Input";
-import { css } from "@/styled-system/css";
 import {
-  accountItemActiveStyles,
-  accountItemStyles,
-  accountNameStyles,
-  accountPasswordStyles,
-  accountsLabelStyles,
-  accountsStyles,
-  containerStyles,
-  errorBoxStyles,
-  fieldGroupStyles,
-  formStyles,
-  headerStyles,
-  logoStyles,
-  subtitleStyles,
-} from "./LoginForm.styles";
+  AuthError,
+  AuthForm,
+  AuthHeader,
+  AuthLayout,
+} from "@/components/ui/Layout/AuthLayout";
+import { css } from "@/styled-system/css";
 
 const ACCOUNTS = [
   { username: "alice", password: "password1" },
@@ -45,48 +37,31 @@ export function LoginForm({
   onSubmit,
 }: LoginFormProps) {
   return (
-    <div className={containerStyles}>
-      <form onSubmit={onSubmit} className={`fade-in ${formStyles}`}>
-        <div className={headerStyles}>
-          <h1 className={logoStyles}>WebSocket お試しアプリ</h1>
-          <p className={subtitleStyles}>
-            テスト用アカウントをクリックすると自動入力されます
-          </p>
-        </div>
+    <AuthLayout>
+      <AuthForm onSubmit={onSubmit}>
+        <AuthHeader
+          title="WebSocket お試しアプリ"
+          subtitle="テスト用アカウントをクリックすると自動入力されます"
+        />
 
-        <div className={accountsStyles}>
-          <p className={accountsLabelStyles}>テスト用アカウント</p>
-          {ACCOUNTS.map((a) => {
-            const isActive = username === a.username;
-            return (
-              <button
-                key={a.username}
-                type="button"
-                className={`${accountItemStyles} ${isActive ? accountItemActiveStyles : ""}`.trim()}
-                aria-pressed={isActive}
-                onClick={() => {
-                  onUsernameChange(a.username);
-                  onPasswordChange(a.password);
-                }}
-              >
-                <span
-                  className={`${accountNameStyles} ${isActive ? css({ color: "primary" }) : ""}`.trim()}
-                >
-                  {a.username}
-                </span>
-                <span className={accountPasswordStyles}>{a.password}</span>
-              </button>
-            );
+        <AccountList
+          accounts={ACCOUNTS}
+          selectedUsername={username}
+          onSelect={(u, p) => {
+            onUsernameChange(u);
+            onPasswordChange(p);
+          }}
+        />
+
+        {error && <AuthError message={error} />}
+
+        <div
+          className={css({
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
           })}
-        </div>
-
-        {error && (
-          <div className={errorBoxStyles} role="alert" aria-live="assertive">
-            {error}
-          </div>
-        )}
-
-        <div className={fieldGroupStyles}>
+        >
           <label htmlFor="username" className="sr-only">
             ユーザー名
           </label>
@@ -122,7 +97,7 @@ export function LoginForm({
         >
           {loading ? "ログイン中..." : "ログイン"}
         </Button>
-      </form>
-    </div>
+      </AuthForm>
+    </AuthLayout>
   );
 }

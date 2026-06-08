@@ -2,34 +2,13 @@
 
 import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/Input/Input";
+import { MentionText } from "@/components/ui/Mention/MentionText";
+import { MentionDropdown } from "@/components/ui/MentionDropdown/MentionDropdown";
+import { MessageBubble } from "@/components/ui/MessageBubble/MessageBubble";
 import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
+import { TypingIndicator } from "@/components/ui/TypingIndicator/TypingIndicator";
+import { css } from "@/styled-system/css";
 import type { GlobalChatServerMessage } from "@/types/ws";
-import {
-  bubbleMeStyles,
-  bubbleOtherStyles,
-  bubbleStyles,
-  inputFormStyles,
-  inputWrapperStyles,
-  mentionAvatarStyles,
-  mentionDropdownStyles,
-  mentionHandleStyles,
-  mentionItemFocusedStyles,
-  mentionItemStyles,
-  mentionUserInfoStyles,
-  mentionUsernameStyles,
-  messagePendingStyles,
-  messageWrapperMeStyles,
-  messageWrapperOtherStyles,
-  messageWrapperStyles,
-  senderNameStyles,
-  subtitleStyles,
-  timestampMeStyles,
-  timestampOtherStyles,
-  timestampStyles,
-  titleStyles,
-} from "./GlobalChat.styles";
-import { MentionText } from "./MentionText";
-import { TypingIndicator } from "./TypingIndicator";
 
 export interface GlobalChatProps {
   messages: (GlobalChatServerMessage & { isPending?: boolean })[];
@@ -46,6 +25,19 @@ export interface GlobalChatProps {
   mentionFocusedIndex: number;
   onMentionSelect: (username: string) => void;
 }
+
+const inputFormStyles = css({
+  padding: "12px 16px",
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+});
+
+const inputWrapperStyles = css({
+  position: "relative",
+  flex: 1,
+  minWidth: 0,
+});
 
 export function GlobalChat({
   messages,
@@ -66,8 +58,23 @@ export function GlobalChat({
     <PanelLayout
       header={
         <>
-          <h2 className={titleStyles}>Global Chat</h2>
-          <p className={subtitleStyles}>
+          <h2
+            className={css({
+              fontSize: "15px",
+              fontWeight: 500,
+              color: "textPrimary",
+              letterSpacing: "0.01em",
+            })}
+          >
+            Global Chat
+          </h2>
+          <p
+            className={css({
+              fontSize: "12px",
+              color: "textSecondary",
+              marginTop: "2px",
+            })}
+          >
             参加者全員とリアルタイムで会話できます。
           </p>
         </>
@@ -78,31 +85,11 @@ export function GlobalChat({
           <form onSubmit={onSend} className={inputFormStyles}>
             <div className={inputWrapperStyles}>
               {mentionIsOpen && (
-                <div className={mentionDropdownStyles}>
-                  {mentionSuggestions.map((u, i) => (
-                    <button
-                      key={u}
-                      type="button"
-                      className={`${mentionItemStyles} ${
-                        i === mentionFocusedIndex
-                          ? mentionItemFocusedStyles
-                          : ""
-                      }`}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        onMentionSelect(u);
-                      }}
-                    >
-                      <span className={mentionAvatarStyles} aria-hidden="true">
-                        {u[0]}
-                      </span>
-                      <span className={mentionUserInfoStyles}>
-                        <span className={mentionUsernameStyles}>{u}</span>
-                        <span className={mentionHandleStyles}>@{u}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                <MentionDropdown
+                  suggestions={mentionSuggestions}
+                  focusedIndex={mentionFocusedIndex}
+                  onSelect={onMentionSelect}
+                />
               )}
               <label htmlFor="global-chat-input" className="sr-only">
                 メッセージを入力
@@ -130,38 +117,21 @@ export function GlobalChat({
       contentAriaLabel="グローバルチャットのメッセージ履歴"
     >
       {messages.map((m) => {
-        const isMe = m.username === currentUser;
         return (
-          <article
+          <MessageBubble
             key={m.id}
-            className={`${messageWrapperStyles} ${
-              isMe ? messageWrapperMeStyles : messageWrapperOtherStyles
-            } ${m.isPending ? messagePendingStyles : ""}`}
-            aria-label={
-              isMe ? "あなたからのメッセージ" : `${m.username} からのメッセージ`
-            }
-          >
-            {!isMe && <span className={senderNameStyles}>{m.username}</span>}
-            <div
-              className={`${bubbleStyles} ${
-                isMe ? bubbleMeStyles : bubbleOtherStyles
-              }`}
-            >
+            username={m.username}
+            currentUser={currentUser}
+            textElement={
               <MentionText
                 text={m.text}
                 currentUser={currentUser}
-                isInMeBubble={isMe}
+                isInMeBubble={m.username === currentUser}
               />
-            </div>
-            <time
-              dateTime={m.created_at}
-              className={`${timestampStyles} ${
-                isMe ? timestampMeStyles : timestampOtherStyles
-              }`}
-            >
-              {formatTime(m.created_at)}
-            </time>
-          </article>
+            }
+            timeStr={formatTime(m.created_at)}
+            isPending={m.isPending}
+          />
         );
       })}
       <div ref={bottomRef} />

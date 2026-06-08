@@ -3,7 +3,7 @@ import {
   mentionMeInMeBubbleStyles,
   mentionMeStyles,
   mentionStyles,
-} from "./GlobalChat.styles";
+} from "./Mention.styles";
 
 interface MentionTextProps {
   text: string;

@@ -4,7 +4,7 @@ export function WorkspaceFooter() {
   return (
     <footer className={footerStyles}>
       <p className={footerTextStyles}>
-        &copy; 2026 Satoha. All rights reserved.
+        &copy; {new Date().getFullYear()} WebSocket test app.
       </p>
     </footer>
   );

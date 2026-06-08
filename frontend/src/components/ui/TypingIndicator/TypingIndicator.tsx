@@ -1,4 +1,4 @@
-import { typingIndicatorStyles } from "./GlobalChat.styles";
+import { typingIndicatorStyles } from "./TypingIndicator.styles";
 
 interface TypingIndicatorProps {
   typingUsers: Set<string>;

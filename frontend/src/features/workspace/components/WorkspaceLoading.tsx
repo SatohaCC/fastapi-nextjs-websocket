@@ -1,6 +1,6 @@
 "use client";
 
-import { loadingContainerStyles } from "./WorkspaceLoading.styles";
+import { Loading } from "@/components/ui/Loading/Loading";
 
 export interface WorkspaceLoadingProps {
   message?: string;
@@ -9,9 +9,5 @@ export interface WorkspaceLoadingProps {
 export function WorkspaceLoading({
   message = "Initializing App...",
 }: WorkspaceLoadingProps) {
-  return (
-    <div className={loadingContainerStyles}>
-      <div className="fade-in">{message}</div>
-    </div>
-  );
+  return <Loading message={message} />;
 }

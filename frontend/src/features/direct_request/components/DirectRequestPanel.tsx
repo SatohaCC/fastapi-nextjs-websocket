@@ -1,28 +1,12 @@
 "use client";
 
-import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Input, Select } from "@/components/ui/Input/Input";
 import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
+import { RequestCard } from "@/components/ui/RequestCard/RequestCard";
+import { css } from "@/styled-system/css";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
-import {
-  actionGroupStyles,
-  emptyStateStyles,
-  formGridStyles,
-  inputGroupStyles,
-  itemHeaderStyles,
-  metaInfoStyles,
-  requestFormStyles,
-  requestItemStyles,
-  requestPendingStyles,
-  requestTextStyles,
-  resolvedNoteStyles,
-  senderNameStyles,
-  separatorStyles,
-  subtitleStyles,
-  timestampStyles,
-  titleStyles,
-} from "./DirectRequestPanel.styles";
 
 export interface DirectRequestPanelProps {
   otherUsers: string[];
@@ -38,6 +22,33 @@ export interface DirectRequestPanelProps {
   bottomRef: React.RefObject<HTMLDivElement | null>;
   isSending?: boolean;
 }
+
+const requestFormStyles = css({
+  padding: "12px 16px",
+  background: "panelBg",
+});
+
+const formGridStyles = css({
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+});
+
+const inputGroupStyles = css({
+  display: "flex",
+  gap: "8px",
+  overflow: "hidden",
+  minWidth: "0",
+  "& select": {
+    flex: "0 0 auto",
+    width: "160px!",
+  },
+  "& input": {
+    flex: "1",
+    minWidth: "0",
+    width: "auto!",
+  },
+});
 
 export function DirectRequestPanel({
   otherUsers,
@@ -57,8 +68,25 @@ export function DirectRequestPanel({
     <PanelLayout
       header={
         <>
-          <h2 className={titleStyles}>ダイレクトリクエスト</h2>
-          <p className={subtitleStyles}>タスクの依頼や問い合わせ</p>
+          <h2
+            className={css({
+              fontSize: "15px",
+              fontWeight: 500,
+              color: "textPrimary",
+              letterSpacing: "0.01em",
+            })}
+          >
+            ダイレクトリクエスト
+          </h2>
+          <p
+            className={css({
+              fontSize: "12px",
+              color: "textSecondary",
+              marginTop: "2px",
+            })}
+          >
+            タスクの依頼や問い合わせ
+          </p>
         </>
       }
       contentRole="region"
@@ -113,7 +141,7 @@ export function DirectRequestPanel({
       }
     >
       {requests.length === 0 ? (
-        <div className={emptyStateStyles}>現在リクエストはありません。</div>
+        <EmptyState message="現在リクエストはありません。" />
       ) : (
         requests.map((m) => {
           const isFromMe = m.sender === currentUser;
@@ -121,70 +149,46 @@ export function DirectRequestPanel({
             m.recipient === currentUser && m.status !== "completed";
 
           return (
-            <article
+            <RequestCard
               key={m.id}
-              className={`tweet-card ${requestItemStyles} ${
-                m.isPending ? requestPendingStyles : ""
-              }`}
-              aria-label={
-                isFromMe ? `${m.recipient} への依頼` : `${m.sender} からの依頼`
-              }
-            >
-              <div className={itemHeaderStyles}>
-                <div className={metaInfoStyles}>
-                  <div className={senderNameStyles}>
-                    {isFromMe
-                      ? `${m.recipient} への依頼`
-                      : `${m.sender} からの依頼`}
-                  </div>
-                  <div className={separatorStyles}>·</div>
-                  <time dateTime={m.created_at} className={timestampStyles}>
-                    {formatDate(m.created_at)}
-                  </time>
-                </div>
-                <Badge variant={m.status}>
-                  {m.status === "requested" && "未着手"}
-                  {m.status === "processing" && "進行中"}
-                  {m.status === "completed" && "完了"}
-                </Badge>
-              </div>
-
-              <div className={requestTextStyles}>{m.text}</div>
-
-              {canUpdate && (
-                <div className={actionGroupStyles}>
-                  {m.status === "requested" && (
+              id={m.id}
+              sender={m.sender}
+              recipient={m.recipient}
+              text={m.text}
+              status={m.status}
+              created_at={m.created_at}
+              updated_at={m.updated_at}
+              isFromMe={isFromMe}
+              isPending={m.isPending}
+              timeStr={formatDate(m.created_at)}
+              updatedTimeStr={formatDate(m.updated_at)}
+              actionsElement={
+                canUpdate ? (
+                  <>
+                    {m.status === "requested" && (
+                      <Button
+                        type="button"
+                        onClick={() => onUpdateStatus(m.id, "processing")}
+                        variant="secondary"
+                        size="sm"
+                        aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
+                      >
+                        承諾
+                      </Button>
+                    )}
                     <Button
                       type="button"
-                      onClick={() => onUpdateStatus(m.id, "processing")}
-                      variant="secondary"
+                      onClick={() => onUpdateStatus(m.id, "completed")}
+                      variant="success"
                       size="sm"
-                      aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
+                      aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
                     >
-                      承諾
+                      完了
                     </Button>
-                  )}
-                  <Button
-                    type="button"
-                    onClick={() => onUpdateStatus(m.id, "completed")}
-                    variant="success"
-                    size="sm"
-                    aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
-                  >
-                    完了
-                  </Button>
-                </div>
-              )}
-
-              {m.status === "completed" && (
-                <div className={resolvedNoteStyles}>
-                  ✓ 解決済み:{" "}
-                  <time dateTime={m.updated_at}>
-                    {formatDate(m.updated_at)}
-                  </time>
-                </div>
-              )}
-            </article>
+                  </>
+                ) : undefined
+              }
+            />
           );
         })
       )}

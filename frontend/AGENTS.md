@@ -38,7 +38,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Presentational コンポーネント:** 接尾辞なし（例: `GlobalChat.tsx`）
 - **Container コンポーネント:** `Container` 接尾辞（例: `GlobalChatContainer.tsx`）
 
-### 5. 作業の完了条件
+### 5. スタイリング規約（Panda CSS）
+- **スタイルのカプセル化**: `src/features/` 以下に `*.styles.ts` などのスタイル定義ファイルを新規作成することは禁止です。
+- **UIコンポーネントへの集約**: 見た目の装飾やスタイル定義は、必ず `src/components/ui/` 配下のコンポーネントにカプセル化してください。
+- **機能コンポーネントでのスタイル微調整**: 機能コンポーネントでレイアウトの微調整（余白、方向、幅）が必要な場合は、インラインの `css({...})` を使用するか、親のコンテナスタイルからのセレクター制御（例: `& input` や `& button`）に限定します。
+
+### 6. 作業の完了条件
 実装完了後は必ず以下のコマンドを実行し、エラーがないことを確認すること。
 ```bash
 npm run test:all

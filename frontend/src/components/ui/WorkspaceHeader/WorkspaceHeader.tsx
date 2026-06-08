@@ -1,7 +1,7 @@
 "use client";
 
+import { NotificationSettings } from "@/components/ui/NotificationSettings/NotificationSettings";
 import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
-import { NotificationSettings } from "./NotificationSettings";
 import {
   brandGroupStyles,
   gearButtonStyles,
