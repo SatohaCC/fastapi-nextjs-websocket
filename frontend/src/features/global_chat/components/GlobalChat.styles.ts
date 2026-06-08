@@ -14,14 +14,14 @@ export const inputWrapperStyles = css({
 });
 
 export const headerTitleStyles = css({
-  fontSize: "15px",
+  fontSize: "lg",
   fontWeight: 500,
   color: "textPrimary",
   letterSpacing: "0.01em",
 });
 
 export const headerSubtitleStyles = css({
-  fontSize: "12px",
+  fontSize: "xs",
   color: "textSecondary",
   marginTop: "2px",
 });

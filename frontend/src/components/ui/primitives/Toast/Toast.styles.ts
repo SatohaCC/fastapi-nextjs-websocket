@@ -37,7 +37,7 @@ export const bodyStyles = css({
 });
 
 export const titleStyles = css({
-  fontSize: "0.875rem",
+  fontSize: "md",
   fontWeight: 500,
   color: "toast.text",
   lineHeight: 1.4,
@@ -45,7 +45,7 @@ export const titleStyles = css({
 });
 
 export const descriptionStyles = css({
-  fontSize: "0.8rem",
+  fontSize: "sm",
   color: "toast.subtext",
   marginTop: "2px",
   lineHeight: 1.4,
@@ -58,7 +58,7 @@ export const closeStyles = css({
   border: "none",
   color: "toast.subtext",
   cursor: "pointer",
-  fontSize: "1rem",
+  fontSize: "lg",
   lineHeight: 1,
   padding: 0,
   transition: "color 0.15s",

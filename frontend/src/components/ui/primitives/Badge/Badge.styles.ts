@@ -4,7 +4,7 @@ export const badgeStyles = cva({
   base: {
     padding: "2px 10px",
     borderRadius: "full",
-    fontSize: "0.75rem",
+    fontSize: "xs",
     fontWeight: 500,
     display: "inline-block",
   },
