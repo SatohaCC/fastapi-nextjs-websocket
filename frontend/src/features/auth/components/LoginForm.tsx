@@ -15,7 +15,6 @@ import {
   fieldGroupStyles,
   formStyles,
   headerStyles,
-  inputStyles,
   logoStyles,
   submitButtonStyles,
   subtitleStyles,
@@ -101,7 +100,6 @@ export function LoginForm({
             }
             required
             placeholder="ユーザー名"
-            className={inputStyles}
           />
           <label htmlFor="password" className="sr-only">
             パスワード
@@ -113,7 +111,6 @@ export function LoginForm({
             onChange={(e) => onPasswordChange(e.target.value)}
             required
             placeholder="パスワード"
-            className={inputStyles}
           />
         </div>
 

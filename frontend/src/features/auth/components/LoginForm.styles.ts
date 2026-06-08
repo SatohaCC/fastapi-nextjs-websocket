@@ -135,20 +135,6 @@ export const fieldGroupStyles = css({
   gap: "16px",
 });
 
-export const inputStyles = css({
-  padding: "14px 16px",
-  fontSize: "15px",
-  borderRadius: "control!",
-  border: "1px solid",
-  borderColor: "border.default!",
-  background: "panelBg",
-  color: "textPrimary",
-  _focus: {
-    borderColor: "primary!",
-    boxShadow: "focusSubtle!",
-  },
-});
-
 export const submitButtonStyles = css({
   padding: "14px",
   fontSize: "15px",

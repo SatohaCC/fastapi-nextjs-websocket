@@ -29,46 +29,14 @@ export const inputGroupStyles = css({
   gap: "8px",
   overflow: "hidden",
   minWidth: "0",
-});
-
-export const selectRecipientStyles = css({
-  flex: "0 0 auto",
-  width: "160px!",
-  borderRadius: "control",
-  background: "panelBg",
-  border: "1px solid",
-  borderColor: "panelBorder",
-  height: "42px",
-  color: "textPrimary",
-  fontSize: "14px",
-  padding: "0 36px 0 12px",
-  appearance: "none",
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235F6368' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 10px center",
-  _focus: {
-    borderColor: "primary",
-    boxShadow: "focus",
-    outline: "none",
+  "& select": {
+    flex: "0 0 auto",
+    width: "160px!",
   },
-});
-
-export const inputTaskStyles = css({
-  flex: "1",
-  minWidth: "0",
-  width: "auto!",
-  borderRadius: "control",
-  background: "panelBg",
-  border: "1px solid",
-  borderColor: "panelBorder",
-  height: "42px",
-  color: "textPrimary",
-  fontSize: "14px",
-  padding: "0 16px",
-  _focus: {
-    borderColor: "primary",
-    boxShadow: "focus",
-    outline: "none",
+  "& input": {
+    flex: "1",
+    minWidth: "0",
+    width: "auto!",
   },
 });
 

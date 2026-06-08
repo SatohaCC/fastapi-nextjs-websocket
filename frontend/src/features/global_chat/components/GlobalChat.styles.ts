@@ -123,26 +123,6 @@ export const inputFormStyles = css({
   alignItems: "center",
 });
 
-export const textInputStyles = css({
-  borderRadius: "control!",
-  background: "panelBg",
-  border: "1px solid",
-  borderColor: "panelBorder!",
-  flex: 1,
-  height: "42px",
-  color: "textPrimary",
-  fontSize: "14px!",
-  padding: "0 16px!",
-  _focus: {
-    borderColor: "primary!",
-    boxShadow: "focus!",
-    outline: "none",
-  },
-  _placeholder: {
-    color: "textMuted",
-  },
-});
-
 export const sendButtonStyles = css({
   padding: "0 20px",
   borderRadius: "control!",

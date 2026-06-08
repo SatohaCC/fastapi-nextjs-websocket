@@ -29,7 +29,9 @@ export function MentionText({
 
         let className: string;
         if (isInMeBubble) {
-          className = isMe ? mentionMeInMeBubbleStyles : mentionInMeBubbleStyles;
+          className = isMe
+            ? mentionMeInMeBubbleStyles
+            : mentionInMeBubbleStyles;
         } else {
           className = isMe ? mentionMeStyles : mentionStyles;
         }

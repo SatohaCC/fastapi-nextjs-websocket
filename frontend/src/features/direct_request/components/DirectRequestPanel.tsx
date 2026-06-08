@@ -1,33 +1,31 @@
 "use client";
 
-import { Badge } from "@/components/ui/Badge/Badge";
-import { Button } from "@/components/ui/Button/Button";
-import { Input, Select } from "@/components/ui/Input/Input";
-import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
-import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
+import {Badge} from "@/components/ui/Badge/Badge";
+import {Button} from "@/components/ui/Button/Button";
+import {Input, Select} from "@/components/ui/Input/Input";
+import {PanelLayout} from "@/components/ui/PanelLayout/PanelLayout";
+import type {DirectRequestServerMessage, TaskStatus} from "@/types/ws";
 import {
-  actionButtonStyles,
-  actionGroupStyles,
-  completeButtonStyles,
-  emptyStateStyles,
-  formGridStyles,
-  inputGroupStyles,
-  inputTaskStyles,
-  itemHeaderStyles,
-  metaInfoStyles,
-  requestFormStyles,
-  requestItemStyles,
-  requestListStyles,
-  requestPendingStyles,
-  requestTextStyles,
-  resolvedNoteStyles,
-  selectRecipientStyles,
-  senderNameStyles,
-  separatorStyles,
-  submitButtonStyles,
-  subtitleStyles,
-  timestampStyles,
-  titleStyles,
+    actionButtonStyles,
+    actionGroupStyles,
+    completeButtonStyles,
+    emptyStateStyles,
+    formGridStyles,
+    inputGroupStyles,
+    itemHeaderStyles,
+    metaInfoStyles,
+    requestFormStyles,
+    requestItemStyles,
+    requestListStyles,
+    requestPendingStyles,
+    requestTextStyles,
+    resolvedNoteStyles,
+    senderNameStyles,
+    separatorStyles,
+    submitButtonStyles,
+    subtitleStyles,
+    timestampStyles,
+    titleStyles,
 } from "./DirectRequestPanel.styles";
 
 export interface DirectRequestPanelProps {
@@ -83,7 +81,6 @@ export function DirectRequestPanel({
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   onTargetUserChange(e.target.value)
                 }
-                className={selectRecipientStyles}
                 disabled={isSending}
               >
                 <option value="" disabled>
@@ -106,7 +103,6 @@ export function DirectRequestPanel({
                   onTextChange(e.target.value)
                 }
                 placeholder="依頼内容を入力してください"
-                className={inputTaskStyles}
               />
             </div>
             <Button

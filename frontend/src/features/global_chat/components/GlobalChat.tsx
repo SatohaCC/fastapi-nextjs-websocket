@@ -27,7 +27,6 @@ import {
   sendButtonStyles,
   senderNameStyles,
   subtitleStyles,
-  textInputStyles,
   timestampMeStyles,
   timestampOtherStyles,
   timestampStyles,
@@ -161,7 +160,6 @@ export function GlobalChat({
               }
               onKeyDown={onInputKeyDown}
               placeholder="Start a new message"
-              className={textInputStyles}
               autoComplete="off"
             />
           </div>
