@@ -1,14 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/Button/Button";
-import { Card, CardHeader } from "@/components/ui/Card/Card";
 import { Input } from "@/components/ui/Input/Input";
+import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
 import type { GlobalChatServerMessage } from "@/types/ws";
 import {
   bubbleMeStyles,
   bubbleOtherStyles,
   bubbleStyles,
-  formWrapperStyles,
   inputFormStyles,
   inputWrapperStyles,
   mentionAvatarStyles,
@@ -19,11 +18,9 @@ import {
   mentionUserInfoStyles,
   mentionUsernameStyles,
   messagePendingStyles,
-  messagesAreaStyles,
   messageWrapperMeStyles,
   messageWrapperOtherStyles,
   messageWrapperStyles,
-  panelStyles,
   senderNameStyles,
   subtitleStyles,
   timestampMeStyles,
@@ -66,62 +63,17 @@ export function GlobalChat({
   onMentionSelect,
 }: GlobalChatProps) {
   return (
-    <div className={`fade-in ${panelStyles}`}>
-      <Card>
-        <CardHeader>
+    <PanelLayout
+      header={
+        <>
           <h2 className={titleStyles}>Global Chat</h2>
           <p className={subtitleStyles}>
             参加者全員とリアルタイムで会話できます。
           </p>
-        </CardHeader>
-        <div
-          className={messagesAreaStyles}
-          role="log"
-          aria-label="グローバルチャットのメッセージ履歴"
-          aria-live="polite"
-        >
-          {messages.map((m) => {
-            const isMe = m.username === currentUser;
-            return (
-              <article
-                key={m.id}
-                className={`${messageWrapperStyles} ${
-                  isMe ? messageWrapperMeStyles : messageWrapperOtherStyles
-                } ${m.isPending ? messagePendingStyles : ""}`}
-                aria-label={
-                  isMe
-                    ? "あなたからのメッセージ"
-                    : `${m.username} からのメッセージ`
-                }
-              >
-                {!isMe && (
-                  <span className={senderNameStyles}>{m.username}</span>
-                )}
-                <div
-                  className={`${bubbleStyles} ${
-                    isMe ? bubbleMeStyles : bubbleOtherStyles
-                  }`}
-                >
-                  <MentionText
-                    text={m.text}
-                    currentUser={currentUser}
-                    isInMeBubble={isMe}
-                  />
-                </div>
-                <time
-                  dateTime={m.created_at}
-                  className={`${timestampStyles} ${
-                    isMe ? timestampMeStyles : timestampOtherStyles
-                  }`}
-                >
-                  {formatTime(m.created_at)}
-                </time>
-              </article>
-            );
-          })}
-          <div ref={bottomRef} />
-        </div>
-        <div className={formWrapperStyles}>
+        </>
+      }
+      form={
+        <>
           <TypingIndicator typingUsers={typingUsers} />
           <form onSubmit={onSend} className={inputFormStyles}>
             <div className={inputWrapperStyles}>
@@ -171,8 +123,48 @@ export function GlobalChat({
               Send
             </Button>
           </form>
-        </div>
-      </Card>
-    </div>
+        </>
+      }
+      padding="normal"
+      contentRole="log"
+      contentAriaLabel="グローバルチャットのメッセージ履歴"
+    >
+      {messages.map((m) => {
+        const isMe = m.username === currentUser;
+        return (
+          <article
+            key={m.id}
+            className={`${messageWrapperStyles} ${
+              isMe ? messageWrapperMeStyles : messageWrapperOtherStyles
+            } ${m.isPending ? messagePendingStyles : ""}`}
+            aria-label={
+              isMe ? "あなたからのメッセージ" : `${m.username} からのメッセージ`
+            }
+          >
+            {!isMe && <span className={senderNameStyles}>{m.username}</span>}
+            <div
+              className={`${bubbleStyles} ${
+                isMe ? bubbleMeStyles : bubbleOtherStyles
+              }`}
+            >
+              <MentionText
+                text={m.text}
+                currentUser={currentUser}
+                isInMeBubble={isMe}
+              />
+            </div>
+            <time
+              dateTime={m.created_at}
+              className={`${timestampStyles} ${
+                isMe ? timestampMeStyles : timestampOtherStyles
+              }`}
+            >
+              {formatTime(m.created_at)}
+            </time>
+          </article>
+        );
+      })}
+      <div ref={bottomRef} />
+    </PanelLayout>
   );
 }

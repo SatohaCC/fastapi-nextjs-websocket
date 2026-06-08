@@ -1,16 +1,5 @@
 import { css } from "@/styled-system/css";
 
-export const panelStyles = css({
-  gridRow: "span 3",
-  display: "grid",
-  gridTemplateRows: "subgrid",
-  "@media (max-width: 1024px)": {
-    gridRow: "unset",
-    display: "flex",
-    flexDirection: "column",
-  },
-});
-
 export const titleStyles = css({
   fontSize: "15px",
   fontWeight: 500,
@@ -22,27 +11,6 @@ export const subtitleStyles = css({
   fontSize: "12px",
   color: "textSecondary",
   marginTop: "2px",
-});
-
-export const messagesAreaStyles = css({
-  padding: "16px 20px 16px 20px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "14px",
-  overflowY: "auto",
-  overflowX: "hidden",
-  minHeight: 0,
-  background: "bg",
-  scrollbarGutter: "stable",
-});
-
-export const formWrapperStyles = css({
-  borderTop: "1px solid",
-  borderTopColor: "border.divider",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "flex-end",
-  background: "panelBg",
 });
 
 export const messageWrapperStyles = css({

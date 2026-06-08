@@ -10,6 +10,7 @@ interface PanelLayoutProps {
   header: ReactNode;
   form: ReactNode;
   children: ReactNode;
+  padding?: "none" | "normal";
   contentRole?: "log" | "region" | "navigation" | "search" | "main" | "form";
   contentAriaLabel?: string;
   contentAriaLive?: "polite" | "assertive" | "off";
@@ -19,13 +20,14 @@ export function PanelLayout({
   header,
   form,
   children,
+  padding = "none",
   contentRole,
   contentAriaLabel,
   contentAriaLive,
 }: PanelLayoutProps) {
   let contentElement: ReactNode;
 
-  const combinedContentClass = contentStyles;
+  const combinedContentClass = contentStyles({ padding });
 
   if (contentRole === "log") {
     contentElement = (

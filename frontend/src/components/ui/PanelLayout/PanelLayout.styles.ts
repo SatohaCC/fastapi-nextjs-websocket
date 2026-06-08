@@ -1,4 +1,4 @@
-import { css } from "@/styled-system/css";
+import { css, cva } from "@/styled-system/css";
 
 export const containerStyles = css({
   gridRow: "span 3",
@@ -11,14 +11,30 @@ export const containerStyles = css({
   },
 });
 
-export const contentStyles = css({
-  overflowY: "auto",
-  minHeight: 0,
-  display: "flex",
-  flexDirection: "column",
-  background: "bg",
-  "@media (max-width: 1024px)": {
-    flex: 1,
+export const contentStyles = cva({
+  base: {
+    overflowY: "auto",
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    background: "bg",
+    "@media (max-width: 1024px)": {
+      flex: 1,
+    },
+  },
+  variants: {
+    padding: {
+      none: {
+        padding: 0,
+      },
+      normal: {
+        padding: "16px 20px",
+        gap: "14px",
+      },
+    },
+  },
+  defaultVariants: {
+    padding: "none",
   },
 });
 
