@@ -74,3 +74,7 @@ export const accountPasswordStyles = css({
   fontFamily: "monospace",
   letterSpacing: "0.02em",
 });
+
+export const accountNameActiveStyles = css({
+  color: "primary",
+});

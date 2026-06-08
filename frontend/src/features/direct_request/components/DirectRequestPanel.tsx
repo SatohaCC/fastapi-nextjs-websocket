@@ -4,8 +4,14 @@ import { EmptyState } from "@/components/ui/composites/EmptyState/EmptyState";
 import { PanelLayout } from "@/components/ui/composites/PanelLayout/PanelLayout";
 import { Button } from "@/components/ui/primitives/Button/Button";
 import { Input, Select } from "@/components/ui/primitives/Input/Input";
-import { css } from "@/styled-system/css";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
+import {
+  formGridStyles,
+  headerSubtitleStyles,
+  headerTitleStyles,
+  inputGroupStyles,
+  requestFormStyles,
+} from "./DirectRequestPanel.styles";
 import { RequestCard } from "./RequestCard/RequestCard";
 
 export interface DirectRequestPanelProps {
@@ -22,33 +28,6 @@ export interface DirectRequestPanelProps {
   bottomRef: React.RefObject<HTMLDivElement | null>;
   isSending?: boolean;
 }
-
-const requestFormStyles = css({
-  padding: "12px 16px",
-  background: "panelBg",
-});
-
-const formGridStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-});
-
-const inputGroupStyles = css({
-  display: "flex",
-  gap: "8px",
-  overflow: "hidden",
-  minWidth: "0",
-  "& select": {
-    flex: "0 0 auto",
-    width: "160px!",
-  },
-  "& input": {
-    flex: "1",
-    minWidth: "0",
-    width: "auto!",
-  },
-});
 
 export function DirectRequestPanel({
   otherUsers,
@@ -68,25 +47,8 @@ export function DirectRequestPanel({
     <PanelLayout
       header={
         <>
-          <h2
-            className={css({
-              fontSize: "15px",
-              fontWeight: 500,
-              color: "textPrimary",
-              letterSpacing: "0.01em",
-            })}
-          >
-            ダイレクトリクエスト
-          </h2>
-          <p
-            className={css({
-              fontSize: "12px",
-              color: "textSecondary",
-              marginTop: "2px",
-            })}
-          >
-            タスクの依頼や問い合わせ
-          </p>
+          <h2 className={headerTitleStyles}>ダイレクトリクエスト</h2>
+          <p className={headerSubtitleStyles}>タスクの依頼や問い合わせ</p>
         </>
       }
       contentRole="region"

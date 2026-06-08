@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/primitives/Button/Button";
 import { Input } from "@/components/ui/primitives/Input/Input";
-import { css } from "@/styled-system/css";
 import { AccountList } from "./AccountList/AccountList";
 import {
   AuthError,
@@ -10,6 +9,7 @@ import {
   AuthHeader,
   AuthLayout,
 } from "./AuthLayout/AuthLayout";
+import { fieldsWrapperStyles } from "./LoginForm.styles";
 
 const ACCOUNTS = [
   { username: "alice", password: "password1" },
@@ -55,13 +55,7 @@ export function LoginForm({
 
         {error && <AuthError message={error} />}
 
-        <div
-          className={css({
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-          })}
-        >
+        <div className={fieldsWrapperStyles}>
           <label htmlFor="username" className="sr-only">
             ユーザー名
           </label>

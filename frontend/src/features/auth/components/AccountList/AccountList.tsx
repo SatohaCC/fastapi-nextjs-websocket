@@ -1,7 +1,7 @@
-import { css } from "@/styled-system/css";
 import {
   accountItemActiveStyles,
   accountItemStyles,
+  accountNameActiveStyles,
   accountNameStyles,
   accountPasswordStyles,
   accountsLabelStyles,
@@ -40,7 +40,7 @@ export function AccountList({
             onClick={() => onSelect(a.username, a.password)}
           >
             <span
-              className={`${accountNameStyles} ${isActive ? css({ color: "primary" }) : ""}`.trim()}
+              className={`${accountNameStyles} ${isActive ? accountNameActiveStyles : ""}`.trim()}
             >
               {a.username}
             </span>

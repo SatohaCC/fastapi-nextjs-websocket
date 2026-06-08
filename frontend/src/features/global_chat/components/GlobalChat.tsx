@@ -3,8 +3,13 @@
 import { PanelLayout } from "@/components/ui/composites/PanelLayout/PanelLayout";
 import { Button } from "@/components/ui/primitives/Button/Button";
 import { Input } from "@/components/ui/primitives/Input/Input";
-import { css } from "@/styled-system/css";
 import type { GlobalChatServerMessage } from "@/types/ws";
+import {
+  headerSubtitleStyles,
+  headerTitleStyles,
+  inputFormStyles,
+  inputWrapperStyles,
+} from "./GlobalChat.styles";
 import { MentionText } from "./Mention/MentionText";
 import { MentionDropdown } from "./MentionDropdown/MentionDropdown";
 import { MessageBubble } from "./MessageBubble/MessageBubble";
@@ -26,19 +31,6 @@ export interface GlobalChatProps {
   onMentionSelect: (username: string) => void;
 }
 
-const inputFormStyles = css({
-  padding: "12px 16px",
-  display: "flex",
-  gap: "8px",
-  alignItems: "center",
-});
-
-const inputWrapperStyles = css({
-  position: "relative",
-  flex: 1,
-  minWidth: 0,
-});
-
 export function GlobalChat({
   messages,
   currentUser,
@@ -58,23 +50,8 @@ export function GlobalChat({
     <PanelLayout
       header={
         <>
-          <h2
-            className={css({
-              fontSize: "15px",
-              fontWeight: 500,
-              color: "textPrimary",
-              letterSpacing: "0.01em",
-            })}
-          >
-            Global Chat
-          </h2>
-          <p
-            className={css({
-              fontSize: "12px",
-              color: "textSecondary",
-              marginTop: "2px",
-            })}
-          >
+          <h2 className={headerTitleStyles}>Global Chat</h2>
+          <p className={headerSubtitleStyles}>
             参加者全員とリアルタイムで会話できます。
           </p>
         </>
