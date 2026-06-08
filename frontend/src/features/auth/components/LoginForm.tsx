@@ -1,15 +1,15 @@
 "use client";
 
-import { AccountList } from "@/components/ui/AccountList/AccountList";
-import { Button } from "@/components/ui/Button/Button";
-import { Input } from "@/components/ui/Input/Input";
+import { Button } from "@/components/ui/primitives/Button/Button";
+import { Input } from "@/components/ui/primitives/Input/Input";
+import { css } from "@/styled-system/css";
+import { AccountList } from "./AccountList/AccountList";
 import {
   AuthError,
   AuthForm,
   AuthHeader,
   AuthLayout,
-} from "@/components/ui/Layout/AuthLayout";
-import { css } from "@/styled-system/css";
+} from "./AuthLayout/AuthLayout";
 
 const ACCOUNTS = [
   { username: "alice", password: "password1" },

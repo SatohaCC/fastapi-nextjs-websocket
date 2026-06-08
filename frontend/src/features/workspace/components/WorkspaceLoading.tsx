@@ -1,6 +1,6 @@
 "use client";
 
-import { Loading } from "@/components/ui/Loading/Loading";
+import { Loading } from "@/components/ui/primitives/Loading/Loading";
 
 export interface WorkspaceLoadingProps {
   message?: string;

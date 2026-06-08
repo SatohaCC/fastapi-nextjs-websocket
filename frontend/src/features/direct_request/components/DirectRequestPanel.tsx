@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/Button/Button";
-import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
-import { Input, Select } from "@/components/ui/Input/Input";
-import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
-import { RequestCard } from "@/components/ui/RequestCard/RequestCard";
+import { EmptyState } from "@/components/ui/composites/EmptyState/EmptyState";
+import { PanelLayout } from "@/components/ui/composites/PanelLayout/PanelLayout";
+import { Button } from "@/components/ui/primitives/Button/Button";
+import { Input, Select } from "@/components/ui/primitives/Input/Input";
 import { css } from "@/styled-system/css";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
+import { RequestCard } from "./RequestCard/RequestCard";
 
 export interface DirectRequestPanelProps {
   otherUsers: string[];

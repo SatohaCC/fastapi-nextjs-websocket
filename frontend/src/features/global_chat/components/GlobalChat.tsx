@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/Button/Button";
-import { Input } from "@/components/ui/Input/Input";
-import { MentionText } from "@/components/ui/Mention/MentionText";
-import { MentionDropdown } from "@/components/ui/MentionDropdown/MentionDropdown";
-import { MessageBubble } from "@/components/ui/MessageBubble/MessageBubble";
-import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
-import { TypingIndicator } from "@/components/ui/TypingIndicator/TypingIndicator";
+import { PanelLayout } from "@/components/ui/composites/PanelLayout/PanelLayout";
+import { Button } from "@/components/ui/primitives/Button/Button";
+import { Input } from "@/components/ui/primitives/Input/Input";
 import { css } from "@/styled-system/css";
 import type { GlobalChatServerMessage } from "@/types/ws";
+import { MentionText } from "./Mention/MentionText";
+import { MentionDropdown } from "./MentionDropdown/MentionDropdown";
+import { MessageBubble } from "./MessageBubble/MessageBubble";
+import { TypingIndicator } from "./TypingIndicator/TypingIndicator";
 
 export interface GlobalChatProps {
   messages: (GlobalChatServerMessage & { isPending?: boolean })[];

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ui/Badge/Badge";
+import { Badge } from "@/components/ui/primitives/Badge/Badge";
 import type { TaskStatus } from "@/types/ws";
 import {
   actionGroupStyles,

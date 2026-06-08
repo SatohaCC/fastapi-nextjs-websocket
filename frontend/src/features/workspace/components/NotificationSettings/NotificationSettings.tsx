@@ -1,6 +1,6 @@
 "use client";
 
-import { Toggle } from "@/components/ui/Toggle/Toggle";
+import { Toggle } from "@/components/ui/primitives/Toggle/Toggle";
 import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
 import {
   settingsListStyles,

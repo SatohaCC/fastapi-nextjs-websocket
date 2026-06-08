@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card, CardHeader } from "@/components/ui/Card/Card";
+import { Card, CardHeader } from "@/components/ui/primitives/Card/Card";
 import {
   containerStyles,
   contentStyles,

@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { WorkspaceHeader } from "@/components/ui/WorkspaceHeader/WorkspaceHeader";
 import { useNotificationSettings } from "@/features/common/notifications/useNotificationSettings";
 import { useWebSocketContext } from "@/features/common/websocket/context/WebSocketContext";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { requestBrowserNotificationPermission } from "@/lib/browserNotification";
 import type { NotificationSettings } from "@/lib/notificationSettings";
 import { toast } from "@/lib/toast";
+import { WorkspaceHeader } from "./WorkspaceHeader/WorkspaceHeader";
 
 export function WorkspaceHeaderContainer() {
   const { username, onLogout } = useWorkspaceContext();
