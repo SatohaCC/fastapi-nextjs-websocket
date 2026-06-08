@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/Button/Button";
+import {
+  containerStyles,
+  detailBoxStyles,
+  headingStyles,
+  messageStyles,
+} from "./error.styles";
 
 export default function ChatError({
   error,
@@ -15,49 +22,16 @@ export default function ChatError({
   }, [error]);
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "24px",
-        padding: "20px",
-        textAlign: "center",
-        background: "var(--background)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "48px",
-          fontWeight: "900",
-          color: "var(--error)",
-          letterSpacing: "-0.05em",
-        }}
-      >
-        システムエラー
-      </div>
-      <p style={{ color: "var(--text-secondary)", maxWidth: "400px" }}>
+    <div className={containerStyles}>
+      <div className={headingStyles}>システムエラー</div>
+      <p className={messageStyles}>
         システムとの同期中に予期しないエラーが発生しました。
         サーバーとの接続が切断されています。
       </p>
-      <div
-        style={{
-          padding: "16px",
-          background: "rgba(239, 68, 68, 0.1)",
-          border: "1px solid rgba(239, 68, 68, 0.2)",
-          borderRadius: "12px",
-          fontFamily: "monospace",
-          fontSize: "12px",
-          color: "var(--error)",
-        }}
-      >
+      <div className={detailBoxStyles}>
         {error.message || "原因不明のエラーが検出されました"}
       </div>
-      <button type="button" onClick={() => reset()} className="btn-primary">
-        再接続を試みる
-      </button>
+      <Button onPress={() => reset()}>再接続を試みる</Button>
     </div>
   );
 }
