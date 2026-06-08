@@ -1,31 +1,27 @@
 "use client";
 
-import {Badge} from "@/components/ui/Badge/Badge";
-import {Button} from "@/components/ui/Button/Button";
-import {Input, Select} from "@/components/ui/Input/Input";
-import {PanelLayout} from "@/components/ui/PanelLayout/PanelLayout";
-import type {DirectRequestServerMessage, TaskStatus} from "@/types/ws";
+import { Badge } from "@/components/ui/Badge/Badge";
+import { Button } from "@/components/ui/Button/Button";
+import { Input, Select } from "@/components/ui/Input/Input";
+import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
+import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
 import {
-    actionButtonStyles,
-    actionGroupStyles,
-    completeButtonStyles,
-    emptyStateStyles,
-    formGridStyles,
-    inputGroupStyles,
-    itemHeaderStyles,
-    metaInfoStyles,
-    requestFormStyles,
-    requestItemStyles,
-    requestListStyles,
-    requestPendingStyles,
-    requestTextStyles,
-    resolvedNoteStyles,
-    senderNameStyles,
-    separatorStyles,
-    submitButtonStyles,
-    subtitleStyles,
-    timestampStyles,
-    titleStyles,
+  actionGroupStyles,
+  emptyStateStyles,
+  formGridStyles,
+  inputGroupStyles,
+  itemHeaderStyles,
+  metaInfoStyles,
+  requestFormStyles,
+  requestItemStyles,
+  requestPendingStyles,
+  requestTextStyles,
+  resolvedNoteStyles,
+  senderNameStyles,
+  separatorStyles,
+  subtitleStyles,
+  timestampStyles,
+  titleStyles,
 } from "./DirectRequestPanel.styles";
 
 export interface DirectRequestPanelProps {
@@ -65,7 +61,6 @@ export function DirectRequestPanel({
           <p className={subtitleStyles}>タスクの依頼や問い合わせ</p>
         </>
       }
-      contentClassName={requestListStyles}
       contentRole="region"
       contentAriaLabel="ダイレクトリクエスト一覧"
       form={
@@ -108,7 +103,7 @@ export function DirectRequestPanel({
             <Button
               type="submit"
               variant="primary"
-              className={submitButtonStyles}
+              fullWidth
               disabled={!targetUser || !text.trim()}
             >
               リクエストを送信
@@ -163,7 +158,7 @@ export function DirectRequestPanel({
                       type="button"
                       onClick={() => onUpdateStatus(m.id, "processing")}
                       variant="secondary"
-                      className={actionButtonStyles}
+                      size="sm"
                       aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
                     >
                       承諾
@@ -172,8 +167,8 @@ export function DirectRequestPanel({
                   <Button
                     type="button"
                     onClick={() => onUpdateStatus(m.id, "completed")}
-                    variant="primary"
-                    className={`${actionButtonStyles} ${completeButtonStyles}`}
+                    variant="success"
+                    size="sm"
                     aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
                   >
                     完了

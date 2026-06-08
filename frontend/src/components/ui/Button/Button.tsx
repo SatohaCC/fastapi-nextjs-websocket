@@ -5,8 +5,9 @@ import {
 import { buttonStyles } from "./Button.styles";
 
 interface ButtonProps extends RACButtonProps {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "success";
   size?: "sm" | "md" | "lg";
+  fullWidth?: boolean;
   children: React.ReactNode;
   disabled?: boolean;
 }
@@ -14,6 +15,7 @@ interface ButtonProps extends RACButtonProps {
 export function Button({
   variant = "primary",
   size = "md",
+  fullWidth = false,
   className = "",
   children,
   disabled,
@@ -23,7 +25,7 @@ export function Button({
     <RACButton
       isDisabled={disabled ?? props.isDisabled}
       className={(state) => {
-        const baseClass = buttonStyles({ variant, size });
+        const baseClass = buttonStyles({ variant, size, fullWidth });
         const customClass =
           typeof className === "function" ? className(state) : className;
         return `${baseClass} ${customClass}`.trim();

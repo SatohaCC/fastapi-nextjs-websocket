@@ -10,8 +10,6 @@ interface PanelLayoutProps {
   header: ReactNode;
   form: ReactNode;
   children: ReactNode;
-  contentClassName?: string;
-  className?: string;
   contentRole?: "log" | "region" | "navigation" | "search" | "main" | "form";
   contentAriaLabel?: string;
   contentAriaLive?: "polite" | "assertive" | "off";
@@ -21,15 +19,13 @@ export function PanelLayout({
   header,
   form,
   children,
-  contentClassName = "",
-  className = "",
   contentRole,
   contentAriaLabel,
   contentAriaLive,
 }: PanelLayoutProps) {
   let contentElement: ReactNode;
 
-  const combinedContentClass = `${contentStyles} ${contentClassName}`.trim();
+  const combinedContentClass = contentStyles;
 
   if (contentRole === "log") {
     contentElement = (
@@ -61,7 +57,7 @@ export function PanelLayout({
   }
 
   return (
-    <Card className={`fade-in ${containerStyles} ${className}`.trim()}>
+    <Card className={`fade-in ${containerStyles}`.trim()}>
       <CardHeader>{header}</CardHeader>
       {contentElement}
       <div className={formWrapperStyles}>{form}</div>

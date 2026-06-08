@@ -14,6 +14,9 @@ export const containerStyles = css({
 export const contentStyles = css({
   overflowY: "auto",
   minHeight: 0,
+  display: "flex",
+  flexDirection: "column",
+  background: "bg",
   "@media (max-width: 1024px)": {
     flex: 1,
   },

@@ -134,15 +134,3 @@ export const fieldGroupStyles = css({
   flexDirection: "column",
   gap: "16px",
 });
-
-export const submitButtonStyles = css({
-  padding: "14px",
-  fontSize: "15px",
-  fontWeight: 500,
-  width: "100%",
-  borderRadius: "control!",
-  letterSpacing: "0.01em",
-  _active: {
-    transform: "scale(0.99)",
-  },
-});

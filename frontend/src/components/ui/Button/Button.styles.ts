@@ -7,7 +7,7 @@ export const buttonStyles = cva({
     fontWeight: 500,
     border: "none",
     cursor: "pointer",
-    transition: "background 0.2s, box-shadow 0.2s",
+    transition: "background 0.2s, box-shadow 0.2s, transform 0.1s ease",
     fontSize: "14px",
     letterSpacing: "0.01em",
     display: "inline-flex",
@@ -28,6 +28,9 @@ export const buttonStyles = cva({
       border: "1px solid",
       borderColor: "panelBorder!",
       cursor: "not-allowed",
+    },
+    _active: {
+      transform: "scale(0.99)",
     },
   },
   variants: {
@@ -62,6 +65,15 @@ export const buttonStyles = cva({
           bg: "surface.active",
         },
       },
+      success: {
+        bg: "success",
+        color: "white",
+        boxShadow: "buttonDefault",
+        "&[data-hovered]": {
+          opacity: 0.9,
+          boxShadow: "buttonHover",
+        },
+      },
     },
     size: {
       sm: {
@@ -75,6 +87,15 @@ export const buttonStyles = cva({
       lg: {
         padding: "14px 32px",
         fontSize: "16px",
+      },
+    },
+    fullWidth: {
+      true: {
+        width: "100%",
+        display: "flex",
+      },
+      false: {
+        display: "inline-flex",
       },
     },
   },

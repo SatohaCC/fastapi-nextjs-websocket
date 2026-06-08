@@ -123,15 +123,6 @@ export const inputFormStyles = css({
   alignItems: "center",
 });
 
-export const sendButtonStyles = css({
-  padding: "0 20px",
-  borderRadius: "control!",
-  fontWeight: 500,
-  height: "42px",
-  fontSize: "14px",
-  minWidth: "64px",
-});
-
 export const messagePendingStyles = css({
   opacity: 0.5,
 });

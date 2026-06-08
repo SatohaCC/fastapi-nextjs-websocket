@@ -16,7 +16,6 @@ import {
   formStyles,
   headerStyles,
   logoStyles,
-  submitButtonStyles,
   subtitleStyles,
 } from "./LoginForm.styles";
 
@@ -118,7 +117,8 @@ export function LoginForm({
           type="submit"
           disabled={loading}
           variant="primary"
-          className={submitButtonStyles}
+          size="lg"
+          fullWidth
         >
           {loading ? "ログイン中..." : "ログイン"}
         </Button>

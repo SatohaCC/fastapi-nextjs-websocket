@@ -40,21 +40,6 @@ export const inputGroupStyles = css({
   },
 });
 
-export const submitButtonStyles = css({
-  fontSize: "14px",
-  height: "42px",
-  borderRadius: "control",
-  fontWeight: 500,
-  letterSpacing: "0.01em",
-  width: "100%",
-});
-
-export const requestListStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  background: "bg",
-});
-
 export const emptyStateStyles = css({
   textAlign: "center",
   color: "textMuted",
@@ -116,19 +101,9 @@ export const actionGroupStyles = css({
   display: "flex",
   gap: "8px",
   marginTop: "12px",
-});
-
-export const actionButtonStyles = css({
-  fontSize: "13px",
-  padding: "8px 0",
-  flex: 1,
-  borderRadius: "control",
-  fontWeight: 500,
-});
-
-export const completeButtonStyles = css({
-  background: "success!",
-  color: "white!",
+  "& button": {
+    flex: 1,
+  },
 });
 
 export const resolvedNoteStyles = css({
