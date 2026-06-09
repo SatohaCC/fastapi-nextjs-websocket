@@ -1,14 +1,28 @@
 """アプリケーション設定モジュール。"""
 
+from typing import Literal
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ..domain.primitives.primitives import Password, Username
 
+_DEV_SECRET_KEY = "dev-secret-key-do-not-use-in-production"
+_DEV_ADMIN_PASSWORD = "admin-password"
+_DEV_ADMIN_SECRET_KEY = "dev-admin-secret-key"
+
 
 class Settings(BaseSettings):
     """アプリケーション全体の設定を管理するクラス。
-    環境変数によって各項目を上書きすることが可能です。
+
+    優先順位（高い順）:
+      1. 実際の環境変数
+      2. .env.local（開発用ローカルファイル、Git 管理外）
+    本番環境では APP_ENV=production を設定すること。
+    デフォルト値のままのシークレットは本番起動時にエラーになります。
     """
+
+    APP_ENV: Literal["development", "production"] = "development"
 
     # CORS 設定
     ALLOWED_ORIGIN: str = "http://localhost:3000"
@@ -26,7 +40,7 @@ class Settings(BaseSettings):
     REDIS_SEQ_KEY: str = "chat:seq"
 
     # JWT 認証設定
-    SECRET_KEY: str = "dev-secret-key-do-not-use-in-production"
+    SECRET_KEY: str = _DEV_SECRET_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -39,8 +53,8 @@ class Settings(BaseSettings):
 
     # SQLAdmin 設定
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin-password"
-    ADMIN_SECRET_KEY: str = "dev-admin-secret-key"
+    ADMIN_PASSWORD: str = _DEV_ADMIN_PASSWORD
+    ADMIN_SECRET_KEY: str = _DEV_ADMIN_SECRET_KEY
 
     # 簡易ユーザーマスター（デモ用）
     # key: username, value: password
@@ -50,7 +64,29 @@ class Settings(BaseSettings):
         Username("charlie"): Password("password3"),
     }
 
-    model_config = SettingsConfigDict(extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env.local",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @model_validator(mode="after")
+    def _reject_dev_secrets_in_production(self) -> "Settings":
+        """本番環境でデフォルトのシークレットが使われていないことを検証する。"""
+        if self.APP_ENV != "production":
+            return self
+        errors: list[str] = []
+        if self.SECRET_KEY == _DEV_SECRET_KEY:
+            errors.append("SECRET_KEY must be changed from the default value")
+        if self.ADMIN_PASSWORD == _DEV_ADMIN_PASSWORD:
+            errors.append("ADMIN_PASSWORD must be changed from the default value")
+        if self.ADMIN_SECRET_KEY == _DEV_ADMIN_SECRET_KEY:
+            errors.append("ADMIN_SECRET_KEY must be changed from the default value")
+        if errors:
+            raise ValueError(
+                "Production secrets are not configured:\n" + "\n".join(f"  - {e}" for e in errors)
+            )
+        return self
 
 
 # グローバルな設定インスタンス
