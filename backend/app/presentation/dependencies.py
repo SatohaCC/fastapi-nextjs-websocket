@@ -41,6 +41,7 @@ from ..infrastructure.persistence.sa_user_settings_repository import (
     SqlAlchemyUserSettingsRepository,
 )
 from ..infrastructure.persistence.session import get_db
+from ..infrastructure.rate_limiter import UserRateLimiter
 from .websockets.manager import ChatManager, get_manager
 
 security = HTTPBearer()
@@ -71,6 +72,9 @@ def get_chat_manager() -> ChatManager:
 
 _ticket_store: TicketStore | None = None
 _login_rate_limiter: LoginRateLimiter | None = None
+_chat_message_rate_limiter: UserRateLimiter | None = None
+_direct_request_rate_limiter: UserRateLimiter | None = None
+_status_update_rate_limiter: UserRateLimiter | None = None
 
 
 def get_login_rate_limiter() -> LoginRateLimiter:
@@ -85,6 +89,45 @@ def get_login_rate_limiter() -> LoginRateLimiter:
             user_window_seconds=settings.LOGIN_RATE_LIMIT_USER_WINDOW_SECONDS,
         )
     return _login_rate_limiter
+
+
+def get_chat_message_rate_limiter() -> UserRateLimiter:
+    """グローバルチャットメッセージ送信用 UserRateLimiter シングルトンの取得。"""
+    global _chat_message_rate_limiter
+    if _chat_message_rate_limiter is None:
+        _chat_message_rate_limiter = UserRateLimiter(
+            redis_url=settings.REDIS_URL,
+            key_prefix="rate_limit:chat_message:",
+            max_attempts=settings.CHAT_MESSAGE_RATE_LIMIT_MAX_ATTEMPTS,
+            window_seconds=settings.CHAT_MESSAGE_RATE_LIMIT_WINDOW_SECONDS,
+        )
+    return _chat_message_rate_limiter
+
+
+def get_direct_request_rate_limiter() -> UserRateLimiter:
+    """ダイレクトリクエスト送信用 UserRateLimiter シングルトンの取得。"""
+    global _direct_request_rate_limiter
+    if _direct_request_rate_limiter is None:
+        _direct_request_rate_limiter = UserRateLimiter(
+            redis_url=settings.REDIS_URL,
+            key_prefix="rate_limit:direct_request:",
+            max_attempts=settings.DIRECT_REQUEST_RATE_LIMIT_MAX_ATTEMPTS,
+            window_seconds=settings.DIRECT_REQUEST_RATE_LIMIT_WINDOW_SECONDS,
+        )
+    return _direct_request_rate_limiter
+
+
+def get_status_update_rate_limiter() -> UserRateLimiter:
+    """ダイレクトリクエストのステータス更新用 UserRateLimiter シングルトンの取得。"""
+    global _status_update_rate_limiter
+    if _status_update_rate_limiter is None:
+        _status_update_rate_limiter = UserRateLimiter(
+            redis_url=settings.REDIS_URL,
+            key_prefix="rate_limit:status_update:",
+            max_attempts=settings.STATUS_UPDATE_RATE_LIMIT_MAX_ATTEMPTS,
+            window_seconds=settings.STATUS_UPDATE_RATE_LIMIT_WINDOW_SECONDS,
+        )
+    return _status_update_rate_limiter
 
 
 def get_ticket_store() -> TicketStore:
