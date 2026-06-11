@@ -1,8 +1,9 @@
 """アプリケーション設定モジュール。"""
 
+from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ..domain.primitives.primitives import Password, Username
@@ -10,6 +11,14 @@ from ..domain.primitives.primitives import Password, Username
 _DEV_SECRET_KEY = "dev-secret-key-do-not-use-in-production"
 _DEV_ADMIN_PASSWORD = "admin-password"
 _DEV_ADMIN_SECRET_KEY = "dev-admin-secret-key"
+_DEV_USERS: dict[Username, Password] = {
+    Username("alice"): Password("password1"),
+    Username("bob"): Password("password2"),
+    Username("charlie"): Password("password3"),
+}
+
+# 起動時のカレントディレクトリに依存しないよう、backend/ 直下を絶対パスで指す
+_BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -58,17 +67,30 @@ class Settings(BaseSettings):
 
     # 簡易ユーザーマスター（デモ用）
     # key: username, value: password
-    USERS: dict[Username, Password] = {
-        Username("alice"): Password("password1"),
-        Username("bob"): Password("password2"),
-        Username("charlie"): Password("password3"),
-    }
+    USERS: dict[Username, Password] = _DEV_USERS
 
     model_config = SettingsConfigDict(
-        env_file=".env.local",
+        env_file=_BACKEND_DIR / ".env.local",
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @field_validator("USERS", mode="before")
+    @classmethod
+    def _coerce_users(cls, value: object) -> object:
+        """環境変数の JSON をドメインプリミティブへ変換する。
+
+        JSON ではキーにオブジェクトを使えないため、{"alice": "password1"} の
+        ようなプレーンな文字列を受け取り Username/Password に包み直します。
+        """
+        if isinstance(value, dict):
+            return {
+                Username(k) if isinstance(k, str) else k: (
+                    Password(v) if isinstance(v, str) else v
+                )
+                for k, v in value.items()
+            }
+        return value
 
     @model_validator(mode="after")
     def _reject_dev_secrets_in_production(self) -> "Settings":
@@ -82,9 +104,12 @@ class Settings(BaseSettings):
             errors.append("ADMIN_PASSWORD must be changed from the default value")
         if self.ADMIN_SECRET_KEY == _DEV_ADMIN_SECRET_KEY:
             errors.append("ADMIN_SECRET_KEY must be changed from the default value")
+        if self.USERS == _DEV_USERS:
+            errors.append("USERS must be replaced (demo users with known passwords)")
         if errors:
             raise ValueError(
-                "Production secrets are not configured:\n" + "\n".join(f"  - {e}" for e in errors)
+                "Production secrets are not configured:\n"
+                + "\n".join(f"  - {e}" for e in errors)
             )
         return self
 

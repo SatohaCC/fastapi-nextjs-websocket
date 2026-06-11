@@ -23,7 +23,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-chat_db}
       REDIS_URL: redis://redis:6379
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:3000}
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-do-not-use-in-production}
+      # フォールバック値は config.py の _DEV_SECRET_KEY と一致させること
+      # （不一致だと APP_ENV=production 時のデフォルト値検証をすり抜ける）
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-do-not-use-in-production}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin-password}
       ADMIN_SECRET_KEY: ${ADMIN_SECRET_KEY:-dev-admin-secret-key}
       PYTHONUNBUFFERED: "1"
