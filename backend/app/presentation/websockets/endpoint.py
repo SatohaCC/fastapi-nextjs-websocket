@@ -21,7 +21,7 @@ from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.global_chat_service import GlobalChatService
 from ...domain.entities.user import User
 from ...domain.exceptions import DomainException
-from ...infrastructure.rate_limiter import UserRateLimiter
+from ...infrastructure.rate_limiter import FixedWindowRateLimiter
 from ..dependencies import (
     get_chat_manager,
     get_chat_message_rate_limiter,
@@ -95,13 +95,13 @@ async def websocket_endpoint(
     connection_service: Annotated[ConnectionService, Depends(get_connection_service)],
     ws_manager: Annotated[ChatManager, Depends(get_chat_manager)],
     chat_message_rate_limiter: Annotated[
-        UserRateLimiter, Depends(get_chat_message_rate_limiter)
+        FixedWindowRateLimiter, Depends(get_chat_message_rate_limiter)
     ],
     direct_request_rate_limiter: Annotated[
-        UserRateLimiter, Depends(get_direct_request_rate_limiter)
+        FixedWindowRateLimiter, Depends(get_direct_request_rate_limiter)
     ],
     status_update_rate_limiter: Annotated[
-        UserRateLimiter, Depends(get_status_update_rate_limiter)
+        FixedWindowRateLimiter, Depends(get_status_update_rate_limiter)
     ],
     last_chat_id: Annotated[int | None, Query()] = None,
     last_request_id: Annotated[int | None, Query()] = None,
@@ -184,9 +184,9 @@ async def _client_message_loop(
     global_chat_service: GlobalChatService,
     direct_request_service: DirectRequestService,
     ws_manager: ChatManager,
-    chat_message_rate_limiter: UserRateLimiter,
-    direct_request_rate_limiter: UserRateLimiter,
-    status_update_rate_limiter: UserRateLimiter,
+    chat_message_rate_limiter: FixedWindowRateLimiter,
+    direct_request_rate_limiter: FixedWindowRateLimiter,
+    status_update_rate_limiter: FixedWindowRateLimiter,
 ) -> None:
     """クライアントからの inbound メッセージをディスパッチする。"""
     typing_tasks: dict[str, asyncio.Task[None]] = {}

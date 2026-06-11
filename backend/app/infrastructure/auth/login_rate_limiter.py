@@ -1,14 +1,13 @@
 """ログイン試行に対する Redis ベースのレートリミッター。"""
 
-import redis.asyncio as aioredis
+from ..rate_limiter import FixedWindowRateLimiter
 
 
 class LoginRateLimiter:
     """IP アドレスおよびユーザー名ごとにログイン試行回数を制限する。
 
-    固定ウィンドウ方式で Redis カウンターを管理し、制限を超えた場合は
-    True を返す。カウンター未存在時に TTL を設定するため、INCR → EXPIRE (NX)
-    を 1 パイプラインで実行し、原子性を確保する。
+    IP 用・ユーザー名用の 2 つの FixedWindowRateLimiter に委譲し、
+    どちらか一方でも上限を超えていれば制限と判定する。
     """
 
     _IP_KEY_PREFIX = "rate_limit:login:ip:"
@@ -31,13 +30,18 @@ class LoginRateLimiter:
             user_max_attempts: ユーザー名ごとの最大試行回数。
             user_window_seconds: ユーザー名ごとのウィンドウ幅（秒）。
         """
-        self._redis: aioredis.Redis = aioredis.from_url(
-            redis_url, socket_keepalive=True, health_check_interval=30
+        self._user_limiter = FixedWindowRateLimiter(
+            redis_url=redis_url,
+            key_prefix=self._USER_KEY_PREFIX,
+            max_attempts=user_max_attempts,
+            window_seconds=user_window_seconds,
         )
-        self._ip_max = ip_max_attempts
-        self._ip_window = ip_window_seconds
-        self._user_max = user_max_attempts
-        self._user_window = user_window_seconds
+        self._ip_limiter = FixedWindowRateLimiter(
+            redis_url=redis_url,
+            key_prefix=self._IP_KEY_PREFIX,
+            max_attempts=ip_max_attempts,
+            window_seconds=ip_window_seconds,
+        )
 
     async def is_limited(self, ip: str | None, username: str) -> bool:
         """レートリミットに抵触するか判定し、カウンターを加算します。
@@ -52,36 +56,10 @@ class LoginRateLimiter:
         Returns:
             制限に抵触する場合は True、そうでなければ False。
         """
-        user_key = f"{self._USER_KEY_PREFIX}{username}"
-        user_count = await self._increment(user_key, self._user_window)
-        if user_count > self._user_max:
+        if await self._user_limiter.is_limited(username):
             return True
 
-        if ip is not None:
-            ip_key = f"{self._IP_KEY_PREFIX}{ip}"
-            ip_count = await self._increment(ip_key, self._ip_window)
-            if ip_count > self._ip_max:
-                return True
+        if ip is not None and await self._ip_limiter.is_limited(ip):
+            return True
 
         return False
-
-    async def _increment(self, key: str, window_seconds: int) -> int:
-        """指定キーのカウンターをインクリメントし、カウント値を返します。
-
-        カウンターが存在しない場合（初回）は TTL を設定します。
-        INCR と EXPIRE NX をパイプラインで実行することで、
-        インクリメントと TTL 設定の原子性を保証します。
-
-        Args:
-            key: Redis キー。
-            window_seconds: TTL（秒）。
-
-        Returns:
-            インクリメント後のカウント値。
-        """
-        async with self._redis.pipeline(transaction=True) as pipe:
-            pipe.incr(key)
-            pipe.expire(key, window_seconds, nx=True)
-            results = await pipe.execute()
-        count: int = results[0]
-        return count

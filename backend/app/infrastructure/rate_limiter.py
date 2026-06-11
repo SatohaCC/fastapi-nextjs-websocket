@@ -1,10 +1,10 @@
-"""ユーザー単位のアクションに対する Redis ベースのレートリミッター。"""
+"""固定ウィンドウ方式の Redis ベースのレートリミッター。"""
 
 import redis.asyncio as aioredis
 
 
-class UserRateLimiter:
-    """ユーザー ID ごとにアクション回数を制限する。
+class FixedWindowRateLimiter:
+    """識別子（ユーザー ID や IP アドレス等）ごとにアクション回数を制限する。
 
     固定ウィンドウ方式で Redis カウンターを管理し、制限を超えた場合は
     True を返す。カウンター未存在時（初回）は TTL を設定するため、INCR → EXPIRE (NX)
@@ -33,16 +33,16 @@ class UserRateLimiter:
         self._max_attempts = max_attempts
         self._window_seconds = window_seconds
 
-    async def is_limited(self, user_id: str) -> bool:
+    async def is_limited(self, identifier: str) -> bool:
         """レートリミットに抵触するか判定し、カウンターを加算します。
 
         Args:
-            user_id: 対象ユーザーの ID。
+            identifier: 制限対象の識別子（ユーザー ID や IP アドレス等）。
 
         Returns:
             制限に抵触する場合は True、そうでなければ False。
         """
-        key = f"{self._key_prefix}{user_id}"
+        key = f"{self._key_prefix}{identifier}"
         count = await self._increment(key)
         return count > self._max_attempts
 

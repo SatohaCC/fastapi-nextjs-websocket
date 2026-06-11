@@ -9,7 +9,7 @@ from ...application.services.direct_request_service import DirectRequestService
 from ...domain.entities.user import User
 from ...domain.primitives.primitives import EntityId, TaskText, Username
 from ...domain.primitives.task_status import TaskStatus
-from ...infrastructure.rate_limiter import UserRateLimiter
+from ...infrastructure.rate_limiter import FixedWindowRateLimiter
 from ..dependencies import (
     get_authenticated_user,
     get_direct_request_rate_limiter,
@@ -82,7 +82,9 @@ async def send_request(
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
-    rate_limiter: Annotated[UserRateLimiter, Depends(get_direct_request_rate_limiter)],
+    rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_direct_request_rate_limiter)
+    ],
 ) -> dict:
     """ダイレクトリクエストを新規送信します。"""
     if await rate_limiter.is_limited(str(user.id.value)):
@@ -108,7 +110,9 @@ async def update_request_status(
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
-    rate_limiter: Annotated[UserRateLimiter, Depends(get_status_update_rate_limiter)],
+    rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_status_update_rate_limiter)
+    ],
 ) -> dict:
     """ダイレクトリクエストのステータスを更新します。"""
     if await rate_limiter.is_limited(str(user.id.value)):

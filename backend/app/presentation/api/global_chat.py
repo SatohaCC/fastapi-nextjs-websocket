@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from ...application.services.global_chat_service import GlobalChatService
 from ...domain.entities.user import User
 from ...domain.primitives.primitives import EntityId, MessageText
-from ...infrastructure.rate_limiter import UserRateLimiter
+from ...infrastructure.rate_limiter import FixedWindowRateLimiter
 from ..dependencies import (
     get_authenticated_user,
     get_chat_message_rate_limiter,
@@ -48,7 +48,9 @@ async def send_message(
     body: SendGlobalChatMessageRequest,
     user: Annotated[User, Depends(get_authenticated_user)],
     global_chat_service: Annotated[GlobalChatService, Depends(get_global_chat_service)],
-    rate_limiter: Annotated[UserRateLimiter, Depends(get_chat_message_rate_limiter)],
+    rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_chat_message_rate_limiter)
+    ],
 ) -> dict:
     """メッセージを新規送信します（REST API 経由）。"""
     if await rate_limiter.is_limited(str(user.id.value)):
