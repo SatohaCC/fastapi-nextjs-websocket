@@ -2,14 +2,20 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, field_validator
 
 from ...application.services.direct_request_service import DirectRequestService
 from ...domain.entities.user import User
 from ...domain.primitives.primitives import EntityId, TaskText, Username
 from ...domain.primitives.task_status import TaskStatus
-from ..dependencies import get_authenticated_user, get_direct_request_service
+from ...infrastructure.rate_limiter import FixedWindowRateLimiter
+from ..dependencies import (
+    get_authenticated_user,
+    get_direct_request_rate_limiter,
+    get_direct_request_service,
+    get_status_update_rate_limiter,
+)
 from ..websockets.schemas import DirectRequestServerMessage
 
 router = APIRouter(prefix="/api/direct_requests", tags=["direct_requests"])
@@ -76,8 +82,16 @@ async def send_request(
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
+    rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_direct_request_rate_limiter)
+    ],
 ) -> dict:
     """ダイレクトリクエストを新規送信します。"""
+    if await rate_limiter.is_limited(str(user.id.value)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="リクエストの送信頻度が高すぎます。しばらく待ってから再試行してください。",
+        )
     recipient, text = body.to_domain()
     await direct_request_service.send_request(
         sender_id=user.id,
@@ -96,8 +110,16 @@ async def update_request_status(
     direct_request_service: Annotated[
         DirectRequestService, Depends(get_direct_request_service)
     ],
+    rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_status_update_rate_limiter)
+    ],
 ) -> dict:
     """ダイレクトリクエストのステータスを更新します。"""
+    if await rate_limiter.is_limited(str(user.id.value)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="ステータス更新の頻度が高すぎます。しばらく待ってから再試行してください。",
+        )
     await direct_request_service.update_status(
         EntityId(task_id), body.to_domain(), user.id
     )

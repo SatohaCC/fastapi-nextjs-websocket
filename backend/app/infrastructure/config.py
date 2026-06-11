@@ -60,6 +60,18 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT_USER_MAX_ATTEMPTS: int = 20
     LOGIN_RATE_LIMIT_USER_WINDOW_SECONDS: int = 900
 
+    # グローバルチャットメッセージ送信のレートリミット設定
+    CHAT_MESSAGE_RATE_LIMIT_MAX_ATTEMPTS: int = 10
+    CHAT_MESSAGE_RATE_LIMIT_WINDOW_SECONDS: int = 10
+
+    # ダイレクトリクエスト送信のレートリミット設定
+    DIRECT_REQUEST_RATE_LIMIT_MAX_ATTEMPTS: int = 10
+    DIRECT_REQUEST_RATE_LIMIT_WINDOW_SECONDS: int = 60
+
+    # ダイレクトリクエストのステータス更新のレートリミット設定
+    STATUS_UPDATE_RATE_LIMIT_MAX_ATTEMPTS: int = 30
+    STATUS_UPDATE_RATE_LIMIT_WINDOW_SECONDS: int = 60
+
     # SQLAdmin 設定
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = _DEV_ADMIN_PASSWORD
@@ -107,10 +119,8 @@ class Settings(BaseSettings):
         if self.USERS == _DEV_USERS:
             errors.append("USERS must be replaced (demo users with known passwords)")
         if errors:
-            raise ValueError(
-                "Production secrets are not configured:\n"
-                + "\n".join(f"  - {e}" for e in errors)
-            )
+            details = "\n".join(f"  - {e}" for e in errors)
+            raise ValueError(f"Production secrets are not configured:\n{details}")
         return self
 
 

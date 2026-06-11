@@ -21,12 +21,16 @@ from ...application.services.feed_query_service import FeedQueryService
 from ...application.services.global_chat_service import GlobalChatService
 from ...domain.entities.user import User
 from ...domain.exceptions import DomainException
+from ...infrastructure.rate_limiter import FixedWindowRateLimiter
 from ..dependencies import (
     get_chat_manager,
+    get_chat_message_rate_limiter,
     get_connection_service,
+    get_direct_request_rate_limiter,
     get_direct_request_service,
     get_feed_query_service,
     get_global_chat_service,
+    get_status_update_rate_limiter,
     get_ws_authenticated_user,
 )
 from .manager import ChatManager, heartbeat
@@ -90,6 +94,15 @@ async def websocket_endpoint(
     feed_service: Annotated[FeedQueryService, Depends(get_feed_query_service)],
     connection_service: Annotated[ConnectionService, Depends(get_connection_service)],
     ws_manager: Annotated[ChatManager, Depends(get_chat_manager)],
+    chat_message_rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_chat_message_rate_limiter)
+    ],
+    direct_request_rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_direct_request_rate_limiter)
+    ],
+    status_update_rate_limiter: Annotated[
+        FixedWindowRateLimiter, Depends(get_status_update_rate_limiter)
+    ],
     last_chat_id: Annotated[int | None, Query()] = None,
     last_request_id: Annotated[int | None, Query()] = None,
 ) -> None:
@@ -151,6 +164,9 @@ async def websocket_endpoint(
                     global_chat_service=global_chat_service,
                     direct_request_service=direct_request_service,
                     ws_manager=ws_manager,
+                    chat_message_rate_limiter=chat_message_rate_limiter,
+                    direct_request_rate_limiter=direct_request_rate_limiter,
+                    status_update_rate_limiter=status_update_rate_limiter,
                 )
             )
     except* WebSocketDisconnect as eg:
@@ -168,6 +184,9 @@ async def _client_message_loop(
     global_chat_service: GlobalChatService,
     direct_request_service: DirectRequestService,
     ws_manager: ChatManager,
+    chat_message_rate_limiter: FixedWindowRateLimiter,
+    direct_request_rate_limiter: FixedWindowRateLimiter,
+    status_update_rate_limiter: FixedWindowRateLimiter,
 ) -> None:
     """クライアントからの inbound メッセージをディスパッチする。"""
     typing_tasks: dict[str, asyncio.Task[None]] = {}
@@ -192,12 +211,26 @@ async def _client_message_loop(
                 if isinstance(msg, PongClientMessage):
                     pong_event.set()
                 elif isinstance(msg, GlobalChatClientMessage):
+                    if await chat_message_rate_limiter.is_limited(str(user.id.value)):
+                        await websocket.send_json(
+                            ErrorServerMessage(
+                                text="メッセージの送信頻度が高すぎます。しばらく待ってから再試行してください。"
+                            ).model_dump(mode="json")
+                        )
+                        continue
                     await global_chat_service.send_message(
                         user_id=user.id,
                         username=user.username,
                         text=msg.to_domain(),
                     )
                 elif isinstance(msg, DirectRequestClientMessage):
+                    if await direct_request_rate_limiter.is_limited(str(user.id.value)):
+                        await websocket.send_json(
+                            ErrorServerMessage(
+                                text="リクエストの送信頻度が高すぎます。しばらく待ってから再試行してください。"
+                            ).model_dump(mode="json")
+                        )
+                        continue
                     recipient, text = msg.to_domain()
                     await direct_request_service.send_request(
                         sender_id=user.id,
@@ -206,6 +239,13 @@ async def _client_message_loop(
                         text=text,
                     )
                 elif isinstance(msg, UpdateDirectRequestStatusClientMessage):
+                    if await status_update_rate_limiter.is_limited(str(user.id.value)):
+                        await websocket.send_json(
+                            ErrorServerMessage(
+                                text="ステータス更新の頻度が高すぎます。しばらく待ってから再試行してください。"
+                            ).model_dump(mode="json")
+                        )
+                        continue
                     task_id, new_status = msg.to_domain()
                     await direct_request_service.update_status(
                         task_id=task_id,
