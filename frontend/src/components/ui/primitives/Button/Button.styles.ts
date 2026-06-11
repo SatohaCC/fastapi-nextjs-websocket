@@ -8,7 +8,7 @@ export const buttonStyles = cva({
     border: "none",
     cursor: "pointer",
     transition: "background 0.2s, box-shadow 0.2s, transform 0.1s ease",
-    fontSize: "14px",
+    fontSize: "md",
     letterSpacing: "0.01em",
     display: "inline-flex",
     alignItems: "center",
@@ -50,7 +50,7 @@ export const buttonStyles = cva({
         borderColor: "panelBorder",
         color: "primary",
         padding: "8px 16px",
-        fontSize: "14px",
+        fontSize: "md",
         "&[data-hovered]": {
           bg: "surface.active",
         },
@@ -60,7 +60,7 @@ export const buttonStyles = cva({
         border: "1px solid transparent",
         color: "primary",
         padding: "8px 16px",
-        fontSize: "14px",
+        fontSize: "md",
         "&[data-hovered]": {
           bg: "surface.active",
         },
@@ -78,15 +78,15 @@ export const buttonStyles = cva({
     size: {
       sm: {
         padding: "6px 16px",
-        fontSize: "13px",
+        fontSize: "sm",
       },
       md: {
         padding: "10px 24px",
-        fontSize: "14px",
+        fontSize: "md",
       },
       lg: {
         padding: "14px 32px",
-        fontSize: "16px",
+        fontSize: "xl",
       },
     },
     fullWidth: {

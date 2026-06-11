@@ -24,7 +24,7 @@ export const switchStyles = css({
 });
 
 export const labelStyles = css({
-  fontSize: "14px",
+  fontSize: "md",
   fontWeight: 400,
   color: "textPrimary",
   flex: 1,

@@ -9,7 +9,7 @@ export const inputStyles = css({
   height: "42px",
   borderRadius: "control",
   width: "100%",
-  fontSize: "14px",
+  fontSize: "md",
   outline: "none",
   transition: "border-color 0.2s, box-shadow 0.2s",
   _focus: {
@@ -31,7 +31,7 @@ export const selectStyles = css({
   height: "42px",
   borderRadius: "control",
   width: "100%",
-  fontSize: "14px",
+  fontSize: "md",
   outline: "none",
   transition: "border-color 0.2s, box-shadow 0.2s",
   appearance: "none",

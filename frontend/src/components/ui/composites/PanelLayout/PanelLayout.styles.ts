@@ -4,7 +4,7 @@ export const containerStyles = css({
   gridRow: "span 3",
   display: "grid",
   gridTemplateRows: "subgrid",
-  "@media (max-width: 1024px)": {
+  _mobile: {
     gridRow: "unset",
     display: "flex",
     flexDirection: "column",
@@ -18,7 +18,7 @@ export const contentStyles = cva({
     display: "flex",
     flexDirection: "column",
     background: "bg",
-    "@media (max-width: 1024px)": {
+    _mobile: {
       flex: 1,
     },
   },

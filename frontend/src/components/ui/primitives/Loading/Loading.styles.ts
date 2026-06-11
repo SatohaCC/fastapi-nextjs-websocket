@@ -7,6 +7,6 @@ export const loadingContainerStyles = css({
   justifyContent: "center",
   background: "black",
   color: "white",
-  fontSize: "14px",
+  fontSize: "md",
   letterSpacing: "0.1em",
 });
