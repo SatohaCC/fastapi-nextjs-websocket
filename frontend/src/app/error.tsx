@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/Button/Button";
+import { Button } from "@/components/ui/primitives/Button/Button";
 import {
   containerStyles,
   detailBoxStyles,
