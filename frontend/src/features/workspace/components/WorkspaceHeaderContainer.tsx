@@ -7,7 +7,7 @@ import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceConte
 import { requestBrowserNotificationPermission } from "@/lib/browserNotification";
 import type { NotificationSettings } from "@/lib/notificationSettings";
 import { toast } from "@/lib/toast";
-import { WorkspaceHeader } from "./WorkspaceHeader";
+import { WorkspaceHeader } from "./WorkspaceHeader/WorkspaceHeader";
 
 export function WorkspaceHeaderContainer() {
   const { username, onLogout } = useWorkspaceContext();

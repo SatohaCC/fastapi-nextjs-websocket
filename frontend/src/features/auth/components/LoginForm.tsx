@@ -1,8 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/Button/Button";
-import { Input } from "@/components/ui/Input/Input";
-import styles from "./LoginForm.module.css";
+import { Button } from "@/components/ui/primitives/Button/Button";
+import { Input } from "@/components/ui/primitives/Input/Input";
+import { AccountList } from "./AccountList/AccountList";
+import {
+  AuthError,
+  AuthForm,
+  AuthHeader,
+  AuthLayout,
+} from "./AuthLayout/AuthLayout";
+import { fieldsWrapperStyles } from "./LoginForm.styles";
 
 const ACCOUNTS = [
   { username: "alice", password: "password1" },
@@ -30,41 +37,25 @@ export function LoginForm({
   onSubmit,
 }: LoginFormProps) {
   return (
-    <div className={styles.container}>
-      <form onSubmit={onSubmit} className={`fade-in ${styles.form}`}>
-        <div className={styles.header}>
-          <h1 className={styles.logo}>WebSocket お試しアプリ</h1>
-          <p className={styles.subtitle}>
-            テスト用アカウントをクリックすると自動入力されます
-          </p>
-        </div>
+    <AuthLayout>
+      <AuthForm onSubmit={onSubmit}>
+        <AuthHeader
+          title="WebSocket お試しアプリ"
+          subtitle="テスト用アカウントをクリックすると自動入力されます"
+        />
 
-        <div className={styles.accounts}>
-          <p className={styles.accountsLabel}>テスト用アカウント</p>
-          {ACCOUNTS.map((a) => (
-            <button
-              key={a.username}
-              type="button"
-              className={`${styles.accountItem} ${username === a.username ? styles.accountItemActive : ""}`}
-              aria-pressed={username === a.username}
-              onClick={() => {
-                onUsernameChange(a.username);
-                onPasswordChange(a.password);
-              }}
-            >
-              <span className={styles.accountName}>{a.username}</span>
-              <span className={styles.accountPassword}>{a.password}</span>
-            </button>
-          ))}
-        </div>
+        <AccountList
+          accounts={ACCOUNTS}
+          selectedUsername={username}
+          onSelect={(u, p) => {
+            onUsernameChange(u);
+            onPasswordChange(p);
+          }}
+        />
 
-        {error && (
-          <div className={styles.errorBox} role="alert" aria-live="assertive">
-            {error}
-          </div>
-        )}
+        {error && <AuthError message={error} />}
 
-        <div className={styles.fieldGroup}>
+        <div className={fieldsWrapperStyles}>
           <label htmlFor="username" className="sr-only">
             ユーザー名
           </label>
@@ -77,11 +68,7 @@ export function LoginForm({
             }
             required
             placeholder="ユーザー名"
-            className={styles.input}
           />
-        </div>
-
-        <div className={styles.fieldGroup}>
           <label htmlFor="password" className="sr-only">
             パスワード
           </label>
@@ -92,7 +79,6 @@ export function LoginForm({
             onChange={(e) => onPasswordChange(e.target.value)}
             required
             placeholder="パスワード"
-            className={styles.input}
           />
         </div>
 
@@ -100,11 +86,12 @@ export function LoginForm({
           type="submit"
           disabled={loading}
           variant="primary"
-          className={styles.submitButton}
+          size="lg"
+          fullWidth
         >
           {loading ? "ログイン中..." : "ログイン"}
         </Button>
-      </form>
-    </div>
+      </AuthForm>
+    </AuthLayout>
   );
 }

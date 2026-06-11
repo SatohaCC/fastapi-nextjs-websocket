@@ -1,11 +1,18 @@
 "use client";
 
-import { Badge } from "@/components/ui/Badge/Badge";
-import { Button } from "@/components/ui/Button/Button";
-import { Input, Select } from "@/components/ui/Input/Input";
-import { PanelLayout } from "@/components/ui/PanelLayout/PanelLayout";
+import { EmptyState } from "@/components/ui/composites/EmptyState/EmptyState";
+import { PanelLayout } from "@/components/ui/composites/PanelLayout/PanelLayout";
+import { Button } from "@/components/ui/primitives/Button/Button";
+import { Input, Select } from "@/components/ui/primitives/Input/Input";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
-import styles from "./DirectRequestPanel.module.css";
+import {
+  formGridStyles,
+  headerSubtitleStyles,
+  headerTitleStyles,
+  inputGroupStyles,
+  requestFormStyles,
+} from "./DirectRequestPanel.styles";
+import { RequestCard } from "./RequestCard/RequestCard";
 
 export interface DirectRequestPanelProps {
   otherUsers: string[];
@@ -40,17 +47,16 @@ export function DirectRequestPanel({
     <PanelLayout
       header={
         <>
-          <h2 className={styles.title}>ダイレクトリクエスト</h2>
-          <p className={styles.subtitle}>タスクの依頼や問い合わせ</p>
+          <h2 className={headerTitleStyles}>ダイレクトリクエスト</h2>
+          <p className={headerSubtitleStyles}>タスクの依頼や問い合わせ</p>
         </>
       }
-      contentClassName={styles.requestList}
       contentRole="region"
       contentAriaLabel="ダイレクトリクエスト一覧"
       form={
-        <form onSubmit={onSend} className={styles.requestForm}>
-          <div className={styles.formGrid}>
-            <div className={styles.inputGroup}>
+        <form onSubmit={onSend} className={requestFormStyles}>
+          <div className={formGridStyles}>
+            <div className={inputGroupStyles}>
               <label htmlFor="direct-request-recipient" className="sr-only">
                 依頼先を選択
               </label>
@@ -60,7 +66,6 @@ export function DirectRequestPanel({
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   onTargetUserChange(e.target.value)
                 }
-                className={styles.selectRecipient}
                 disabled={isSending}
               >
                 <option value="" disabled>
@@ -83,13 +88,12 @@ export function DirectRequestPanel({
                   onTextChange(e.target.value)
                 }
                 placeholder="依頼内容を入力してください"
-                className={styles.inputTask}
               />
             </div>
             <Button
               type="submit"
               variant="primary"
-              className={styles.submitButton}
+              fullWidth
               disabled={!targetUser || !text.trim()}
             >
               リクエストを送信
@@ -99,7 +103,7 @@ export function DirectRequestPanel({
       }
     >
       {requests.length === 0 ? (
-        <div className={styles.emptyState}>現在リクエストはありません。</div>
+        <EmptyState message="現在リクエストはありません。" />
       ) : (
         requests.map((m) => {
           const isFromMe = m.sender === currentUser;
@@ -107,70 +111,46 @@ export function DirectRequestPanel({
             m.recipient === currentUser && m.status !== "completed";
 
           return (
-            <article
+            <RequestCard
               key={m.id}
-              className={`tweet-card ${styles.requestItem} ${
-                m.isPending ? styles.requestPending : ""
-              }`}
-              aria-label={
-                isFromMe ? `${m.recipient} への依頼` : `${m.sender} からの依頼`
-              }
-            >
-              <div className={styles.itemHeader}>
-                <div className={styles.metaInfo}>
-                  <div className={styles.senderName}>
-                    {isFromMe
-                      ? `${m.recipient} への依頼`
-                      : `${m.sender} からの依頼`}
-                  </div>
-                  <div className={styles.separator}>·</div>
-                  <time dateTime={m.created_at} className={styles.timestamp}>
-                    {formatDate(m.created_at)}
-                  </time>
-                </div>
-                <Badge variant={m.status}>
-                  {m.status === "requested" && "未着手"}
-                  {m.status === "processing" && "進行中"}
-                  {m.status === "completed" && "完了"}
-                </Badge>
-              </div>
-
-              <div className={styles.requestText}>{m.text}</div>
-
-              {canUpdate && (
-                <div className={styles.actionGroup}>
-                  {m.status === "requested" && (
+              id={m.id}
+              sender={m.sender}
+              recipient={m.recipient}
+              text={m.text}
+              status={m.status}
+              created_at={m.created_at}
+              updated_at={m.updated_at}
+              isFromMe={isFromMe}
+              isPending={m.isPending}
+              timeStr={formatDate(m.created_at)}
+              updatedTimeStr={formatDate(m.updated_at)}
+              actionsElement={
+                canUpdate ? (
+                  <>
+                    {m.status === "requested" && (
+                      <Button
+                        type="button"
+                        onClick={() => onUpdateStatus(m.id, "processing")}
+                        variant="secondary"
+                        size="sm"
+                        aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
+                      >
+                        承諾
+                      </Button>
+                    )}
                     <Button
                       type="button"
-                      onClick={() => onUpdateStatus(m.id, "processing")}
-                      variant="secondary"
-                      className={styles.actionButton}
-                      aria-label={`${m.sender} からの依頼「${m.text}」を承諾する`}
+                      onClick={() => onUpdateStatus(m.id, "completed")}
+                      variant="success"
+                      size="sm"
+                      aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
                     >
-                      承諾
+                      完了
                     </Button>
-                  )}
-                  <Button
-                    type="button"
-                    onClick={() => onUpdateStatus(m.id, "completed")}
-                    variant="primary"
-                    className={`${styles.actionButton} ${styles.completeButton}`}
-                    aria-label={`${m.sender} からの依頼「${m.text}」を完了する`}
-                  >
-                    完了
-                  </Button>
-                </div>
-              )}
-
-              {m.status === "completed" && (
-                <div className={styles.resolvedNote}>
-                  ✓ 解決済み:{" "}
-                  <time dateTime={m.updated_at}>
-                    {formatDate(m.updated_at)}
-                  </time>
-                </div>
-              )}
-            </article>
+                  </>
+                ) : undefined
+              }
+            />
           );
         })
       )}

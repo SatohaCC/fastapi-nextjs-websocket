@@ -20,6 +20,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## スタイリング & UIコンポーネント
+
+本プロジェクトのスタイリングとUIコンポーネント設計には、以下のモダンな技術スタックを採用しています。
+
+- **Panda CSS**: ビルド時に静的に解析されて CSS が出力される、Zero-runtime な CSS-in-JS です。`panda.config.ts` で定義されたデザイントークンに基づいた安全なスタイリングを実現します。本プロジェクトでは、スタイリングの関心を各UIコンポーネント（共通UIおよび機能固有のPresentationalコンポーネント）に集約・カプセル化し、呼び出し元のロジック側（Container）から ad-hoc にスタイル定義を注入・上書きすることを禁止しています。共通の基本部品は `src/components/ui/` 配下に「単体 (primitives)」と「複合 (composites)」として整理し、機能固有のUIはそれぞれの `src/features/` フォルダ配下にカプセル化して管理します。
+- **React Aria Components**: WAI-ARIAに準拠したアクセシブルかつアンスタイルのUIコンポーネントライブラリです。`Button` や `Switch` などのネイティブUIパーツの置き換えに使用され、スタイリングは Panda CSS で行っています。
+- **共通UIコンポーネントのスタイル集約**: アプリケーション全体でデザインの一貫性を保つため、Input などの共通コントロールの基本デザイン（高さ、枠線、背景、フォーカス状態など）は `src/components/ui/` 配下のコンポーネントスタイルに集約しています。各機能コンポーネント（ログインフォームやチャットなど）で個別に同様のデザイン定義を行うことは避け、共通コンポーネントを利用するか、レイアウト用スタイル（`flex` や `width` など）のみを必要に応じて付与する設計ルールとしています。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

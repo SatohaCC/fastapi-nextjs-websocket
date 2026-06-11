@@ -14,7 +14,8 @@
       "!dist",
       "!build",
       "!public/mockServiceWorker.js",
-      "!src/tests/msw/worker/mockServiceWorker.js"
+      "!src/tests/msw/worker/mockServiceWorker.js",
+      "!src/styled-system"
     ]
   },
   "formatter": {
