@@ -4,8 +4,21 @@ import { API_BASE } from "@/lib/config";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
-const SECRET_KEY =
-  process.env.BFF_SECRET || "dev-secret-key-32-bytes-long-1234567";
+
+const resolveSecretKey = (): string => {
+  const secret = process.env.BFF_SECRET;
+  if (secret) {
+    return secret;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "BFF_SECRET must be set in production (see frontend/.env.example)",
+    );
+  }
+  return "dev-secret-key-32-bytes-long-1234567";
+};
+
+const SECRET_KEY = resolveSecretKey();
 
 export const SESSION_COOKIE = "bff_session";
 export const REFRESH_COOKIE = "bff_refresh";
