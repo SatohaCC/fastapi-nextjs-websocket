@@ -11,14 +11,18 @@ from app.infrastructure.config import settings
 
 
 async def seed_users(conn: AsyncConnection) -> None:
-    """ユーザー初期レコードのシードを行います（空の場合のみ）。
+    """ユーザー初期レコードのシードを行います（存在しないユーザーのみ追加）。
 
     Args:
         conn: SQLAlchemy の非同期コネクション。
     """
-    result = await conn.execute(text("SELECT COUNT(*) FROM users"))
-    if result.scalar() == 0:
-        for username, password in settings.USERS.items():
+    for username, password in settings.USERS.items():
+        result = await conn.execute(
+            text("SELECT 1 FROM users WHERE username = :username").bindparams(
+                username=username.value
+            )
+        )
+        if result.scalar() is None:
             user_id = uuid.uuid7()
             hashed = PasswordHasher.hash_password(password.value)
             await conn.execute(
@@ -30,5 +34,18 @@ async def seed_users(conn: AsyncConnection) -> None:
                     username=username.value,
                     hashed_password=hashed,
                     created_at=datetime.now(timezone.utc),
+                )
+            )
+        else:
+            # 既存のユーザーが存在する場合、パスワードを環境変数の最新値で更新します
+            hashed = PasswordHasher.hash_password(password.value)
+            await conn.execute(
+                text(
+                    "UPDATE users "
+                    "SET hashed_password = :hashed_password "
+                    "WHERE username = :username"
+                ).bindparams(
+                    username=username.value,
+                    hashed_password=hashed,
                 )
             )

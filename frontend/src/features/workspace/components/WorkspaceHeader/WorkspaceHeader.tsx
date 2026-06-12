@@ -8,10 +8,10 @@ import {
   handleStyles,
   headerStyles,
   logoStyles,
+  logoutButtonStyles,
   settingsWrapperStyles,
   statusDotStyles,
   statusIndicatorStyles,
-  statusTextStyles,
   systemInfoStyles,
   userGroupStyles,
   userInfoStyles,
@@ -54,41 +54,25 @@ export function WorkspaceHeader({
       <div className={brandGroupStyles}>
         <div className={logoStyles}>WebSocket test</div>
         <output
-          className={statusIndicatorStyles}
+          className={statusIndicatorStyles({
+            status: isActuallyConnected
+              ? "online"
+              : error
+                ? "offline"
+                : "connecting",
+          })}
           aria-live="polite"
-          style={{
-            background: isActuallyConnected
-              ? "#E6F4EA"
-              : error
-                ? "#FCE8E6"
-                : "#FEF3E2",
-            borderColor: isActuallyConnected
-              ? "#34A853"
-              : error
-                ? "#D93025"
-                : "#E37400",
-          }}
         >
           <div
-            className={statusDotStyles}
-            style={{
-              background: isActuallyConnected
-                ? "var(--status-completed)"
+            className={statusDotStyles({
+              status: isActuallyConnected
+                ? "online"
                 : error
-                  ? "var(--error)"
-                  : "var(--warning)",
-            }}
+                  ? "offline"
+                  : "connecting",
+            })}
           />
-          <span
-            className={statusTextStyles}
-            style={{
-              color: isActuallyConnected
-                ? "var(--status-completed)"
-                : error
-                  ? "var(--error)"
-                  : "var(--warning)",
-            }}
-          >
+          <span>
             {isActuallyConnected
               ? "オンライン"
               : error
@@ -129,12 +113,7 @@ export function WorkspaceHeader({
             />
           )}
         </div>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="btn-secondary"
-          style={{ padding: "8px 20px", fontSize: "14px" }}
-        >
+        <button type="button" onClick={onLogout} className={logoutButtonStyles}>
           ログアウト
         </button>
       </div>

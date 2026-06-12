@@ -44,7 +44,7 @@
 
 ### 3.4 BFF と WebSocket チケット方式によるセキュア認証（XSS 対策）
 本システムでは、Zennの記事「『JWT を localStorage に置くな』はなぜ言われるのか、Cookie 回帰までの時系列整理」の設計思想に基づき、ブラウザ上に生の JWT トークンを一切露出させないセキュアな認証システムを実装しています。
-- **BFF (Next.js APIルート) によるトークンの隔離**: 
+- **BFF (Next.js APIルート) によるトークンの隔離**:
   - ブラウザと BFF 間の通信は、`HttpOnly`, `Secure`, `SameSite=Lax` 属性を持つセッションCookie（`bff_session`。BFF側でAES-256-GCMにより暗号化）で行います。JavaScriptコードからはトークン値を一切読み取れないため、XSSによるトークン窃取を完全に防ぎます。
   - BFF（サーバーサイド）はCookieを復号し、生のアクセストークン（JWT）を取り出して、FastAPIへ `Authorization: Bearer <JWT>` ヘッダーを付与してリクエストをプロキシします。
 - **データベースによるリフレッシュトークン管理とRTR (Refresh Token Rotation)**:
@@ -243,13 +243,18 @@ docker-compose up -d --build
    ```bash
    minikube start
    # ローカルの Docker デーモンを minikube 内に切り替え
+   # (bash の場合)
    eval $(minikube docker-env)
+   # (Windows PowerShell の場合)
+   minikube docker-env | Invoke-Expression
+   # (Windows コマンドプロンプトの場合)
+   @FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env --shell cmd') DO @%i
    ```
 
 2. **イメージのビルド**
    ```bash
-   # クラスタ内で直接イメージをビルド
-   docker build -t fastapi-nextjs-websocket-backend ./backend
+   # クラスタ内で直接イメージをビルド (backend.yaml で指定されているイメージ名と合わせる必要があります)
+   docker build -t chat-backend-ddd:latest ./backend
    ```
 
 3. **Secret の作成**
@@ -265,6 +270,10 @@ docker-compose up -d --build
 
 4. **リソースの適用**
    ```bash
+   # 最初に Secret を適用します
+   kubectl apply -f k8s/secret.yaml
+
+   # 各種リソースを適用します
    kubectl apply -f k8s/postgres.yaml
    kubectl apply -f k8s/redis.yaml
    kubectl apply -f k8s/backend.yaml
@@ -272,7 +281,7 @@ docker-compose up -d --build
 
 5. **サービスの公開**
    ```bash
-   minikube service fastapi-backend
+   minikube service backend
    ```
 
 ---
@@ -297,3 +306,23 @@ uv run mypy .
 ```
 
 ---
+
+## 負荷テストの実行
+
+本プロジェクトでは、負荷テストツール **Artillery** を用いて、WebSocket 接続やメッセージ送信に対する大量アクセス負荷テストを実行できます。
+
+### 1. インストール
+ローカル環境に Artillery をグローバルインストールするか、`npx` を使用して実行します。
+```bash
+npm install -g artillery
+```
+
+### 2. 実行手順
+1. `minikube service backend` コマンドでバックエンドサービスが正常に公開されていることを確認します。
+2. `load-test.yml` を開き、`config.target` および `connect` アクションに指定されているポート番号（例: `64058`）を、現在 `minikube` によって公開されている実際のポート番号に書き換えます。
+3. プロジェクトのルートディレクトリで以下のコマンドを実行し、負荷テストを開始します。
+   ```bash
+   artillery run load-test.yml
+   ```
+
+テスト実行後、ターミナルに各フェーズの統計情報（接続成功率、応答タイム、秒間リクエスト数など）が出力されます。

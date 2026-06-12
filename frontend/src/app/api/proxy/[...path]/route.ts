@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/config";
+import { isValidProxyPath } from "@/lib/server/proxyPath";
 import {
   applyRefreshedCookies,
   attemptTokenRefresh,
@@ -16,6 +17,16 @@ async function handleProxy(
 ) {
   try {
     const { path } = await params;
+
+    // パストラバーサルの脆弱性を防ぐためのバリデーション。
+    // エンコードされた ".." 等で /api/ 名前空間を脱出されないことを保証する。
+    if (!isValidProxyPath(path)) {
+      return NextResponse.json(
+        { detail: "不正なリクエストパスです" },
+        { status: 400 },
+      );
+    }
+
     const destPath = path.join("/");
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get(SESSION_COOKIE);

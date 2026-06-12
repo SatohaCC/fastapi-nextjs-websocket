@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/primitives/Button/Button";
 import { Input, Select } from "@/components/ui/primitives/Input/Input";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
 import {
-  formGridStyles,
   headerSubtitleStyles,
   headerTitleStyles,
   inputGroupStyles,
@@ -55,50 +54,47 @@ export function DirectRequestPanel({
       contentAriaLabel="ダイレクトリクエスト一覧"
       form={
         <form onSubmit={onSend} className={requestFormStyles}>
-          <div className={formGridStyles}>
-            <div className={inputGroupStyles}>
-              <label htmlFor="direct-request-recipient" className="sr-only">
-                依頼先を選択
-              </label>
-              <Select
-                id="direct-request-recipient"
-                value={targetUser}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  onTargetUserChange(e.target.value)
-                }
-                disabled={isSending}
-              >
-                <option value="" disabled>
-                  依頼先を選択
-                </option>
-                {otherUsers.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </Select>
-              <label htmlFor="direct-request-text" className="sr-only">
-                依頼内容を入力
-              </label>
-              <Input
-                id="direct-request-text"
-                type="text"
-                value={text}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onTextChange(e.target.value)
-                }
-                placeholder="依頼内容を入力してください"
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              disabled={!targetUser || !text.trim()}
+          <div className={inputGroupStyles}>
+            <label htmlFor="direct-request-recipient" className="sr-only">
+              依頼先を選択
+            </label>
+            <Select
+              id="direct-request-recipient"
+              value={targetUser}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onTargetUserChange(e.target.value)
+              }
+              disabled={isSending}
             >
-              リクエストを送信
-            </Button>
+              <option value="" disabled>
+                依頼先を選択
+              </option>
+              {otherUsers.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </Select>
+            <label htmlFor="direct-request-text" className="sr-only">
+              依頼内容を入力
+            </label>
+            <Input
+              id="direct-request-text"
+              type="text"
+              value={text}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onTextChange(e.target.value)
+              }
+              placeholder="依頼内容を入力してください"
+            />
           </div>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!targetUser || !text.trim()}
+          >
+            Request
+          </Button>
         </form>
       }
     >

@@ -80,10 +80,7 @@ export async function GET() {
     }
 
     if (!res.ok) {
-      return NextResponse.json(
-        { detail: "セッション検証に失敗しました" },
-        { status: 401 },
-      );
+      return unauthorizedResponse("セッション検証に失敗しました");
     }
 
     const data = await res.json();
@@ -95,9 +92,11 @@ export async function GET() {
   } catch (error) {
     // biome-ignore lint/suspicious/noConsole: Error tracking
     console.error("[BFF Me] Error:", error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { detail: "Internal Server Error" },
       { status: 500 },
     );
+    clearSessionCookies(response);
+    return response;
   }
 }

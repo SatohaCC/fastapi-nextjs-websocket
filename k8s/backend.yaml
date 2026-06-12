@@ -17,8 +17,6 @@ spec:
           image: chat-backend-ddd:latest
           imagePullPolicy: Never
           env:
-            # production にすることで、シークレット未設定（開発用デフォルト値）の
-            # まま起動しようとした場合に config.py のバリデーションで起動を拒否する
             - name: APP_ENV
               value: "production"
             - name: ALLOWED_ORIGIN
