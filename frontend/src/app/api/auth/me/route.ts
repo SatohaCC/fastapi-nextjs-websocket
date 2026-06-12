@@ -4,11 +4,24 @@ import { API_BASE } from "@/lib/config";
 import {
   applyRefreshedCookies,
   attemptTokenRefresh,
+  clearSessionCookies,
   decryptSession,
   REFRESH_COOKIE,
   type RefreshResult,
   SESSION_COOKIE,
 } from "@/lib/server/session";
+
+/**
+ * 再ログインが必要な 401 レスポンスを生成します。
+ *
+ * 無効になった Cookie を残すとルートページ（Cookie の有無で判定）と
+ * /workspace の間でリダイレクトループになるため、同時に削除します。
+ */
+const unauthorizedResponse = (detail: string) => {
+  const response = NextResponse.json({ detail }, { status: 401 });
+  clearSessionCookies(response);
+  return response;
+};
 
 export async function GET() {
   try {
@@ -23,16 +36,13 @@ export async function GET() {
         cookieStore.get(REFRESH_COOKIE)?.value,
       );
       if (!preRefreshResult) {
-        return NextResponse.json({ detail: "未ログイン" }, { status: 401 });
+        return unauthorizedResponse("未ログイン");
       }
       token = preRefreshResult.accessToken;
     } else {
       token = await decryptSession(sessionCookie.value);
       if (!token) {
-        return NextResponse.json(
-          { detail: "セッションが無効です" },
-          { status: 401 },
-        );
+        return unauthorizedResponse("セッションが無効です");
       }
     }
 
@@ -45,10 +55,7 @@ export async function GET() {
         cookieStore.get(REFRESH_COOKIE)?.value,
       );
       if (!refreshed) {
-        return NextResponse.json(
-          { detail: "再ログインが必要です" },
-          { status: 401 },
-        );
+        return unauthorizedResponse("再ログインが必要です");
       }
 
       const retryRes = await fetch(`${API_BASE}/api/auth/me`, {
@@ -57,10 +64,7 @@ export async function GET() {
 
       if (!retryRes.ok) {
         if (retryRes.status === 401) {
-          return NextResponse.json(
-            { detail: "再ログインが必要です" },
-            { status: 401 },
-          );
+          return unauthorizedResponse("再ログインが必要です");
         }
         const err = await retryRes.json().catch(() => ({}));
         return NextResponse.json(

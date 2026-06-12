@@ -106,6 +106,26 @@ export interface RefreshResult {
 }
 
 /**
+ * セッション関連の Cookie をすべて削除します。
+ *
+ * ログアウト時のほか、トークンが無効と確定した（再ログインが必要な）場合に
+ * 古い Cookie を残すと、Cookie の有無で判定するページとの間で
+ * リダイレクトループが発生するため、必ず削除すること。
+ */
+export function clearSessionCookies(
+  response: import("next/server").NextResponse,
+): void {
+  response.cookies.set(SESSION_COOKIE, "", {
+    ...SESSION_COOKIE_OPTIONS,
+    maxAge: 0,
+  });
+  response.cookies.set(REFRESH_COOKIE, "", {
+    ...REFRESH_COOKIE_OPTIONS,
+    maxAge: 0,
+  });
+}
+
+/**
  * bff_refresh Cookie の値からトークンリフレッシュを試み、
  * 新しいアクセストークンと暗号化済みトークンペアを返します。
  *
