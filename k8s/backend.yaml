@@ -21,6 +21,10 @@ spec:
               value: "production"
             - name: ALLOWED_ORIGIN
               value: "http://localhost:3000"
+            - name: LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS
+              value: "99999"
+            - name: LOGIN_RATE_LIMIT_USER_MAX_ATTEMPTS
+              value: "99999"
             - name: REDIS_URL
               value: "redis://redis:6379"
             - name: DATABASE_URL
