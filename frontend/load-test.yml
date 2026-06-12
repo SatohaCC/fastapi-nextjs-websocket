@@ -1,0 +1,49 @@
+config:
+  target: "http://127.0.0.1:64058"
+  phases:
+    - duration: 60       # テストを実行する時間（秒）
+      arrivalRate: 2     # 毎秒接続を開始するユーザー数（初期値）
+      rampTo: 10         # 60秒かけて毎秒10ユーザー接続まで負荷を増加
+      name: "Ramp up load"
+  payload:
+    path: "./load-test-users.csv"
+    fields:
+      - "username"
+      - "password"
+    order: "sequence"
+  engines:
+    ws: {}
+scenarios:
+  - name: "API Login -> Get WS Ticket -> Establish WebSocket Connection -> Send Chat Messages"
+    flow:
+      # 1. バックエンドのAPIにログインしてアクセストークンを取得
+      - post:
+          url: "/api/auth/token"
+          json:
+            username: "{{ username }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      # 2. WebSocket 接続用の一時チケットを取得
+      - post:
+          url: "/api/auth/ws-ticket"
+          headers:
+            authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.ticket"
+              as: "ticket"
+      # 3. 取得したチケットを使って WebSocket に接続
+      # (※ポート 64058 は現在の minikube service の公開ポートに設定されています)
+      - connect: "ws://127.0.0.1:64058/ws?ticket={{ ticket }}"
+      - think: 1
+      # 4. グローバルチャットにテストメッセージを送信
+      - send:
+          type: "global_chat"
+          text: "Hello, this is a load test message from {{ username }}!"
+      - think: 2
+      # 5. 複数回メッセージを送信して負荷をかける
+      - send:
+          type: "global_chat"
+          text: "Outbox pattern load test. Message 2 from {{ username }}."
+      - think: 5
