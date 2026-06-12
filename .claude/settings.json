@@ -3,7 +3,9 @@
     "allow": [
       "Bash(grep -v \"^$\")",
       "Bash(docker compose *)",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "Bash(UV_PROJECT_ENVIRONMENT=.venv2 powershell -ExecutionPolicy Bypass -File check.ps1)",
+      "Bash(UV_PROJECT_ENVIRONMENT=.venv2 uv run pytest -q)"
     ]
   }
 }
