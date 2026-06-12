@@ -35,7 +35,7 @@ scenarios:
               as: "ticket"
       # 3. 取得したチケットを使って WebSocket に接続
       # (※ポート 64058 は現在の minikube service の公開ポートに設定されています)
-      - connect: "/ws?ticket={{ ticket }}"
+      - connect: "ws://127.0.0.1:64058/ws?ticket={{ ticket }}"
       - think: 1
       # 4. グローバルチャットにテストメッセージを送信
       - send:
