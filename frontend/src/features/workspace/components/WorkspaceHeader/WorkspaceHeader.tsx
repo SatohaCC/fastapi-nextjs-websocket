@@ -12,7 +12,6 @@ import {
   settingsWrapperStyles,
   statusDotStyles,
   statusIndicatorStyles,
-  statusTextStyles,
   systemInfoStyles,
   userGroupStyles,
   userInfoStyles,
@@ -55,41 +54,25 @@ export function WorkspaceHeader({
       <div className={brandGroupStyles}>
         <div className={logoStyles}>WebSocket test</div>
         <output
-          className={statusIndicatorStyles}
+          className={statusIndicatorStyles({
+            status: isActuallyConnected
+              ? "online"
+              : error
+                ? "offline"
+                : "connecting",
+          })}
           aria-live="polite"
-          style={{
-            background: isActuallyConnected
-              ? "#E6F4EA"
-              : error
-                ? "#FCE8E6"
-                : "#FEF3E2",
-            borderColor: isActuallyConnected
-              ? "#34A853"
-              : error
-                ? "#D93025"
-                : "#E37400",
-          }}
         >
           <div
-            className={statusDotStyles}
-            style={{
-              background: isActuallyConnected
-                ? "var(--status-completed)"
+            className={statusDotStyles({
+              status: isActuallyConnected
+                ? "online"
                 : error
-                  ? "var(--error)"
-                  : "var(--warning)",
-            }}
+                  ? "offline"
+                  : "connecting",
+            })}
           />
-          <span
-            className={statusTextStyles}
-            style={{
-              color: isActuallyConnected
-                ? "var(--status-completed)"
-                : error
-                  ? "var(--error)"
-                  : "var(--warning)",
-            }}
-          >
+          <span>
             {isActuallyConnected
               ? "オンライン"
               : error
