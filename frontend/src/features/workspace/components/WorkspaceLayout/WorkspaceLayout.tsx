@@ -7,6 +7,7 @@ import {
 
 interface WorkspaceLayoutProps {
   header: ReactNode;
+  presence?: ReactNode;
   footer: ReactNode;
   error?: string | null;
   children: ReactNode;
@@ -14,6 +15,7 @@ interface WorkspaceLayoutProps {
 
 export function WorkspaceLayout({
   header,
+  presence,
   footer,
   error,
   children,
@@ -21,6 +23,8 @@ export function WorkspaceLayout({
   return (
     <div className={containerStyles}>
       {header}
+
+      {presence}
 
       {error && (
         <div className={`fade-in ${errorToastStyles}`}>

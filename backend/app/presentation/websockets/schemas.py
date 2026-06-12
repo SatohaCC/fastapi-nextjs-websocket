@@ -211,6 +211,17 @@ class JoinLeaveServerMessage(BaseServerMessage):
         )
 
 
+class PresenceStateServerMessage(BaseServerMessage):
+    """接続時に現在の在席ロスター（オンラインのユーザー名一覧）を通知するメッセージ。
+
+    再接続のたびにこのスナップショットで在席状態を再同期するため、
+    join/leave 差分の取りこぼしは次回接続時に自己回復する。
+    """
+
+    type: Literal["presence_state"] = "presence_state"
+    usernames: list[str]
+
+
 class TypingServerMessage(BaseServerMessage):
     """ユーザーが入力中であることを全クライアントに通知するメッセージ。"""
 

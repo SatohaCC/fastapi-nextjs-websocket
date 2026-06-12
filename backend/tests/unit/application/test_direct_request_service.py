@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.application.outbox.delivery_feed import DIRECT_REQUEST_SEQUENCE
+from app.application.outbox.delivery_feed import direct_request_sequence
 from app.application.outbox.payload import (
     DirectRequestPayload,
     DirectRequestUpdatePayload,
@@ -60,15 +60,15 @@ class TestDirectRequestServiceSendRequest:
         )
         mock_uow.tasks.save.assert_called_once()
 
-    async def test_saves_feed_to_outbox(self, mock_uow, saved_task):
-        """outbox.save が 1 回呼ばれること（Transactional Outbox）。"""
+    async def test_fans_out_feed_to_both_inboxes(self, mock_uow, saved_task):
+        """Sender / recipient 双方の inbox へ feed を fan-out 保存すること。"""
         mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
         await service.send_request(
             ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
-        mock_uow.outbox.save.assert_called_once()
+        assert mock_uow.outbox.save.await_count == 2
 
     async def test_commits_transaction(self, mock_uow, saved_task):
         """Commit が 1 回呼ばれること。"""
@@ -107,8 +107,10 @@ class TestDirectRequestServiceSendRequest:
         assert feed.payload.text == saved_task.text
         assert feed.payload.status == saved_task.status
 
-    async def test_outbox_feed_uses_direct_request_sequence(self, mock_uow, saved_task):
-        """Outbox フィードのシーケンス名が DIRECT_REQUEST_SEQUENCE であること。"""
+    async def test_outbox_feeds_use_per_user_inbox_sequences(
+        self, mock_uow, saved_task
+    ):
+        """Fan-out した 2 件が sender / recipient それぞれの inbox 名を持つこと。"""
         mock_uow.users.get_by_username.return_value = BOB
         mock_uow.tasks.save.return_value = saved_task
         service = DirectRequestService(mock_uow)
@@ -116,8 +118,11 @@ class TestDirectRequestServiceSendRequest:
             ALICE_ID, Username("alice"), Username("bob"), TaskText("please review")
         )
 
-        feed = mock_uow.outbox.save.call_args.args[0]
-        assert feed.sequence_name == DIRECT_REQUEST_SEQUENCE
+        names = {c.args[0].sequence_name for c in mock_uow.outbox.save.await_args_list}
+        assert names == {
+            direct_request_sequence("alice"),
+            direct_request_sequence("bob"),
+        }
 
     async def test_recipient_not_found_raises(self, mock_uow):
         """存在しない recipient を指定すると EntityNotFoundException を送出すること。"""
@@ -148,15 +153,20 @@ class TestDirectRequestServiceUpdateStatus:
         await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
         mock_uow.tasks.save.assert_called_once()
 
-    async def test_saves_update_feed_to_outbox(
+    async def test_fans_out_update_feed_to_both_inboxes(
         self, mock_uow, saved_task, processing_task
     ):
-        """ステータス更新フィードが outbox.save で記録されること。"""
+        """更新フィードも sender / recipient 双方の inbox に記録されること。"""
         mock_uow.tasks.get_by_id.return_value = saved_task
         mock_uow.tasks.save.return_value = processing_task
         service = DirectRequestService(mock_uow)
         await service.update_status(EntityId(1), TaskStatus.PROCESSING, BOB_ID)
-        mock_uow.outbox.save.assert_called_once()
+        assert mock_uow.outbox.save.await_count == 2
+        names = {c.args[0].sequence_name for c in mock_uow.outbox.save.await_args_list}
+        assert names == {
+            direct_request_sequence("alice"),
+            direct_request_sequence("bob"),
+        }
 
     async def test_commits_transaction(self, mock_uow, saved_task, processing_task):
         """Commit が 1 回呼ばれること。"""

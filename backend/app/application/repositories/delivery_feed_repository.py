@@ -35,8 +35,22 @@ class DeliveryFeedRepository(Protocol):
         sequence_name: SequenceName,
         after_id: SequenceId,
         username: Username | None = None,
+        limit: int = 500,
     ) -> list[DeliveryFeed]:
-        """指定された ID 以降のフィードを取得します。リカバリ用途です。"""
+        """指定された ID 以降のフィードを ``limit`` 件まで取得します（リカバリ用）。"""
+        ...
+
+    async def get_sequence_bounds(
+        self, sequence_name: SequenceName
+    ) -> tuple[int | None, int | None]:
+        """リカバリの穴検知用の境界値を返します。
+
+        ``(保持中の最小 sequence_id, 採番済みの最大 sequence_id)`` を返します。
+
+        最小値は ``delivery_feeds`` に現存する最小 ``sequence_id``（24h クリーンアップで
+        古い行が消えると上昇する）。最大値は ``delivery_sequences`` の ``last_id``。
+        いずれも該当が無ければ ``None``。
+        """
         ...
 
     async def delete_old_processed_feeds(self, hours: int = 24) -> int:

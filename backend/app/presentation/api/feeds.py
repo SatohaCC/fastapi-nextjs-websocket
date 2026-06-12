@@ -6,7 +6,12 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from ...application.outbox.delivery_feed import DeliveryFeed, SequenceId, SequenceName
+from ...application.outbox.delivery_feed import (
+    DeliveryFeed,
+    SequenceId,
+    SequenceName,
+    direct_request_sequence,
+)
 from ...application.services.feed_query_service import FeedQueryService
 from ...domain.entities.user import User
 from ..dependencies import get_authenticated_user, get_feed_query_service
@@ -66,7 +71,9 @@ async def get_request_feeds_since(
 ) -> list[FeedResponse]:
     """指定された ID 以降のダイレクトリクエストフィードを取得します（リカバリ用）。"""
     feeds = await feed_service.get_feeds_after(
-        SequenceName("direct_request"), SequenceId(after_request_id), user.username
+        direct_request_sequence(user.username.value),
+        SequenceId(after_request_id),
+        user.username,
     )
     return [
         FeedResponse.from_domain(f)

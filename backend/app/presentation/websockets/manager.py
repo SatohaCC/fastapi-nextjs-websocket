@@ -27,16 +27,29 @@ class ChatManager:
     def __init__(self) -> None:
         """ChatManager を初期化します。"""
         self.connections: dict[UserId, set[WebSocket]] = {}
+        # 在席ロスター用の UserId → username マッピング。
+        # ユーザーの最後の接続が切れた時点で削除する。
+        self._usernames: dict[UserId, str] = {}
 
-    async def connect(self, user_id: UserId, websocket: WebSocket) -> None:
-        """新しい WebSocket 接続を受け入れ、管理リストに追加します。"""
+    async def connect(
+        self, user_id: UserId, username: str, websocket: WebSocket
+    ) -> bool:
+        """新しい WebSocket 接続を受け入れ、管理リストに追加します。
+
+        Returns:
+            このユーザーにとって初めてのアクティブな接続（0→1 への遷移）
+            であれば ``True``。プレゼンス（入室通知）の対称性を保つために
+            呼び出し側が JOIN 配信の要否を判断するのに使う。
+        """
         await websocket.accept()
         ws_id = id(websocket)
         logger.info("connect: user=%s ws=%d", user_id.value, ws_id)
 
-        if user_id not in self.connections:
+        is_first_connection = user_id not in self.connections
+        if is_first_connection:
             self.connections[user_id] = set()
         self.connections[user_id].add(websocket)
+        self._usernames[user_id] = username
 
         active_users = [u.value for u in self.connections.keys()]
         logger.debug(
@@ -44,6 +57,17 @@ class ChatManager:
             user_id.value,
             len(self.connections[user_id]),
             active_users,
+        )
+        return is_first_connection
+
+    def is_user_connected(self, user_id: UserId) -> bool:
+        """指定ユーザーにアクティブな接続が残っているかを返します。"""
+        return user_id in self.connections
+
+    def online_usernames(self) -> list[str]:
+        """現在アクティブな接続を持つユーザー名の一覧を返します（在席ロスター）。"""
+        return sorted(
+            self._usernames[uid] for uid in self.connections if uid in self._usernames
         )
 
     def disconnect(self, websocket: WebSocket, user_id: UserId | None = None) -> None:
@@ -57,6 +81,7 @@ class ChatManager:
                 actual_user = user_id
             if not self.connections[user_id]:
                 del self.connections[user_id]
+                self._usernames.pop(user_id, None)
         else:
             for user, ws_set in list(self.connections.items()):
                 if websocket in ws_set:
@@ -64,6 +89,7 @@ class ChatManager:
                     actual_user = user
                     if not ws_set:
                         del self.connections[user]
+                        self._usernames.pop(user, None)
                     break
 
         user_str = actual_user.value if isinstance(actual_user, UserId) else actual_user
