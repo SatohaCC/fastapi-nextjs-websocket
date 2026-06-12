@@ -15,6 +15,7 @@ config:
     ws: {}
 scenarios:
   - name: "API Login -> Get WS Ticket -> Establish WebSocket Connection -> Send Chat Messages"
+    engine: ws
     flow:
       # 1. バックエンドのAPIにログインしてアクセストークンを取得
       - post:

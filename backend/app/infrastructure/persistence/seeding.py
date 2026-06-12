@@ -36,3 +36,16 @@ async def seed_users(conn: AsyncConnection) -> None:
                     created_at=datetime.now(timezone.utc),
                 )
             )
+        else:
+            # 既存のユーザーが存在する場合、パスワードを環境変数の最新値で更新します
+            hashed = PasswordHasher.hash_password(password.value)
+            await conn.execute(
+                text(
+                    "UPDATE users "
+                    "SET hashed_password = :hashed_password "
+                    "WHERE username = :username"
+                ).bindparams(
+                    username=username.value,
+                    hashed_password=hashed,
+                )
+            )
