@@ -8,6 +8,7 @@ import {
   handleStyles,
   headerStyles,
   logoStyles,
+  logoutButtonStyles,
   settingsWrapperStyles,
   statusDotStyles,
   statusIndicatorStyles,
@@ -129,12 +130,7 @@ export function WorkspaceHeader({
             />
           )}
         </div>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="btn-secondary"
-          style={{ padding: "8px 20px", fontSize: "14px" }}
-        >
+        <button type="button" onClick={onLogout} className={logoutButtonStyles}>
           ログアウト
         </button>
       </div>

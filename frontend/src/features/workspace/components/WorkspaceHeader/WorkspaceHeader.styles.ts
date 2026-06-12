@@ -120,3 +120,34 @@ export const gearButtonStyles = css({
 export const settingsWrapperStyles = css({
   position: "relative",
 });
+
+export const logoutButtonStyles = css({
+  background: "panelBg",
+  border: "1px solid",
+  borderColor: "panelBorder",
+  color: "textSecondary",
+  padding: "8px 16px",
+  fontSize: "sm",
+  borderRadius: "control",
+  fontWeight: 500,
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  outline: "none",
+  _hover: {
+    color: "error",
+    background: "badge.errorBg",
+    borderColor: "error",
+  },
+  _active: {
+    transform: "scale(0.98)",
+  },
+  "&[data-focus-visible]": {
+    outlineWidth: "3px",
+    outlineStyle: "solid",
+    outlineColor: "error",
+    outlineOffset: "3px",
+  },
+});
