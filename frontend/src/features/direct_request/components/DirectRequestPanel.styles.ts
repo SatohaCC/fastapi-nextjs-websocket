@@ -2,17 +2,14 @@ import { css } from "@/styled-system/css";
 
 export const requestFormStyles = css({
   padding: "12px 16px",
-  background: "panelBg",
-});
-
-export const formGridStyles = css({
   display: "flex",
-  flexDirection: "column",
-  gap: "10px",
+  gap: "8px",
+  alignItems: "center",
 });
 
 export const inputGroupStyles = css({
   display: "flex",
+  flex: 1,
   gap: "8px",
   overflow: "hidden",
   minWidth: "0",
