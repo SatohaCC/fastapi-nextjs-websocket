@@ -243,17 +243,26 @@ docker-compose up -d --build
    ```bash
    minikube start
    # ローカルの Docker デーモンを minikube 内に切り替え
+   # (bash の場合)
    eval $(minikube docker-env)
+   # (Windows PowerShell の場合)
+   minikube docker-env | Invoke-Expression
+   # (Windows コマンドプロンプトの場合)
+   @FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env --shell cmd') DO @%i
    ```
 
 2. **イメージのビルド**
    ```bash
-   # クラスタ内で直接イメージをビルド
-   docker build -t fastapi-nextjs-websocket-backend ./backend
+   # クラスタ内で直接イメージをビルド (backend.yaml で指定されているイメージ名と合わせる必要があります)
+   docker build -t chat-backend-ddd:latest ./backend
    ```
 
 3. **リソースの適用**
    ```bash
+   # 最初に Secret を適用します
+   kubectl apply -f k8s/secret.yaml
+
+   # 各種リソースを適用します
    kubectl apply -f k8s/postgres.yaml
    kubectl apply -f k8s/redis.yaml
    kubectl apply -f k8s/backend.yaml
@@ -261,7 +270,7 @@ docker-compose up -d --build
 
 4. **サービスの公開**
    ```bash
-   minikube service fastapi-backend
+   minikube service backend
    ```
 
 ---
