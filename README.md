@@ -257,7 +257,18 @@ docker-compose up -d --build
    docker build -t chat-backend-ddd:latest ./backend
    ```
 
-3. **リソースの適用**
+3. **Secret の作成**
+
+   DB パスワードや JWT 署名鍵などのシークレットは Kubernetes Secret（`app-secrets`）から注入されます。テンプレートをコピーして実際の値を設定してください（`k8s/secret.yaml` は Git 管理外です）。
+   ```bash
+   cp k8s/secret.yaml.example k8s/secret.yaml
+   # k8s/secret.yaml を編集し、<change-me> をすべて置き換える
+   # 鍵類は `openssl rand -hex 32` で生成する
+   kubectl apply -f k8s/secret.yaml
+   ```
+   ※ backend は `APP_ENV=production` で起動するため、開発用デフォルトのシークレットのままでは起動時にエラーで停止します。
+
+4. **リソースの適用**
    ```bash
    # 最初に Secret を適用します
    kubectl apply -f k8s/secret.yaml
@@ -268,7 +279,7 @@ docker-compose up -d --build
    kubectl apply -f k8s/backend.yaml
    ```
 
-4. **サービスの公開**
+5. **サービスの公開**
    ```bash
    minikube service backend
    ```

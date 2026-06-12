@@ -10,6 +10,7 @@ ENV/
 .coverage
 
 # Environment files (keep .env.example in Git)
+k8s/secret.yaml
 .env
 .env.local
 .env.production
