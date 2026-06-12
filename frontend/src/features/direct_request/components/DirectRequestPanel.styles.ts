@@ -11,7 +11,6 @@ export const inputGroupStyles = css({
   display: "flex",
   flex: 1,
   gap: "8px",
-  overflow: "hidden",
   minWidth: "0",
   "& select": {
     flex: "0 0 auto",
