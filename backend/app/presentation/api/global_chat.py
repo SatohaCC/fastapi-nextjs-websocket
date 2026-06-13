@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/global_chat", tags=["global_chat"])
 class SendGlobalChatMessageRequest(BaseModel):
     """メッセージ送信用のリクエストボディ。
 
-    REST の Body は ``*Request`` で統一する (CONVENTIONS.md 第 1 節)。
+    REST の Body は ``*Request`` で統一する。
     """
 
     text: str

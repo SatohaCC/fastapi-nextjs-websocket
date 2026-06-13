@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/direct_requests", tags=["direct_requests"])
 class UpdateDirectRequestStatusRequest(BaseModel):
     """ステータス更新用のリクエストボディ。
 
-    REST の Body は ``*Request`` で統一する (CONVENTIONS.md 第 1 節)。
+    REST の Body は ``*Request`` で統一する。
     ``*Payload`` は DeliveryFeed のイベントペイロード専用語であり、ここでは使わない。
     """
 
@@ -45,7 +45,7 @@ class UpdateDirectRequestStatusRequest(BaseModel):
 class SendDirectRequestRequest(BaseModel):
     """ダイレクトリクエスト送信用のリクエストボディ。
 
-    REST の Body は ``*Request`` で統一する (CONVENTIONS.md 第 1 節)。
+    REST の Body は ``*Request`` で統一する。
     """
 
     to: str

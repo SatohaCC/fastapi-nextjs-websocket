@@ -1,4 +1,4 @@
-# リフレッシュトークン実装計画
+# リフレッシュトークン仕様書
 
 ## 目標
 
@@ -32,40 +32,23 @@ BFF ルート（proxy / me / ws-ticket）
           └─ 失敗: 401 をそのまま返す（フロントがログインページへ）
 ```
 
-## 実装ステップ
+## 実装構成とファイル
 
-### Phase 1: バックエンド基盤
+### バックエンド (FastAPI)
 
-| # | ファイル | 変更内容 |
-|---|---------|---------|
-| 1 | `domain/primitives/primitives.py` | `RefreshToken` ValueObject を追加 |
-| 2 | `infrastructure/config.py` | `ACCESS_TOKEN_EXPIRE_MINUTES=15`、`REFRESH_TOKEN_EXPIRE_DAYS=7` を追加 |
-| 3 | `application/interfaces/auth.py` | `TokenProvider.create_token` の戻り値を `tuple[AuthToken, RefreshToken]` に変更、`verify_refresh_token` を追加 |
+*   `domain/primitives/primitives.py`: `RefreshToken` ValueObject
+*   `infrastructure/config.py`: トークン有効期限の設定 (`ACCESS_TOKEN_EXPIRE_MINUTES=15`, `REFRESH_TOKEN_EXPIRE_DAYS=7`)
+*   `application/interfaces/auth.py`: `TokenProvider`（トークン生成・検証インターフェース）
+*   `infrastructure/auth/jwt_service.py`: `type` クレーム（"access" / "refresh"）による誤用防止を含む JWT サービス
+*   `application/services/auth_service.py`: `login()` および `refresh()` 処理
+*   `presentation/api/auth.py`: `POST /api/auth/refresh` エンドポイント
 
-### Phase 2: バックエンド実装
+### フロントエンド (Next.js)
 
-| # | ファイル | 変更内容 |
-|---|---------|---------|
-| 4 | `infrastructure/auth/jwt_service.py` | `create_token` でトークンペアを返す、`type` クレームで誤用防止、`verify_refresh_token` 追加 |
-| 5 | `application/services/auth_service.py` | `login` 戻り値変更、`refresh()` 追加 |
-| 6 | `presentation/api/auth.py` | `LoginResponse` に `refresh_token` フィールド追加、`POST /api/auth/refresh` エンドポイント追加 |
-
-### Phase 3: フロントエンド
-
-| # | ファイル | 変更内容 |
-|---|---------|---------|
-| 7 | `lib/server/session.ts` | `tryRefreshSession` 追加（bff_refresh を使って FastAPI /refresh を呼び、新トークンペアを返す） |
-| 8 | `app/api/auth/login/route.ts` | `bff_refresh` Cookie をセット、`bff_session` の maxAge を 15 分に変更 |
-| 9 | `app/api/auth/logout/route.ts` | `bff_refresh` Cookie も削除 |
-| 10 | `app/api/proxy/[...path]/route.ts` | 401 時に `tryRefreshSession` → リトライ |
-| 11 | `app/api/auth/me/route.ts` | 同上 |
-| 12 | `app/api/auth/ws-ticket/route.ts` | 同上 |
-
-### Phase 4: テスト
-
-| # | 対象 | 内容 |
-|---|------|------|
-| 13 | `tests/msw/handlers.ts` | ログインレスポンスに `refresh_token` 追加、`POST /api/auth/refresh` ハンドラ追加 |
+*   `lib/server/session.ts`: `tryRefreshSession()` による API 呼び出しと Cookie の再設定処理
+*   `app/api/auth/login/route.ts`: ログイン成功時に `bff_session` (15分) と `bff_refresh` (7日) の二重 Cookie を発行
+*   `app/api/auth/logout/route.ts`: ログアウト時に両方の Cookie を削除
+*   `app/api/proxy/[...path]/route.ts`: BFF プロキシ経由で 401 エラー（アクセストークン期限切れ）時に自動で `tryRefreshSession` を走り込ませて透過的リトライを実行
 
 ## JWT クレーム設計
 
@@ -80,13 +63,16 @@ BFF ルート（proxy / me / ws-ticket）
 `verify_token` は `type != "access"` を拒否、`verify_refresh_token` は `type != "refresh"` を拒否。
 リフレッシュトークンをアクセストークンとして使う誤用を防止する。
 
-## Refresh Token Rotation
+## Refresh Token Rotation (RTR) と データベース無効化
 
-`POST /api/auth/refresh` は毎回**新しいリフレッシュトークン**も発行する。
-BFF は `bff_refresh` Cookie を毎回更新するため、盗まれたリフレッシュトークンの再利用を検知できる。
+### 安全性の担保
+1.  **一回限りの利用 (RTR)**: `POST /api/auth/refresh` は、アクセストークンの更新時に毎回**新しいリフレッシュトークン**も再発行します。
+2.  **データベース永続化とハッシュ管理**: 発行したリフレッシュトークンは、データベースの `refresh_tokens` テーブルにセキュアにハッシュ化して保存します。
+3.  **即時無効化 (キルスイッチ)**:
+    *   リフレッシュトークンが使用されるたびに、古いトークンはデータベースから物理削除（DELETE）されます。
+    *   ユーザーがログアウトした際には、そのセッションのリフレッシュトークンを DB から削除して即座に無効化します。
+    *   ユーザー単位で全リフレッシュトークンを一括削除する無効化機構（`delete_by_user_id`）も実装済みで、将来のパスワード変更・アカウント削除機能における強制ログアウトに利用できます。
 
-## 既知のトレードオフ
+## 既知の制限とトレードオフ
 
-- **ステートレス**: リフレッシュトークンをサーバー側 DB で管理しないため、即時無効化はできない。
-  7 日以内に悪用された場合、有効期限が切れるまで止められない。
-- **Cookie maxAge と JWT exp の二重管理**: JWT の有効期限を Cookie より 1 分短く設定することで不整合を防ぐ。
+*   **Cookie maxAge と JWT exp の二重管理**: JWT の有効期限を Cookie より 1 分短く設定することで不整合を防ぎます。

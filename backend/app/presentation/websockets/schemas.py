@@ -1,6 +1,6 @@
 """WebSocket で使用するメッセージスキーマの定義（クライアント↔サーバー）。
 
-命名規則 (CONVENTIONS.md 第 1 節):
+命名規則:
     * ``*ClientMessage``: クライアント → サーバー (inbound)
     * ``*ServerMessage``: サーバー → クライアント (outbound)
 """
