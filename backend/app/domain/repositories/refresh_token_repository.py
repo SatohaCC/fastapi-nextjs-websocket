@@ -1,5 +1,6 @@
 """リフレッシュトークン情報のリポジトリインターフェース。"""
 
+from datetime import datetime
 from typing import Protocol
 
 from app.domain.entities.refresh_token import RefreshToken
@@ -29,4 +30,8 @@ class RefreshTokenRepository(Protocol):
 
     async def delete_by_user_id(self, user_id: UserId) -> None:
         """指定されたユーザーに紐づくすべてのリフレッシュトークンを物理削除します。"""
+        ...
+
+    async def delete_expired(self, now: datetime) -> int:
+        """指定された基準日時より有効期限の古いリフレッシュトークンをすべて物理削除し、削除件数を返します。"""
         ...

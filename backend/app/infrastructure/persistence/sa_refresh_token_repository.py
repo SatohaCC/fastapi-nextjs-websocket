@@ -1,5 +1,7 @@
 """SQLAlchemy を使用した RefreshToken リポジトリの実装。"""
 
+from datetime import datetime
+
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -63,6 +65,12 @@ class SqlAlchemyRefreshTokenRepository(RefreshTokenRepository):
         """指定されたユーザーに紐づくすべてのリフレッシュトークンを物理削除します。"""
         stmt = delete(RefreshTokenORM).where(RefreshTokenORM.user_id == user_id.value)
         await self._session.execute(stmt)
+
+    async def delete_expired(self, now: datetime) -> int:
+        """指定された基準日時より有効期限の古いリフレッシュトークンをすべて物理削除し、削除件数を返します。"""
+        stmt = delete(RefreshTokenORM).where(RefreshTokenORM.expires_at < now)
+        res = await self._session.execute(stmt)
+        return res.rowcount  # type: ignore[attr-defined]
 
     def _to_entity(self, orm: RefreshTokenORM) -> RefreshToken:
         """ORM モデルをドメインエンティティに変換します。"""
