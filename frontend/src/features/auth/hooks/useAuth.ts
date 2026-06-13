@@ -42,6 +42,23 @@ export function useAuth(): UseAuthResult {
       });
   }, []);
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      resetSettings();
+      setUsername(null);
+      sessionStorage.removeItem("username");
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("unauthorized", handleUnauthorized);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("unauthorized", handleUnauthorized);
+      }
+    };
+  }, []);
+
   const setSession = useCallback((newUsername: string) => {
     setUsername(newUsername);
     sessionStorage.setItem("username", newUsername);

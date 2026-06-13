@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/apiClient";
 import type {
   DirectRequestServerMessage,
   DirectRequestUpdatedServerMessage,
@@ -7,7 +8,7 @@ export async function sendRequest(data: {
   to: string;
   text: string;
 }): Promise<void> {
-  const res = await fetch("/api/proxy/direct_requests", {
+  const res = await apiClient("/api/proxy/direct_requests", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -21,7 +22,7 @@ export async function updateRequestStatus(
   taskId: number,
   status: string,
 ): Promise<void> {
-  const res = await fetch(`/api/proxy/direct_requests/${taskId}/status`, {
+  const res = await apiClient(`/api/proxy/direct_requests/${taskId}/status`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +55,7 @@ export async function fetchRequestFeeds(
     const params = new URLSearchParams();
     params.set("after_request_id", (afterRequestId ?? 0).toString());
 
-    const res = await fetch(
+    const res = await apiClient(
       `/api/proxy/feeds/direct_requests?${params.toString()}`,
     );
     if (!res.ok) {

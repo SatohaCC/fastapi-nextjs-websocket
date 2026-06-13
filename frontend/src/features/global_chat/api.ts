@@ -1,7 +1,8 @@
+import { apiClient } from "@/lib/apiClient";
 import type { GlobalChatServerMessage } from "@/types/ws";
 
 export async function sendMessage(text: string): Promise<void> {
-  const res = await fetch("/api/proxy/global_chat/messages", {
+  const res = await apiClient("/api/proxy/global_chat/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -26,7 +27,7 @@ export async function fetchChatFeeds(
     const params = new URLSearchParams();
     params.set("after_chat_id", (afterChatId ?? 0).toString());
 
-    const res = await fetch(
+    const res = await apiClient(
       `/api/proxy/feeds/global_chat?${params.toString()}`,
     );
     if (!res.ok) {

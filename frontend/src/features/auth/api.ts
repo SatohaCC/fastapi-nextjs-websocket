@@ -1,3 +1,5 @@
+import { apiClient } from "@/lib/apiClient";
+
 export async function login(
   username: string,
   password: string,
@@ -34,7 +36,7 @@ export async function getMe(): Promise<{ username: string } | null> {
 }
 
 export async function fetchUsers(): Promise<string[]> {
-  const res = await fetch("/api/proxy/auth/users");
+  const res = await apiClient("/api/proxy/auth/users");
 
   if (!res.ok) {
     const errorBody = await res.text().catch(() => "unknown");

@@ -132,15 +132,41 @@ export function clearSessionCookies(
  * @param refreshCookieValue bff_refresh Cookie の値（未設定時は undefined）
  * @returns リフレッシュ結果、または失敗時は null
  */
+const activeRefreshes = new Map<string, Promise<RefreshResult | null>>();
+
+/**
+ * bff_refresh Cookie の値からトークンリフレッシュを試み、
+ * 新しいアクセストークンと暗号化済みトークンペアを返します。
+ *
+ * 並行するリクエストが同時にリフレッシュを走らせるのを防ぐため、
+ * 同一のトークン値での処理は重複排除（Deduplicate）されます。
+ *
+ * @param refreshCookieValue bff_refresh Cookie の値（未設定時は undefined）
+ * @returns リフレッシュ結果、または失敗時は null
+ */
 export async function attemptTokenRefresh(
   refreshCookieValue: string | undefined,
 ): Promise<RefreshResult | null> {
   if (!refreshCookieValue) return null;
-  const newTokens = await tryRefreshSession(refreshCookieValue);
-  if (!newTokens) return null;
-  const accessToken = await decryptSession(newTokens.encryptedAccess);
-  if (!accessToken) return null;
-  return { accessToken, ...newTokens };
+
+  let promise = activeRefreshes.get(refreshCookieValue);
+  if (!promise) {
+    promise = (async () => {
+      const newTokens = await tryRefreshSession(refreshCookieValue);
+      if (!newTokens) return null;
+      const accessToken = await decryptSession(newTokens.encryptedAccess);
+      if (!accessToken) return null;
+      return { accessToken, ...newTokens };
+    })();
+
+    promise.finally(() => {
+      activeRefreshes.delete(refreshCookieValue);
+    });
+
+    activeRefreshes.set(refreshCookieValue, promise);
+  }
+
+  return promise;
 }
 
 /**

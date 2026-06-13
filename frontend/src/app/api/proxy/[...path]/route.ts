@@ -5,6 +5,7 @@ import { isValidProxyPath } from "@/lib/server/proxyPath";
 import {
   applyRefreshedCookies,
   attemptTokenRefresh,
+  clearSessionCookies,
   decryptSession,
   REFRESH_COOKIE,
   type RefreshResult,
@@ -39,16 +40,23 @@ async function handleProxy(
         cookieStore.get(REFRESH_COOKIE)?.value,
       );
       if (!preRefreshResult) {
-        return NextResponse.json({ detail: "未ログイン" }, { status: 401 });
+        const response = NextResponse.json(
+          { detail: "未ログイン" },
+          { status: 401 },
+        );
+        clearSessionCookies(response);
+        return response;
       }
       token = preRefreshResult.accessToken;
     } else {
       token = await decryptSession(sessionCookie.value);
       if (!token) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { detail: "セッションが無効です" },
           { status: 401 },
         );
+        clearSessionCookies(response);
+        return response;
       }
     }
 
@@ -79,10 +87,12 @@ async function handleProxy(
         cookieStore.get(REFRESH_COOKIE)?.value,
       );
       if (!refreshed) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { detail: "再ログインが必要です" },
           { status: 401 },
         );
+        clearSessionCookies(response);
+        return response;
       }
 
       const retryRes = await fetch(destinationUrl, {

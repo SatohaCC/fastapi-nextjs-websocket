@@ -4,6 +4,7 @@ import { API_BASE } from "@/lib/config";
 import {
   applyRefreshedCookies,
   attemptTokenRefresh,
+  clearSessionCookies,
   decryptSession,
   REFRESH_COOKIE,
   type RefreshResult,
@@ -30,16 +31,23 @@ export async function GET() {
         cookieStore.get(REFRESH_COOKIE)?.value,
       );
       if (!preRefreshResult) {
-        return NextResponse.json({ detail: "未ログイン" }, { status: 401 });
+        const response = NextResponse.json(
+          { detail: "未ログイン" },
+          { status: 401 },
+        );
+        clearSessionCookies(response);
+        return response;
       }
       token = preRefreshResult.accessToken;
     } else {
       token = await decryptSession(sessionCookie.value);
       if (!token) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { detail: "セッションが無効です" },
           { status: 401 },
         );
+        clearSessionCookies(response);
+        return response;
       }
     }
 
@@ -51,19 +59,23 @@ export async function GET() {
         cookieStore.get(REFRESH_COOKIE)?.value,
       );
       if (!refreshed) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { detail: "再ログインが必要です" },
           { status: 401 },
         );
+        clearSessionCookies(response);
+        return response;
       }
 
       const retryRes = await fetchTicket(refreshed.accessToken);
       if (!retryRes.ok) {
         if (retryRes.status === 401) {
-          return NextResponse.json(
+          const response = NextResponse.json(
             { detail: "再ログインが必要です" },
             { status: 401 },
           );
+          clearSessionCookies(response);
+          return response;
         }
         const err = await retryRes.json().catch(() => ({}));
         return NextResponse.json(

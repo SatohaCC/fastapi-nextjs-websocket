@@ -1,7 +1,8 @@
+import { apiClient } from "@/lib/apiClient";
 import type { NotificationSettings } from "@/lib/notificationSettings";
 
 export async function fetchNotificationSettings(): Promise<NotificationSettings> {
-  const res = await fetch("/api/proxy/user_settings");
+  const res = await apiClient("/api/proxy/user_settings");
   if (!res.ok) {
     throw new Error("Failed to fetch notification settings");
   }
@@ -17,7 +18,7 @@ export async function fetchNotificationSettings(): Promise<NotificationSettings>
 export async function saveNotificationSettings(
   s: NotificationSettings,
 ): Promise<void> {
-  const res = await fetch("/api/proxy/user_settings", {
+  const res = await apiClient("/api/proxy/user_settings", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
