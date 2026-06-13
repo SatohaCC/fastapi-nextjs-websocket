@@ -126,6 +126,12 @@ export async function runFeedSync<TFeed extends { sequence_id: number }>(
       setSyncStatus(`最終同期: ${new Date().toLocaleTimeString()}`);
     } while (pendingSyncRef.current);
   } catch (error) {
+    // 401 未ログインエラーの場合は、コンソールに赤文字のエラー（console.error）を出さず、
+    // 静かに終了する（すでに画面はログイン画面へリダイレクトされるため）。
+    if (error instanceof Error && error.name === "UnauthorizedError") {
+      setSyncStatus("未ログイン");
+      return;
+    }
     // biome-ignore lint/suspicious/noConsole: Error tracking
     console.error("[useFeedSync] Sync error:", error);
     setSyncStatus(syncErrorMessage);

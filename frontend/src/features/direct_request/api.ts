@@ -66,6 +66,9 @@ export async function fetchRequestFeeds(
     }
     return res.json();
   } catch (error) {
+    if (error instanceof Error && error.name === "UnauthorizedError") {
+      throw error;
+    }
     // biome-ignore lint/suspicious/noConsole: Error tracking
     console.error("[fetchRequestFeeds] Error:", error);
     throw error;
