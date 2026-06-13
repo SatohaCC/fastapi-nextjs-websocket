@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..application.interfaces.auth import TicketStore
+from ..application.interfaces.presence import PresenceStore
 from ..application.services.auth_service import AuthService
 from ..application.services.connection_service import ConnectionService
 from ..application.services.direct_request_service import DirectRequestService
@@ -21,6 +22,7 @@ from ..infrastructure.auth.login_rate_limiter import LoginRateLimiter
 from ..infrastructure.auth.password_hasher import PasswordHasher
 from ..infrastructure.auth.redis_ticket_store import RedisTicketStore
 from ..infrastructure.config import settings
+from ..infrastructure.messaging.redis_presence_store import RedisPresenceStore
 from ..infrastructure.persistence.sa_message_repository import (
     SqlAlchemyMessageRepository,
 )
@@ -71,6 +73,7 @@ def get_chat_manager() -> ChatManager:
 
 
 _ticket_store: TicketStore | None = None
+_presence_store: PresenceStore | None = None
 _login_rate_limiter: LoginRateLimiter | None = None
 _chat_message_rate_limiter: FixedWindowRateLimiter | None = None
 _direct_request_rate_limiter: FixedWindowRateLimiter | None = None
@@ -136,6 +139,14 @@ def get_ticket_store() -> TicketStore:
     if _ticket_store is None:
         _ticket_store = RedisTicketStore(settings.REDIS_URL)
     return _ticket_store
+
+
+def get_presence_store() -> PresenceStore:
+    """PresenceStore（クラスタ全体の在席ストア）の取得"""
+    global _presence_store
+    if _presence_store is None:
+        _presence_store = RedisPresenceStore(settings.REDIS_URL)
+    return _presence_store
 
 
 def get_auth_service(

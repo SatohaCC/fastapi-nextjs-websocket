@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import and_, delete, or_, select, text, update
+from sqlalchemy import and_, delete, func, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,9 @@ from ...application.outbox.delivery_feed import (
 from ...application.repositories.delivery_feed_repository import DeliveryFeedRepository
 from ..serialization import dict_to_payload, payload_to_dict
 from .orm_models import DeliveryFeedORM, DeliverySequenceORM
+
+# リカバリ取得の 1 ページあたり上限。単一クエリの結果サイズを境界化する。
+RECOVERY_PAGE_SIZE = 500
 
 
 class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
@@ -98,8 +101,13 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
         sequence_name: SequenceName,
         after_id: SequenceId,
         username: Username | None = None,
+        limit: int = RECOVERY_PAGE_SIZE,
     ) -> list[DeliveryFeed]:
-        """指定された ID 以降のフィードを取得します。リカバリ用途です。"""
+        """指定された ID 以降のフィードを ``limit`` 件まで取得します。リカバリ用途です。
+
+        ``sequence_id`` 昇順で最大 ``limit`` 件返すため、単一クエリの結果サイズが
+        境界化される。残りは呼び出し側が cursor を進めてページングする。
+        """
         stmt = (
             select(DeliveryFeedORM)
             .where(
@@ -107,6 +115,7 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
                 DeliveryFeedORM.sequence_id > after_id.value,
             )
             .order_by(DeliveryFeedORM.sequence_id)
+            .limit(limit)
         )
 
         if username:
@@ -122,6 +131,26 @@ class SqlAlchemyDeliveryFeedRepository(DeliveryFeedRepository):
 
         result = await self._session.execute(stmt)
         return [self._to_domain(orm) for orm in result.scalars().all()]
+
+    async def get_sequence_bounds(
+        self, sequence_name: SequenceName
+    ) -> tuple[int | None, int | None]:
+        """``(保持中の最小 sequence_id, 採番済みの最大 sequence_id)`` を返します。"""
+        min_retained = (
+            await self._session.execute(
+                select(func.min(DeliveryFeedORM.sequence_id)).where(
+                    DeliveryFeedORM.sequence_name == sequence_name.value
+                )
+            )
+        ).scalar_one_or_none()
+        head = (
+            await self._session.execute(
+                select(DeliverySequenceORM.last_id).where(
+                    DeliverySequenceORM.name == sequence_name.value
+                )
+            )
+        ).scalar_one_or_none()
+        return (min_retained, head)
 
     async def delete_old_processed_feeds(self, hours: int = 24) -> int:
         """指定された時間以上経過した PROCESSED ステータスのフィードを削除します。"""

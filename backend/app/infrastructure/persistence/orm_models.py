@@ -76,7 +76,9 @@ class DeliverySequenceORM(Base):
 
     __tablename__ = "delivery_sequences"
 
-    name: Mapped[str] = mapped_column(String(50), primary_key=True)
+    # per-user の DM inbox 名（``direct_request:{username}``）を収めるため
+    # 接頭辞 + username(最大50) を見込んで 80 文字とする。
+    name: Mapped[str] = mapped_column(String(80), primary_key=True)
     last_id: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
 
 
@@ -85,7 +87,8 @@ class DeliveryFeedORM(Base):
 
     __tablename__ = "delivery_feeds"
 
-    sequence_name: Mapped[str] = mapped_column(String(50), primary_key=True)
+    # per-user の DM inbox 名（``direct_request:{username}``）を収めるため 80 文字。
+    sequence_name: Mapped[str] = mapped_column(String(80), primary_key=True)
     sequence_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     event_type: Mapped[str] = mapped_column(String(50), nullable=False)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)

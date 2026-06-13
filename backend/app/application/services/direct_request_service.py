@@ -4,8 +4,12 @@ from ...domain.entities.task import DraftTask, Task
 from ...domain.exceptions import EntityNotFoundException
 from ...domain.primitives.primitives import EntityId, TaskText, UserId, Username
 from ...domain.primitives.task_status import TaskStatus
-from ..outbox.delivery_feed import DIRECT_REQUEST_SEQUENCE, DraftDeliveryFeed
-from ..outbox.payload import DirectRequestPayload, DirectRequestUpdatePayload
+from ..outbox.delivery_feed import DraftDeliveryFeed, direct_request_sequence
+from ..outbox.payload import (
+    DirectRequestPayload,
+    DirectRequestUpdatePayload,
+    FeedPayload,
+)
 from ..uow import UnitOfWork
 
 
@@ -20,6 +24,23 @@ class DirectRequestService:
     def __init__(self, uow: UnitOfWork) -> None:
         """ダイレクトリクエストサービスを初期化します。"""
         self._uow = uow
+
+    async def _fanout_to_inboxes(
+        self, payload: FeedPayload, sender: Username, recipient: Username
+    ) -> None:
+        """DM ペイロードを関係者（sender / recipient）の inbox へ複製保存します。
+
+        受信者ごとに独立した連番（``direct_request:{username}``）で採番することで、
+        各クライアントは自分の inbox の seq だけを連番として追える。自分宛
+        （sender == recipient）の場合は重複を除いて 1 件のみ保存する。
+        """
+        for target in {sender.value, recipient.value}:
+            feed = DraftDeliveryFeed(
+                sequence_name=direct_request_sequence(target),
+                event_type=payload.event_type,
+                payload=payload,
+            )
+            await self._uow.outbox.save(feed)
 
     async def send_request(
         self,
@@ -57,12 +78,9 @@ class DirectRequestService:
                 created_at=saved_task.created_at,
                 updated_at=saved_task.updated_at,
             )
-            feed = DraftDeliveryFeed(
-                sequence_name=DIRECT_REQUEST_SEQUENCE,
-                event_type=payload.event_type,
-                payload=payload,
+            await self._fanout_to_inboxes(
+                payload, saved_task.sender, saved_task.recipient
             )
-            await self._uow.outbox.save(feed)
             await self._uow.commit()
 
         return saved_task
@@ -97,12 +115,9 @@ class DirectRequestService:
                 recipient=updated_task.recipient,
                 updated_at=updated_task.updated_at,
             )
-            feed = DraftDeliveryFeed(
-                sequence_name=DIRECT_REQUEST_SEQUENCE,
-                event_type=payload.event_type,
-                payload=payload,
+            await self._fanout_to_inboxes(
+                payload, updated_task.sender, updated_task.recipient
             )
-            await self._uow.outbox.save(feed)
             await self._uow.commit()
 
         return updated_task

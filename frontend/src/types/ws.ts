@@ -8,6 +8,7 @@ export type ServerMessage =
   | DirectRequestServerMessage
   | DirectRequestUpdatedServerMessage
   | JoinLeaveServerMessage
+  | PresenceStateServerMessage
   | PingServerMessage
   | ErrorServerMessage
   | TypingServerMessage
@@ -52,6 +53,11 @@ export interface DirectRequestUpdatedServerMessage {
 export interface JoinLeaveServerMessage {
   type: "join" | "leave";
   username: string;
+}
+
+export interface PresenceStateServerMessage {
+  type: "presence_state";
+  usernames: string[];
 }
 
 export interface TypingServerMessage {

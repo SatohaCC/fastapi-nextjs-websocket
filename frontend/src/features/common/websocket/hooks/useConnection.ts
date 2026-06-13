@@ -32,6 +32,11 @@ export function useConnection({
   const retryMsRef = useRef<number>(INITIAL_RETRY_MS);
   const pingTimerRef = useRef<number | null>(null);
   const isManualRef = useRef(false);
+  // アンマウント済みかどうか。connectWs は ws-ticket を await fetch してから
+  // ソケットを生成するため、その await 中にアンマウント（ログアウトや StrictMode の
+  // 二重マウント）されると、生成済みソケットを閉じられず orphan として残ってしまう。
+  // await 解決後にこのフラグを見て、アンマウント済みならソケットを生成しない。
+  const isMountedRef = useRef(true);
 
   const currentAuthRef = useRef<boolean>(isAuthenticated);
   currentAuthRef.current = isAuthenticated;
@@ -94,6 +99,10 @@ export function useConnection({
       }
       return;
     }
+
+    // チケット取得の await 中にアンマウントされていたら、ここでソケットを生成すると
+    // 閉じる手段のない orphan になる。生成せず即 return する。
+    if (!isMountedRef.current) return;
 
     if (wsRef.current) {
       wsRef.current.onclose = null;
@@ -190,6 +199,30 @@ export function useConnection({
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [connectWs]);
+
+  // アンマウント時（ログアウトによる WebSocketProvider の破棄やページ遷移）に
+  // ソケットを確実に閉じる。これが無いと、サーバーが ping タイムアウトで切断を
+  // 検知するまで接続が残り、その間 LEAVE が配信されず他クライアントの在席表示に
+  // 残り続ける。再接続はスケジュールしない（手動切断扱い）。
+  // mount 本体で isMountedRef を true に戻すことで、StrictMode の再マウント後も
+  // connectWs がソケットを生成できるようにする。
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      isManualRef.current = true;
+      if (reconnectTimerRef.current) {
+        workerTimer.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      clearPingTimeout();
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [clearPingTimeout]);
 
   const send = useCallback((data: unknown) => {
     const ws = wsRef.current;

@@ -81,3 +81,22 @@ class DeliveryFeed(DraftDeliveryFeed):
 GLOBAL_CHAT_SEQUENCE = SequenceName("global_chat")
 SYSTEM_SEQUENCE = SequenceName("system_global")
 DIRECT_REQUEST_SEQUENCE = SequenceName("direct_request")
+
+# ダイレクトリクエストの per-user inbox シーケンス名の接頭辞。
+DIRECT_REQUEST_SEQUENCE_PREFIX = "direct_request:"
+
+
+def direct_request_sequence(username: str) -> SequenceName:
+    """ユーザーごとの DM 受信ストリーム（inbox）のシーケンス名を返します。
+
+    DM は受信者ごとに独立した連番を持たせるため、``direct_request:{username}``
+    という per-user のシーケンス名で採番・取得する。これにより各クライアントは
+    自分の inbox の seq だけを追えばよく、他人の DM による seq の飛びが起きない。
+
+    Args:
+        username: 受信ストリームの所有者ユーザー名。
+
+    Returns:
+        ``direct_request:{username}`` 形式のシーケンス名。
+    """
+    return SequenceName(f"{DIRECT_REQUEST_SEQUENCE_PREFIX}{username}")
