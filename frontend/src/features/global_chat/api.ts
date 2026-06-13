@@ -38,6 +38,9 @@ export async function fetchChatFeeds(
     }
     return res.json();
   } catch (error) {
+    if (error instanceof Error && error.name === "UnauthorizedError") {
+      throw error;
+    }
     // biome-ignore lint/suspicious/noConsole: Error tracking
     console.error("[fetchChatFeeds] Error:", error);
     throw error;
