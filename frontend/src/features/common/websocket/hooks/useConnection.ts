@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { apiClient } from "@/lib/apiClient";
 import { WS_BASE } from "@/lib/config";
 import { workerTimer } from "@/lib/workerTimer";
 
@@ -74,7 +75,7 @@ export function useConnection({
     // 1. BFFからワンタイムチケットを取得
     let ticket: string;
     try {
-      const res = await fetch("/api/auth/ws-ticket");
+      const res = await apiClient("/api/auth/ws-ticket");
       if (!res.ok) {
         onStatusChangeRef.current?.("認証チケットの取得に失敗しました");
         throw new Error("Failed to get ticket");
