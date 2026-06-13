@@ -5,6 +5,7 @@ import logging
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 
+from ...application.services.auth_management_service import AuthManagementService
 from ...application.services.outbox_management_service import OutboxManagementService
 from ...application.uow import UnitOfWork
 
@@ -35,6 +36,11 @@ async def cleanup_worker(
                 deleted = await service.cleanup_old_feeds(hours=24)
                 if deleted > 0:
                     logger.info(f"Cleaned up {deleted} old processed feeds")
+
+                auth_service = AuthManagementService(uow)
+                deleted_tokens = await auth_service.cleanup_expired_tokens()
+                if deleted_tokens > 0:
+                    logger.info(f"Cleaned up {deleted_tokens} expired refresh tokens")
         except asyncio.CancelledError:
             return
         except Exception:
