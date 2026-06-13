@@ -24,7 +24,6 @@ class DraftTask:
     Note:
         ``Task`` はダイレクトリクエスト機能の **作業単位** を表す汎用エンティティで、
         ユーザー向けの業務用語 "DirectRequest" に対応する内部表現である。
-        詳細は CONVENTIONS.md 第 6 節を参照。
     """
 
     sender_id: UserId  # 送信者の UUID（識別子）

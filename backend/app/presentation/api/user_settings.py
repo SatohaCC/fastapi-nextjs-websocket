@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/user_settings", tags=["user_settings"])
 class UserSettingsResponse(BaseModel):
     """通知設定取得のレスポンスボディ。
 
-    REST のレスポンス DTO は ``*Response`` で統一します (CONVENTIONS.md 第 1 節)。
+    REST のレスポンス DTO は ``*Response`` で統一します。
     """
 
     global_chat: bool
@@ -38,7 +38,7 @@ class UserSettingsResponse(BaseModel):
 class UpdateUserSettingsRequest(BaseModel):
     """通知設定更新用のリクエストボディ。
 
-    REST のリクエストボディ DTO は ``*Request`` で統一します (CONVENTIONS.md 第 1 節)。
+    REST のリクエストボディ DTO は ``*Request`` で統一します。
     """
 
     global_chat: bool

@@ -1,4 +1,4 @@
-// 命名規則 (../../../CONVENTIONS.md 第 1 節):
+// 命名規則:
 //   - *ServerMessage: サーバー → クライアント (受信)
 //   - *ClientMessage: クライアント → サーバー (送信)
 
