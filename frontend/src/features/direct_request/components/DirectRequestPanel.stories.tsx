@@ -1,0 +1,112 @@
+import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
+import type { DirectRequestServerMessage } from "@/types/ws";
+import { DirectRequestPanel } from "./DirectRequestPanel";
+
+const meta: Meta<typeof DirectRequestPanel> = {
+  title: "Features/DirectRequest/DirectRequestPanel",
+  component: DirectRequestPanel,
+  tags: ["autodocs"],
+  args: {
+    onTargetUserChange: fn(),
+    onTextChange: fn(),
+    onSend: fn(),
+    onUpdateStatus: fn(),
+    formatDate: (dateStr: string) => {
+      const d = new Date(dateStr);
+      return d.toLocaleString("ja-JP", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof DirectRequestPanel>;
+
+const mockRequests: DirectRequestServerMessage[] = [
+  {
+    type: "direct_request",
+    id: 1,
+    seq: 1,
+    sender: "bob",
+    recipient: "alice",
+    sender_id: "bob-id",
+    recipient_id: "alice-id",
+    text: "資料の確認をお願いします。",
+    status: "requested",
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 3600000).toISOString(),
+    is_history: false,
+  },
+  {
+    type: "direct_request",
+    id: 2,
+    seq: 2,
+    sender: "alice",
+    recipient: "charlie",
+    sender_id: "alice-id",
+    recipient_id: "charlie-id",
+    text: "バグの修正状況を教えてください。",
+    status: "processing",
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+    updated_at: new Date(Date.now() - 1800000).toISOString(),
+    is_history: false,
+  },
+  {
+    type: "direct_request",
+    id: 3,
+    seq: 3,
+    sender: "charlie",
+    recipient: "alice",
+    sender_id: "charlie-id",
+    recipient_id: "alice-id",
+    text: "デプロイ完了しました。",
+    status: "completed",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 43200000).toISOString(),
+    is_history: false,
+  },
+];
+
+export const Default: Story = {
+  args: {
+    otherUsers: [
+      { id: "bob-id", username: "bob" },
+      { id: "charlie-id", username: "charlie" },
+    ],
+    requests: mockRequests,
+    currentUser: "alice",
+    targetUser: "",
+    text: "",
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    otherUsers: [
+      { id: "bob-id", username: "bob" },
+      { id: "charlie-id", username: "charlie" },
+    ],
+    requests: [],
+    currentUser: "alice",
+    targetUser: "",
+    text: "",
+  },
+};
+
+export const Typing: Story = {
+  args: {
+    otherUsers: [
+      { id: "bob-id", username: "bob" },
+      { id: "charlie-id", username: "charlie" },
+    ],
+    requests: mockRequests,
+    currentUser: "alice",
+    targetUser: "bob-id",
+    text: "急ぎでお願いします！",
+  },
+};

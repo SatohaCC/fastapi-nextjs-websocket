@@ -1,0 +1,18 @@
+# 使い方:
+#   1. このファイルを terraform.tfvars にコピーする（.gitignore 済み）
+#      cp terraform.tfvars.example terraform.tfvars
+#   2. <change-me> をすべて実際の値に置き換える
+#      パスワード類は `openssl rand -hex 32` 等で生成すること
+#   3. terraform init && terraform apply
+
+allowed_origin = "https://<your-app>.vercel.app"
+
+db_password    = "<change-me>"
+admin_password = "<change-me>"
+
+# ログイン可能なユーザーの定義 (JSON文字列)
+users_json = "{\"<username>\":\"<password>\"}"
+
+# 必要であれば変更
+# backend_image_tag = "latest"
+# desired_count     = 2

@@ -1,0 +1,56 @@
+"""グローバルチャットに関するユースケースを実現するアプリケーションサービス。"""
+
+from ...domain.entities.message import DraftMessage, Message
+from ...domain.primitives.primitives import EntityId, MessageText, UserId, Username
+from ..outbox.delivery_feed import GLOBAL_CHAT_SEQUENCE, DraftDeliveryFeed
+from ..outbox.payload import GlobalChatPayload
+from ..uow import UnitOfWork
+
+
+class GlobalChatService:
+    """グローバルチャットに関するユースケースをまとめたアプリケーションサービス。"""
+
+    def __init__(self, uow: UnitOfWork) -> None:
+        """グローバルチャットサービスを初期化します。"""
+        self._uow = uow
+
+    async def send_message(
+        self, user_id: UserId, username: Username, text: MessageText
+    ) -> Message:
+        """メッセージを生成・保存し、パブリッシュします。"""
+        draft = DraftMessage(user_id=user_id, username=username, text=text)
+        async with self._uow:
+            saved_message = await self._uow.messages.save(draft)
+            payload = GlobalChatPayload(
+                id=saved_message.id,
+                user_id=saved_message.user_id,
+                username=saved_message.username,
+                text=saved_message.text,
+                created_at=saved_message.created_at,
+            )
+            feed = DraftDeliveryFeed(
+                sequence_name=GLOBAL_CHAT_SEQUENCE,
+                event_type=payload.event_type,
+                payload=payload,
+            )
+            await self._uow.outbox.save(feed)
+            await self._uow.commit()
+
+        return saved_message
+
+    async def get_messages_after(self, after_id: EntityId) -> list[Message]:
+        """指定したID以降のメッセージを取得します。"""
+        async with self._uow:
+            return await self._uow.messages.get_after(after_id)
+
+    async def get_recent_messages(self, limit: int = 50) -> list[Message]:
+        """最新のメッセージを取得します。"""
+        async with self._uow:
+            return await self._uow.messages.get_recent(limit)
+
+    async def get_messages_before(
+        self, before_id: EntityId, limit: int = 50
+    ) -> list[Message]:
+        """指定したIDより前のメッセージを取得します。"""
+        async with self._uow:
+            return await self._uow.messages.get_before(before_id, limit)

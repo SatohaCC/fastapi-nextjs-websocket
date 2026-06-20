@@ -1,0 +1,61 @@
+@layer reset, base, tokens, recipes, utilities;
+
+@import "../styled-system/styles.css";
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+
+@layer reset {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Design tokens are defined in panda.config.ts and exposed as CSS variables
+   (e.g. var(--colors-primary)) by the generated styled-system/styles.css. */
+
+body {
+  background-color: var(--colors-bg);
+  color: var(--colors-text-primary);
+  font-family: var(--fonts-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  /* WCAG 1.4.11: author-styled scrollbar thumb needs >=3:1 contrast */
+  background: var(--colors-border-muted);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--colors-text-secondary);
+}
+
+a {
+  color: var(--colors-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

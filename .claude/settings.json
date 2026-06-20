@@ -1,0 +1,26 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(grep -v \"^$\")",
+            "Bash(docker compose *)",
+            "Bash(npx playwright *)",
+            "Bash(UV_PROJECT_ENVIRONMENT=.venv2 powershell -ExecutionPolicy Bypass -File check.ps1)",
+            "Bash(UV_PROJECT_ENVIRONMENT=.venv2 uv run pytest -q)",
+            "Bash(npx vitest *)",
+            "Bash(node verify-bob.mjs)",
+            "Bash(node verify-dm-inbox.mjs)",
+            "Bash(python scripts/check_okf.py)",
+            "Bash(jj git *)",
+            "Bash(jj split *)",
+            "Bash(jj file *)",
+            "Bash(powershell -ExecutionPolicy Bypass -File check.ps1)",
+            "Bash(echo \"EXIT_CODE=$?\")",
+            "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v \"$\\(pwd\\):/workspace\" -w /workspace hashicorp/terraform:1.9 fmt -check -diff -recursive)",
+            "Bash(cd ../backend && uv run ruff format --check . 2>&1 | tail -30)",
+            "Bash(jj st *)",
+            "Bash(rtk --help)",
+            "Bash(rtk find *)",
+            "Bash(rtk grep *)"
+        ]
+    }
+}
