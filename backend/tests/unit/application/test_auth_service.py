@@ -267,7 +267,7 @@ class TestAuthServiceSessions:
 
     async def test_revoke_session_success(self, mock_uow, mock_jwt):
         """トークンが存在し所有者が一致する場合、無効化（削除）が成功することを確認。"""
-        token_id = uuid.uuid7()
+        token_id = SessionId(uuid.uuid7())
         mock_token = MagicMock()
         mock_token.user_id = ALICE_ID
         mock_uow.refresh_tokens.get_by_id.return_value = mock_token
@@ -315,7 +315,7 @@ class TestAuthServiceSessions:
 
     async def test_revoke_session_failure_not_found(self, mock_uow, mock_jwt):
         """トークンが存在しない場合、無効化が失敗（False）することを確認。"""
-        token_id = uuid.uuid7()
+        token_id = SessionId(uuid.uuid7())
         mock_uow.refresh_tokens.get_by_id.return_value = None
 
         service = AuthService(
@@ -330,7 +330,7 @@ class TestAuthServiceSessions:
 
     async def test_revoke_session_failure_owner_mismatch(self, mock_uow, mock_jwt):
         """他人のトークンを無効化しようとした場合、失敗（False）することを確認。"""
-        token_id = uuid.uuid7()
+        token_id = SessionId(uuid.uuid7())
         mock_token = MagicMock()
         mock_token.user_id = UserId(uuid.uuid7())  # 他のユーザーID
         mock_uow.refresh_tokens.get_by_id.return_value = mock_token

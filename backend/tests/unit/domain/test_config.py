@@ -1,6 +1,7 @@
 """Settings の本番環境バリデーションのユニットテスト。"""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -13,7 +14,7 @@ from app.infrastructure.config import (
     Settings,
 )
 
-PROD_SECRETS = {
+PROD_SECRETS: dict[str, Any] = {
     "SECRET_KEY": "a" * 64,
     "ADMIN_PASSWORD": "strong-admin-password",
     "ADMIN_SECRET_KEY": "b" * 64,
@@ -23,7 +24,7 @@ PROD_SECRETS = {
 
 def test_development_allows_default_secrets() -> None:
     """Development ではデフォルトシークレットのままでも起動できること。"""
-    settings = Settings(_env_file=None, APP_ENV="development")
+    settings = Settings(_env_file=None, APP_ENV="development")  # type: ignore[call-arg]
 
     assert settings.APP_ENV == "development"
 
@@ -32,7 +33,7 @@ def test_production_rejects_default_secrets() -> None:
     """Production でデフォルトシークレットが残っていると ValidationError になること。"""
     with pytest.raises(ValidationError) as exc_info:
         Settings(
-            _env_file=None,
+            _env_file=None,  # type: ignore[call-arg]
             APP_ENV="production",
             SECRET_KEY=_DEV_SECRET_KEY,
             ADMIN_PASSWORD=_DEV_ADMIN_PASSWORD,
@@ -48,10 +49,10 @@ def test_production_rejects_default_secrets() -> None:
 
 def test_production_rejects_partial_default_secrets() -> None:
     """Production で一部だけデフォルトの場合、その項目のみ報告されること。"""
-    secrets = {**PROD_SECRETS, "ADMIN_PASSWORD": _DEV_ADMIN_PASSWORD}
+    secrets: dict[str, Any] = {**PROD_SECRETS, "ADMIN_PASSWORD": _DEV_ADMIN_PASSWORD}
 
     with pytest.raises(ValidationError) as exc_info:
-        Settings(_env_file=None, APP_ENV="production", **secrets)
+        Settings(_env_file=None, APP_ENV="production", **secrets)  # type: ignore[call-arg]
 
     message = str(exc_info.value)
     assert "ADMIN_PASSWORD" in message
@@ -60,7 +61,7 @@ def test_production_rejects_partial_default_secrets() -> None:
 
 def test_production_accepts_configured_secrets() -> None:
     """Production でもすべてのシークレットが設定済みなら起動できること。"""
-    settings = Settings(_env_file=None, APP_ENV="production", **PROD_SECRETS)
+    settings = Settings(_env_file=None, APP_ENV="production", **PROD_SECRETS)  # type: ignore[call-arg]
 
     assert settings.APP_ENV == "production"
 
@@ -71,9 +72,12 @@ def test_users_coerced_from_plain_json_mapping() -> None:
     環境変数の JSON ではキーにオブジェクトを使えないため、
     文字列のまま受け取って Username/Password に変換できる必要がある。
     """
-    settings = Settings(_env_file=None, USERS={"dave": "s3cret"})
+    settings = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        USERS={"dave": "secret_pass"},  # type: ignore[dict-item]
+    )
 
-    assert settings.USERS == {Username("dave"): Password("s3cret")}
+    assert settings.USERS == {Username("dave"): Password("secret_pass")}
 
 
 def test_env_file_path_is_absolute() -> None:

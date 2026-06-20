@@ -41,6 +41,8 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     """オンラインモードでのマイグレーション実行（非同期エンジン使用）。"""
     url = config.get_main_option("sqlalchemy.url")
+    if not url:
+        raise ValueError("sqlalchemy.url is not configured in alembic.ini")
     connectable = create_async_engine(url)
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

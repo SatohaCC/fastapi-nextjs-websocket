@@ -74,6 +74,21 @@ export const buttonStyles = cva({
           boxShadow: "buttonHover",
         },
       },
+      unstyled: {
+        padding: "0!",
+        borderRadius: "0!",
+        fontWeight: "inherit!",
+        fontSize: "inherit!",
+        display: "block!",
+        width: "100%!",
+        textAlign: "inherit",
+        transition: "none!",
+        boxShadow: "none!",
+        background: "transparent!",
+        _active: {
+          transform: "none!",
+        },
+      },
     },
     size: {
       sm: {
@@ -87,6 +102,10 @@ export const buttonStyles = cva({
       lg: {
         padding: "14px 32px",
         fontSize: "xl",
+      },
+      none: {
+        padding: "0!",
+        fontSize: "inherit!",
       },
     },
     fullWidth: {

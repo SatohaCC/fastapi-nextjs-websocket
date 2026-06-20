@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Input } from "@/components/ui/primitives/Input/Input";
+import { Input } from "@/components/ui/primitives";
 import { useAccountSettings } from "@/features/auth/hooks/useAccountSettings";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { WorkspaceLoading } from "@/features/workspace/components/WorkspaceLoading";

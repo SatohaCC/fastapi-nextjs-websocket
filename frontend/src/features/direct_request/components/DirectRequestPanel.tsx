@@ -2,8 +2,7 @@
 
 import { EmptyState } from "@/components/ui/composites/EmptyState/EmptyState";
 import { PanelLayout } from "@/components/ui/composites/PanelLayout/PanelLayout";
-import { Button } from "@/components/ui/primitives/Button/Button";
-import { Input, Select } from "@/components/ui/primitives/Input/Input";
+import { Button, Input, Select } from "@/components/ui/primitives";
 import type { UserListItem } from "@/features/auth/api";
 import type { DirectRequestServerMessage, TaskStatus } from "@/types/ws";
 import {

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/primitives";
 import {
   accountItemActiveStyles,
   accountItemStyles,
@@ -32,12 +33,13 @@ export function AccountList({
       {accounts.map((a) => {
         const isActive = selectedUsername === a.username;
         return (
-          <button
+          <Button
             key={a.username}
-            type="button"
+            variant="unstyled"
+            size="none"
             className={`${accountItemStyles} ${isActive ? accountItemActiveStyles : ""}`.trim()}
-            aria-pressed={isActive}
-            onClick={() => onSelect(a.username, a.password)}
+            aria-pressed={isActive ? "true" : "false"}
+            onPress={() => onSelect(a.username, a.password)}
           >
             <span
               className={`${accountNameStyles} ${isActive ? accountNameActiveStyles : ""}`.trim()}
@@ -45,7 +47,7 @@ export function AccountList({
               {a.username}
             </span>
             <span className={accountPasswordStyles}>{a.password}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Toggle } from "@/components/ui/primitives/Toggle/Toggle";
+import { Toggle } from "@/components/ui/primitives";
 import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
 import { SessionList } from "../SessionList/SessionList";
 import {
