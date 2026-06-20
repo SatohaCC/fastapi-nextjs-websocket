@@ -94,10 +94,10 @@ pwsh .\check.ps1
 
 
 ### フロントエンドの一括検証 (チェック＆テスト)
-`frontend` ディレクトリで以下の
-
+`frontend` ディレクトリで以下のスクリプトを実行すると、Biomeによるコードチェックとフォーマット、TypeScriptによる型チェック、および Vitest によるテストが一括で実行されます。
 
 ```powershell
 # Windows (PowerShell)
 cd frontend
+npm run test:all
 ```

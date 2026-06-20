@@ -62,19 +62,24 @@
 					{
 						"type": "command",
 						"command": "jj fix"
+					},
+					{
+						"type": "command",
+						"command": "python scripts/check_path_leak.py"
 					}
 				]
 			}
-		],"PreToolUse": [
-        {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          }
-        ]
-      }
-    ]
+		],
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "rtk hook claude"
+					}
+				]
+			}
+		]
 	}
 }
