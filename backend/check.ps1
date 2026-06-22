@@ -6,8 +6,8 @@ $commands = @(
     @("rtk", "err", "python", "../scripts/check_okf.py"),
     @("rtk", "ruff", "format", "."),
     @("rtk", "ruff", "check", ".", "--fix"),
-    @("rtk", "mypy", "app/"),
-    @("rtk", "err", "pyright", "app/"),
+    @("rtk", "mypy", "app/", "tests/"),
+    @("rtk", "err", "pyright", "app/", "tests/"),
     @("rtk", "pytest")
 )
 

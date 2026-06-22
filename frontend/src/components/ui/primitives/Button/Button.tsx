@@ -5,8 +5,8 @@ import {
 import { buttonStyles } from "./Button.styles";
 
 interface ButtonProps extends RACButtonProps {
-  variant?: "primary" | "secondary" | "ghost" | "success";
-  size?: "sm" | "md" | "lg";
+  variant?: "primary" | "secondary" | "ghost" | "success" | "unstyled";
+  size?: "sm" | "md" | "lg" | "none";
   fullWidth?: boolean;
   children: React.ReactNode;
   disabled?: boolean;

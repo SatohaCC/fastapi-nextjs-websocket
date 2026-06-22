@@ -1,7 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/primitives/Button/Button";
-import { Input } from "@/components/ui/primitives/Input/Input";
+import { Button, Input } from "@/components/ui/primitives";
 import { css } from "@/styled-system/css";
 import type { AuthMode } from "../hooks/useLoginForm";
 import { AccountList } from "./AccountList/AccountList";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
-import { ToastContainer } from "@/components/ui/primitives/Toast/ToastContainer";
+import { ToastContainer } from "@/components/ui/primitives";
 import "./globals.css";
 
 export const metadata: Metadata = {

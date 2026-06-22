@@ -16,9 +16,9 @@
  * 3. Update validation schema
  * 4. Implement submission logic
  */
-import { useState } from 'react';
+import {useState} from 'react';
 
-import { z } from 'zod';
+import {z} from 'zod';
 
 // ============================================================================
 // SCHEMA DEFINITION

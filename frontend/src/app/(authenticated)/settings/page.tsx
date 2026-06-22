@@ -6,11 +6,22 @@ import { useNotificationSettings } from "@/features/common/notifications/useNoti
 import { NotificationSettings } from "@/features/workspace/components/NotificationSettings/NotificationSettings";
 import {
   backButtonStyles,
+  settingsHeaderStyles,
+  settingsPageTitleStyles,
   settingsPageWrapperStyles,
 } from "@/features/workspace/components/NotificationSettings/NotificationSettings.styles";
 import { requestBrowserNotificationPermission } from "@/lib/browserNotification";
 import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
 import { toast } from "@/lib/toast";
+import { css } from "@/styled-system/css";
+import { Button } from "@/components/ui/primitives";
+
+const containerStyles = css({
+  padding: "20px 0",
+  maxWidth: "600px",
+  width: "100%",
+  margin: "0 auto",
+});
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -37,32 +48,17 @@ export default function SettingsPage() {
 
   return (
     <div className={settingsPageWrapperStyles}>
-      <div
-        style={{
-          padding: "20px 0",
-          maxWidth: "600px",
-          width: "100%",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
-          <h2 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
-            アカウント・通知設定
-          </h2>
-          <button
-            type="button"
-            onClick={() => router.push("/workspace")}
+      <div className={containerStyles}>
+        <div className={settingsHeaderStyles}>
+          <h2 className={settingsPageTitleStyles}>アカウント・通知設定</h2>
+          <Button
+            variant="unstyled"
+            size="none"
+            onPress={() => router.push("/workspace")}
             className={backButtonStyles}
           >
             チャットに戻る
-          </button>
+          </Button>
         </div>
         <NotificationSettings
           settings={settings}

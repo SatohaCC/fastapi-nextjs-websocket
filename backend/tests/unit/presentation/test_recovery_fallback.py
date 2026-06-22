@@ -87,7 +87,7 @@ class TestSendInitialDataFallback:
             sequence_name=SequenceName("global_chat"),
             feed_service=feed_service,
             history_fetcher=history_fetcher,
-            response_model=_FakeModel,
+            response_model=_FakeModel,  # type: ignore[arg-type]
         )
 
         history_fetcher.assert_awaited_once()
@@ -109,7 +109,7 @@ class TestSendInitialDataFallback:
             sequence_name=SequenceName("global_chat"),
             feed_service=feed_service,
             history_fetcher=history_fetcher,
-            response_model=_FakeModel,
+            response_model=_FakeModel,  # type: ignore[arg-type]
         )
 
         history_fetcher.assert_not_awaited()
@@ -128,7 +128,7 @@ class TestSendInitialDataFallback:
             sequence_name=SequenceName("global_chat"),
             feed_service=feed_service,
             history_fetcher=history_fetcher,
-            response_model=_FakeModel,
+            response_model=_FakeModel,  # type: ignore[arg-type]
         )
 
         history_fetcher.assert_awaited_once()

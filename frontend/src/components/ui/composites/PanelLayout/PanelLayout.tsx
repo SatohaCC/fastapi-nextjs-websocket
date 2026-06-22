@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card, CardHeader } from "@/components/ui/primitives/Card/Card";
+import { Card, CardHeader } from "@/components/ui/primitives";
 import {
   containerStyles,
   contentStyles,
@@ -30,6 +30,7 @@ export function PanelLayout({
   let contentElement: ReactNode;
 
   const combinedContentClass = contentStyles({ padding });
+  const liveAttr = contentAriaLive ? { "aria-live": contentAriaLive } : {};
 
   if (contentRole === "log") {
     contentElement = (
@@ -37,8 +38,8 @@ export function PanelLayout({
         className={combinedContentClass}
         role="log"
         aria-label={contentAriaLabel}
-        aria-live={contentAriaLive}
         ref={contentRef as React.RefObject<HTMLDivElement | null>}
+        {...liveAttr}
       >
         {children}
       </div>
@@ -48,15 +49,15 @@ export function PanelLayout({
       <section
         className={combinedContentClass}
         aria-label={contentAriaLabel}
-        aria-live={contentAriaLive}
         ref={contentRef as React.RefObject<HTMLElement | null>}
+        {...liveAttr}
       >
         {children}
       </section>
     );
   } else {
     contentElement = (
-      <div className={combinedContentClass} aria-live={contentAriaLive}>
+      <div className={combinedContentClass} {...liveAttr}>
         {children}
       </div>
     );
