@@ -4,6 +4,10 @@
 
 ## 履歴
 
+### [2026-07-02] REST APIアクセストークンのセッション即時失効非対応の明文化（対応しない判断の記録）
+*   **経緯**: セキュリティレビューで「`DELETE /api/auth/sessions/{id}` によるセッション削除がREST APIのアクセストークンに反映されず、有効期限（15分）まで使用可能なまま残る」という課題（GitHub Issue #4）が報告された。修正案として `get_authenticated_user`（[/backend/app/presentation/dependencies.py](/backend/app/presentation/dependencies.py)）に既存の `is_session_valid` を用いたDB照会を追加する案を検討した。
+*   **判断**: この修正はREST APIのアクセストークン検証を「ステートレス」から「ステートフル」に変え、全リクエストでDB照会が発生しJWTを採用した本来の利点（DB不要・高速）を失う。「即時失効」と「ステートレス性の維持」のトレードオフを協議した結果、**ステートレス性を優先し、コード修正は行わない**方針とした。アクセストークンの寿命を残留露出ウィンドウとして受け入れ、[/okf/docs/auth.md](/okf/docs/auth.md) の「主要なセキュリティルールと制限」に既知の制限として明文化した。
+
 ### [2026-06-21] ユーザー / ユーザー設定 設計仕様の新規作成
 *   表示名変更・パスワード変更・アカウント削除・パスワードリセット、通知設定の永続化（`UserSettings`）、アクティブセッション一覧・個別失効を一つのドキュメントに整理した [/okf/docs/user-settings.md](/okf/docs/user-settings.md) を新規作成しました（既存の [/okf/docs/auth.md](/okf/docs/auth.md) はログイン・JWT・WebSocketチケットの認証フローに専念させ、ユーザープロファイル管理はこちらに分離）。
 
