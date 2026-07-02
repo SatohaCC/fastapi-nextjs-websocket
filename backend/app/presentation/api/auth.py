@@ -269,10 +269,12 @@ class ActiveSessionResponse(BaseModel):
     expires_at: datetime
     ip_address: str | None
     user_agent: str | None
-    token_hash: str
+    is_current: bool
 
     @classmethod
-    def from_domain(cls, token: RefreshTokenEntity) -> "ActiveSessionResponse":
+    def from_domain(
+        cls, token: RefreshTokenEntity, is_current: bool
+    ) -> "ActiveSessionResponse":
         """ドメインエンティティからレスポンス DTO を生成します。"""
         return cls(
             id=str(token.id),
@@ -280,18 +282,23 @@ class ActiveSessionResponse(BaseModel):
             expires_at=token.expires_at,
             ip_address=token.ip_address.value if token.ip_address else None,
             user_agent=token.user_agent.value if token.user_agent else None,
-            token_hash=token.token_hash.value,
+            is_current=is_current,
         )
 
 
 @router.get("/sessions", response_model=list[ActiveSessionResponse])
 async def list_sessions(
     user: Annotated[User, Depends(get_authenticated_user)],
+    token: Annotated[AuthToken, Depends(get_access_token)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> list[ActiveSessionResponse]:
     """現在のログインユーザーのアクティブセッション一覧を取得します。"""
     sessions = await auth_service.get_active_sessions(user.id)
-    return [ActiveSessionResponse.from_domain(s) for s in sessions]
+    current_session_id = auth_service.get_session_id_from_token(token)
+    return [
+        ActiveSessionResponse.from_domain(s, is_current=(s.id == current_session_id))
+        for s in sessions
+    ]
 
 
 @router.delete("/sessions/{session_id}")
