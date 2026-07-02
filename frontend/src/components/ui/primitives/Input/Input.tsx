@@ -1,3 +1,5 @@
+"use client";
+
 import type { SelectHTMLAttributes } from "react";
 import {
   Input as RACInput,
