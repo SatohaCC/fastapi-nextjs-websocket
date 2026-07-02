@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useOptimistic } from "react";
-import { useGlobalChat } from "@/features/global_chat/hooks/useGlobalChat";
+import { useGlobalChatContext } from "@/features/global_chat/context/GlobalChatContext";
 import { useGlobalChatForm } from "@/features/global_chat/hooks/useGlobalChatForm";
 import { useMentionDropdown } from "@/features/global_chat/hooks/useMentionDropdown";
 import { useTypingIndicator } from "@/features/global_chat/hooks/useTypingIndicator";
@@ -13,14 +13,13 @@ import { GlobalChat } from "./GlobalChat";
 
 export function GlobalChatContainer() {
   const { username, users } = useWorkspaceContext();
-  // ワークスペース内は常に認証済みであるため true を渡します
   const {
     chatMessages,
     sendChat,
     fetchPastMessages,
     isFetchingPast,
     hasMorePast,
-  } = useGlobalChat(true);
+  } = useGlobalChatContext();
 
   const sortedMessages = useMemo(
     () =>

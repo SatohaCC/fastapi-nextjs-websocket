@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useUsers } from "@/features/auth/hooks/useUsers";
 import { WebSocketProvider } from "@/features/common/websocket/context/WebSocketContext";
+import { DirectRequestProvider } from "@/features/direct_request/context/DirectRequestContext";
+import { GlobalChatProvider } from "@/features/global_chat/context/GlobalChatContext";
 import { WorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { Workspace } from "./Workspace";
 import { WorkspaceLoading } from "./WorkspaceLoading";
@@ -59,7 +61,11 @@ export function WorkspaceContainer() {
           },
         }}
       >
-        <Workspace />
+        <GlobalChatProvider isAuthenticated={isAuthenticated}>
+          <DirectRequestProvider isAuthenticated={isAuthenticated}>
+            <Workspace />
+          </DirectRequestProvider>
+        </GlobalChatProvider>
       </WorkspaceContext.Provider>
     </WebSocketProvider>
   );
