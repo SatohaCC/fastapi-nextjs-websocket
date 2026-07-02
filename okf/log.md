@@ -4,6 +4,10 @@
 
 ## 履歴
 
+### [2026-07-02] Next.js 16の middleware→proxy 名称変更への追従
+*   **背景**: Next.js 16でファイル規約 `middleware` が非推奨となり `proxy` に改名された（「middleware」がExpress.js等のmiddlewareと混同されやすいための変更）。
+*   **修正内容**: `frontend/src/middleware.ts` を `frontend/src/proxy.ts` にリネームし、エクスポート関数名を `middleware` から `proxy` に変更（ロジック・`config`は変更なし）。[/okf/docs/auth.md](/okf/docs/auth.md) のCSRF対策に関する記述も「Next.js Middleware」から「Next.js Proxy」に更新した。
+
 ### [2026-07-02] REST APIアクセストークンのセッション即時失効非対応の明文化（対応しない判断の記録）
 *   **経緯**: セキュリティレビューで「`DELETE /api/auth/sessions/{id}` によるセッション削除がREST APIのアクセストークンに反映されず、有効期限（15分）まで使用可能なまま残る」という課題（GitHub Issue #4）が報告された。修正案として `get_authenticated_user`（[/backend/app/presentation/dependencies.py](/backend/app/presentation/dependencies.py)）に既存の `is_session_valid` を用いたDB照会を追加する案を検討した。
 *   **判断**: この修正はREST APIのアクセストークン検証を「ステートレス」から「ステートフル」に変え、全リクエストでDB照会が発生しJWTを採用した本来の利点（DB不要・高速）を失う。「即時失効」と「ステートレス性の維持」のトレードオフを協議した結果、**ステートレス性を優先し、コード修正は行わない**方針とした。アクセストークンの寿命を残留露出ウィンドウとして受け入れ、[/okf/docs/auth.md](/okf/docs/auth.md) の「主要なセキュリティルールと制限」に既知の制限として明文化した。
