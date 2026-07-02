@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/config";
@@ -50,21 +49,6 @@ export async function GET() {
       return response;
     }
 
-    // 現在のトークンのハッシュ値を算出
-    const rawRefreshToken = await decryptSession(refreshCookie.value);
-    if (!rawRefreshToken) {
-      const response = NextResponse.json(
-        { detail: "セッションが無効です" },
-        { status: 401 },
-      );
-      clearSessionCookies(response);
-      return response;
-    }
-    const currentTokenHash = crypto
-      .createHash("sha256")
-      .update(rawRefreshToken)
-      .digest("hex");
-
     // トークンの解決
     const tokenInfo = await resolveToken(cookieStore);
     if (!tokenInfo) {
@@ -108,14 +92,7 @@ export async function GET() {
       }
 
       const sessions = await retryRes.json();
-      // current 判定と token_hash 除去
-      const processedSessions = sessions.map((s: any) => {
-        const isCurrent = s.token_hash === currentTokenHash;
-        const { token_hash, ...rest } = s;
-        return { ...rest, is_current: isCurrent };
-      });
-
-      const response = NextResponse.json(processedSessions);
+      const response = NextResponse.json(sessions);
       applyRefreshedCookies(response, refreshed);
       return response;
     }
@@ -129,13 +106,7 @@ export async function GET() {
     }
 
     const sessions = await res.json();
-    const processedSessions = sessions.map((s: any) => {
-      const isCurrent = s.token_hash === currentTokenHash;
-      const { token_hash, ...rest } = s;
-      return { ...rest, is_current: isCurrent };
-    });
-
-    const response = NextResponse.json(processedSessions);
+    const response = NextResponse.json(sessions);
     if (preRefreshResult) {
       applyRefreshedCookies(response, preRefreshResult);
     }
@@ -171,21 +142,6 @@ export async function DELETE(request: Request) {
       return response;
     }
 
-    // 現在のトークンのハッシュ値
-    const rawRefreshToken = await decryptSession(refreshCookie.value);
-    if (!rawRefreshToken) {
-      const response = NextResponse.json(
-        { detail: "セッションが無効です" },
-        { status: 401 },
-      );
-      clearSessionCookies(response);
-      return response;
-    }
-    const currentTokenHash = crypto
-      .createHash("sha256")
-      .update(rawRefreshToken)
-      .digest("hex");
-
     // トークン解決
     const tokenInfo = await resolveToken(cookieStore);
     if (!tokenInfo) {
@@ -207,10 +163,8 @@ export async function DELETE(request: Request) {
     let isCurrentRevoked = false;
     if (sessionsRes.ok) {
       const sessions = await sessionsRes.json();
-      const currentSession = sessions.find(
-        (s: any) => s.token_hash === currentTokenHash,
-      );
-      if (currentSession && currentSession.id === sessionId) {
+      const targetSession = sessions.find((s: any) => s.id === sessionId);
+      if (targetSession?.is_current) {
         isCurrentRevoked = true;
       }
     }
