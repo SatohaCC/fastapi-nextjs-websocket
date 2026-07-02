@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { Button } from "@/components/ui/primitives";
 import { useNotificationSettings } from "@/features/common/notifications/useNotificationSettings";
 import { NotificationSettings } from "@/features/workspace/components/NotificationSettings/NotificationSettings";
 import {
@@ -14,7 +15,6 @@ import { requestBrowserNotificationPermission } from "@/lib/browserNotification"
 import type { NotificationSettings as Settings } from "@/lib/notificationSettings";
 import { toast } from "@/lib/toast";
 import { css } from "@/styled-system/css";
-import { Button } from "@/components/ui/primitives";
 
 const containerStyles = css({
   padding: "20px 0",

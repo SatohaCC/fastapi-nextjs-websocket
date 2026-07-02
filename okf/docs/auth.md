@@ -105,7 +105,7 @@ sequenceDiagram
 ## 3. 主要なセキュリティルールと制限
 
 1.  **パスワードハッシュ**: `bcrypt` (ストレッチング回数: `12`) を使用してハッシュ化し、管理画面（SQLAdmin）からも直接閲覧・変更できないように防護。
-2.  **CSRF 対策**: 状態変更系（POST等）リクエストに対し、`X-Requested-With` カスタムヘッダーの存在を Next.js Middleware で強制検証。
+2.  **CSRF 対策**: 状態変更系（POST等）リクエストに対し、`X-Requested-With` カスタムヘッダーの存在を Next.js Proxy で強制検証。
 3.  **レートリミット**: Redis カウンターを用いて、ログイン制限（IPアドレス別: 10回/60秒、ユーザー名別: 20回/15分）を適用。
 4.  **セッション強制無効化 (キルスイッチ)**: セッション削除時、Redis Pub/Sub (`session_control` チャンネル) 経由でバックエンドの WebSocket 接続を即座にクローズコード `1008` で強制切断。
     *   個別セッション削除（`DELETE /api/auth/sessions/{id}`）は `session_id` を伴うイベントとして発火され、`ChatManager.force_disconnect_session` により**当該セッションの接続のみ**が切断される（他デバイス・他セッションの接続には影響しない）。`session_id` はワンタイムチケット（`/api/auth/ws-ticket`）の発行時にアクセストークンから取り出され、WebSocket 接続確立時に紐付けられる。
