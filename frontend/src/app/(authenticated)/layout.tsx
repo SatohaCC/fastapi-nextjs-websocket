@@ -6,6 +6,8 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useUsers } from "@/features/auth/hooks/useUsers";
 import { useNotifications } from "@/features/common/notifications/useNotifications";
 import { WebSocketProvider } from "@/features/common/websocket/context/WebSocketContext";
+import { DirectRequestProvider } from "@/features/direct_request/context/DirectRequestContext";
+import { GlobalChatProvider } from "@/features/global_chat/context/GlobalChatContext";
 import { WorkspaceHeaderContainer } from "@/features/workspace/components/WorkspaceHeaderContainer";
 import { WorkspaceLoading } from "@/features/workspace/components/WorkspaceLoading";
 import { WorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
@@ -70,12 +72,20 @@ export default function AuthenticatedLayout({
         }}
       >
         <NotificationHandler />
-        <div
-          style={{ display: "flex", flexDirection: "column", height: "100vh" }}
-        >
-          <WorkspaceHeaderContainer />
-          <div style={{ flex: 1, overflow: "hidden" }}>{children}</div>
-        </div>
+        <GlobalChatProvider isAuthenticated={isAuthenticated}>
+          <DirectRequestProvider isAuthenticated={isAuthenticated}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100vh",
+              }}
+            >
+              <WorkspaceHeaderContainer />
+              <div style={{ flex: 1, overflow: "hidden" }}>{children}</div>
+            </div>
+          </DirectRequestProvider>
+        </GlobalChatProvider>
       </WorkspaceContext.Provider>
     </WebSocketProvider>
   );

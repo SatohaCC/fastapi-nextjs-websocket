@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useOptimistic } from "react";
-import { useDirectRequest } from "@/features/direct_request/hooks/useDirectRequest";
+import { useDirectRequestContext } from "@/features/direct_request/context/DirectRequestContext";
 import { useDirectRequestForm } from "@/features/direct_request/hooks/useDirectRequestForm";
 import { useWorkspaceContext } from "@/features/workspace/context/WorkspaceContext";
 import { useChatScroll } from "@/hooks/useChatScroll";
@@ -11,7 +11,6 @@ import { DirectRequestPanel } from "./DirectRequestPanel";
 
 export function DirectRequestPanelContainer() {
   const { users, username } = useWorkspaceContext();
-  // ワークスペース内は常に認証済みであるため true を渡します
   const {
     requestMessages,
     sendRequest,
@@ -19,7 +18,7 @@ export function DirectRequestPanelContainer() {
     fetchPastRequests,
     isFetchingPast,
     hasMorePast,
-  } = useDirectRequest(true);
+  } = useDirectRequestContext();
 
   const otherUsers = useMemo(
     () => users.filter((u) => u.username !== username),
